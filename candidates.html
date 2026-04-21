@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Danh sách ứng viên - VKU AI Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        #chatPopup {
+            display: none; 
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 340px;
+            z-index: 1050; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            border-radius: 10px 10px 0 0;
+        }
+        #chat-messages {
+            height: 300px; 
+            overflow-y: auto; 
+            background-color: #f0f2f5; 
+            padding: 10px;
+        }
+        .msg-bubble {
+            max-width: 80%;
+            padding: 8px 12px;
+            border-radius: 15px;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
+        .msg-receive {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            align-self: flex-start;
+        }
+        .msg-send {
+            background-color: #0d6efd;
+            color: white;
+            margin-left: auto; 
+        }
+        .candidate-card { transition: 0.3s; }
+        .candidate-card:hover { transform: translateY(-3px); box-shadow: 0 4px 10px rgba(0,0,0,0.1) !important; }
+    </style>
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="/">VKU AI Portal</a>
+            <div class="collapse navbar-collapse">
+                <div class="navbar-nav me-auto">
+                    <a class="nav-link" href="/">Trang chủ</a>
+                    <a class="nav-link" href="/post_job">Đăng tin</a>
+                    <a class="nav-link active" href="/candidates">Ứng viên</a>
+                </div>
+                <div class="navbar-nav">
+                    {% if username %}
+                        <span class="nav-link text-info">Chào, <b>{{ username }}</b></span>
+                        <a class="nav-link btn btn-outline-danger btn-sm ms-2" href="/logout">Thoát</a>
+                    {% else %}
+                        <a class="nav-link" href="/login">Đăng nhập</a>
+                        <a class="nav-link btn btn-primary btn-sm ms-2" href="/register text-white">Đăng ký</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h2 class="mb-4">Ứng viên từ lớp 25GAI</h2>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <div class="card shadow-sm border-0 rounded-3 candidate-card">
+                    <div class="card-body d-flex align-items-center">
+                        <img src="https://ui-avatars.com/api/?name=Nguyễn+Văn+A&background=e9ecef&color=495057&size=70" 
+                             alt="Avatar" class="rounded-circle me-3 shadow-sm border">
+                        
+                        <div class="flex-grow-1">
+                            <h5 class="card-title text-primary mb-1 fw-bold">Nguyễn Văn A</h5>
+                            <p class="card-text text-muted mb-2 small">Kỹ năng: Java Swing, SQL Server</p>
+                            <button class="btn btn-outline-primary btn-sm fw-bold" onclick="openChat('Nguyễn Văn A')">Nhắn tin ngay</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <div class="card shadow-sm border-0 rounded-3 candidate-card">
+                    <div class="card-body d-flex align-items-center">
+                        <img src="https://ui-avatars.com/api/?name=Trần+Thị+B&background=e9ecef&color=495057&size=70" 
+                             alt="Avatar" class="rounded-circle me-3 shadow-sm border">
+                        
+                        <div class="flex-grow-1">
+                            <h5 class="card-title text-success mb-1 fw-bold">Trần Thị B</h5>
+                            <p class="card-text text-muted mb-2 small">Kỹ năng: Python, AI, Data Analysis</p>
+                            <button class="btn btn-outline-success btn-sm fw-bold" onclick="openChat('Trần Thị B')">Nhắn tin ngay</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="chatPopup" class="card">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center" style="border-radius: 10px 10px 0 0;">
+            <div class="fw-bold">
+                <span class="badge bg-success rounded-circle p-1 me-1"> </span>
+                <span id="chatUserName">Tên người dùng</span>
+            </div>
+            <button type="button" class="btn-close btn-close-white" aria-label="Close" onclick="closeChat()"></button>
+        </div>
+        
+        <div class="card-body d-flex flex-column" id="chat-messages">
+            <div class="msg-bubble msg-receive shadow-sm">
+                Chào anh/chị, em thấy công ty đang tuyển dụng thực tập sinh AI ạ.
+            </div>
+            <div class="msg-bubble msg-send shadow-sm">
+                Chào em, đúng rồi nhé. Em gửi CV qua đây cho anh xem thử.
+            </div>
+        </div>
+        
+        <div class="card-footer bg-white">
+            <div class="input-group">
+                <input type="text" class="form-control form-control-sm" placeholder="Nhập tin nhắn..." autocomplete="off">
+                <button class="btn btn-primary btn-sm">Gửi</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openChat(name) {
+            document.getElementById('chatUserName').innerText = name; 
+            document.getElementById('chatPopup').style.display = 'block'; 
+        }
+
+        function closeChat() {
+            document.getElementById('chatPopup').style.display = 'none'; 
+        }
+    </script>
+</body>
+</html>

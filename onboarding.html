@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Chào mừng - Khảo sát nhu cầu</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .onboarding-card {
+            max-width: 600px;
+            margin: 50px auto;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            border: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="card onboarding-card">
+            <div class="card-header bg-primary text-white text-center py-4" style="border-radius: 15px 15px 0 0;">
+                <h3 class="fw-bold mb-0">Chào mừng {{ username }}! 👋</h3>
+                <p class="mb-0 mt-2 text-white-50">Giúp chúng tôi hiểu rõ hơn nhu cầu tuyển dụng của bạn</p>
+            </div>
+            
+            <div class="card-body p-5">
+                <form action="/onboarding" method="POST">
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">1. Bạn thường xuyên tuyển dụng nhân sự ở mảng nào nhất?</label>
+                        <select class="form-select border-secondary-subtle" name="industry" required>
+                            <option value="" selected disabled>-- Chọn ngành nghề --</option>
+                            <option value="Trí tuệ nhân tạo (AI) / Machine Learning">Trí tuệ nhân tạo (AI) / Machine Learning</option>
+                            <option value="Phát triển Web / Backend / Frontend">Phát triển Web / Backend / Frontend</option>
+                            <option value="Khoa học dữ liệu (Data Science / Data Analyst)">Khoa học dữ liệu (Data Science / Data Analyst)</option>
+                            <option value="Phát triển Mobile / App">Phát triển Mobile / App</option>
+                            <option value="Khác">Lĩnh vực phần mềm khác</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">2. Trình độ / Kinh nghiệm bạn mong muốn ở ứng viên?</label>
+                        <select class="form-select border-secondary-subtle" name="level" required>
+                            <option value="" selected disabled>-- Chọn trình độ --</option>
+                            <option value="Thực tập sinh (Intern) / Sinh viên năm cuối">Thực tập sinh (Intern) / Sinh viên năm cuối</option>
+                            <option value="Mới ra trường (Fresher)">Mới ra trường (Fresher)</option>
+                            <option value="Dưới 2 năm kinh nghiệm (Junior)">Dưới 2 năm kinh nghiệm (Junior)</option>
+                            <option value="Trên 2 năm kinh nghiệm (Middle/Senior)">Trên 2 năm kinh nghiệm (Middle/Senior)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-5">
+                        <label class="form-label fw-bold">3. Yêu cầu về năng lực ngoại ngữ (Tiếng Anh)?</label>
+                        <select class="form-select border-secondary-subtle" name="english" required>
+                            <option value="" selected disabled>-- Chọn yêu cầu ngoại ngữ --</option>
+                            <option value="Không yêu cầu bắt buộc">Không yêu cầu bắt buộc</option>
+                            <option value="Đọc hiểu tài liệu chuyên ngành tốt">Đọc hiểu tài liệu chuyên ngành tốt</option>
+                            <option value="Giao tiếp cơ bản (Tương đương TOEIC 600+)">Giao tiếp cơ bản (Tương đương TOEIC 600+)</option>
+                            <option value="Thành thạo 4 kỹ năng (Tương đương IELTS 6.0+)">Thành thạo 4 kỹ năng (Tương đương IELTS 6.0+)</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-bold fs-5">Lưu thông tin & Bắt đầu</button>
+                    <p class="text-center text-muted small mt-3">Bạn có thể thay đổi thông tin này sau trong phần Hồ sơ.</p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
