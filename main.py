@@ -29,7 +29,7 @@ class CareerBridgeWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        # 1. Setup the main window
+        # 1. Set up the main window
         self.setWindowTitle("AI Career Bridge")
         self.setGeometry(100, 100, 600, 400)
 
