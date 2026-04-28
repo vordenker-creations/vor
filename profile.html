@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI-Career Bridge – Tài khoản & CV</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0d1117;--sidebar:#161b22;--card:#1a2030;--card2:#1e2840;
+    --border:#2a3447;--accent:#4f9cf9;--accent2:#38d9a9;
+    --text:#e6edf3;--text2:#8b949e;--text3:#c9d1d9;
+    --success:#3fb950;--sidebar-w:240px;--radius:12px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;}
+  .sidebar{width:var(--sidebar-w);background:var(--sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;}
+  .sidebar-logo{padding:20px 18px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);}
+  .logo-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--accent),#7c3aed);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;}
+  .logo-text{font-size:14px;font-weight:700;line-height:1.2;} .logo-text span{color:var(--accent);}
+  .sidebar-user{padding:16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);}
+  .user-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#4f9cf9,#38d9a9);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0;}
+  .user-name{font-size:13px;font-weight:600;} .user-mssv{font-size:11px;color:var(--text2);}
+  nav{padding:12px 8px;flex:1;}
+  .nav-section{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text2);padding:8px 10px 4px;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);transition:all .2s;text-decoration:none;margin-bottom:2px;}
+  .nav-item:hover{background:var(--card);color:var(--text);}
+  .nav-item.active{background:rgba(79,156,249,.15);color:var(--accent);}
+  .nav-item .icon{width:18px;text-align:center;font-size:16px;}
+  .nav-badge{margin-left:auto;background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;}
+  .sidebar-bottom{padding:12px 8px;border-top:1px solid var(--border);}
+  .logout-btn{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--text2);transition:all .2s;}
+  .logout-btn:hover{background:rgba(248,81,73,.1);color:#f85149;}
+  .main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;}
+  .topbar{background:var(--sidebar);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+  .topbar-title{font-size:18px;font-weight:700;}
+  .topbar-actions{display:flex;align-items:center;gap:12px;}
+  .notif-btn{width:36px;height:36px;background:var(--card);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;}
+
+  .content{padding:28px;flex:1;display:flex;gap:24px;}
+
+  /* FORM PANEL */
+  .form-panel{flex:1.1;display:flex;flex-direction:column;gap:16px;}
+  .section-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--accent);margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .form-group{display:flex;flex-direction:column;gap:6px;}
+  .form-group.full{grid-column:1/-1;}
+  label{font-size:12px;font-weight:600;color:var(--text2);}
+  input, textarea, select{
+    background:var(--card2);border:1px solid var(--border);border-radius:8px;
+    padding:9px 12px;color:var(--text);font-size:13px;font-family:inherit;
+    outline:none;transition:border-color .2s;width:100%;
+  }
+  input:focus, textarea:focus, select:focus{border-color:var(--accent);}
+  input::placeholder, textarea::placeholder{color:var(--text2);}
+  textarea{resize:vertical;min-height:80px;}
+
+  .skill-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;}
+  .skill-tag{padding:4px 12px;border-radius:20px;background:rgba(79,156,249,.15);border:1px solid rgba(79,156,249,.25);color:var(--accent);font-size:12px;font-weight:500;display:flex;align-items:center;gap:6px;cursor:pointer;transition:all .2s;}
+  .skill-tag:hover{background:rgba(79,156,249,.25);}
+  .skill-tag .rm{font-size:14px;opacity:.5;} .skill-tag .rm:hover{opacity:1;}
+  .add-skill{padding:4px 12px;border-radius:20px;background:var(--card2);border:1px dashed var(--border);color:var(--text2);font-size:12px;cursor:pointer;transition:all .2s;}
+  .add-skill:hover{border-color:var(--accent);color:var(--accent);}
+
+  .project-item{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:flex-start;gap:10px;}
+  .project-icon{font-size:20px;flex-shrink:0;}
+  .project-body{flex:1;}
+  .project-name{font-size:13px;font-weight:600;} .project-desc{font-size:12px;color:var(--text2);margin-top:2px;}
+  .project-tags{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;}
+  .pt{padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;background:rgba(56,217,169,.12);color:var(--accent2);}
+  .add-project{border:1px dashed var(--border);border-radius:8px;padding:12px;text-align:center;cursor:pointer;color:var(--text2);font-size:13px;transition:all .2s;}
+  .add-project:hover{border-color:var(--accent);color:var(--accent);background:rgba(79,156,249,.04);}
+
+  .save-btn{padding:12px 28px;background:var(--accent);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px;}
+  .save-btn:hover{opacity:.9;transform:translateY(-1px);}
+
+  /* CV PREVIEW PANEL */
+  .cv-panel{width:340px;flex-shrink:0;display:flex;flex-direction:column;gap:12px;}
+  .cv-preview-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;flex:1;}
+  .cv-preview-header{background:linear-gradient(135deg,var(--accent),#7c3aed);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;}
+  .cv-preview-title{font-size:12px;font-weight:700;color:#fff;letter-spacing:.5px;}
+  .cv-preview-badge{font-size:10px;background:rgba(255,255,255,.2);padding:3px 8px;border-radius:6px;color:#fff;}
+
+  /* CV DOCUMENT INSIDE */
+  .cv-doc{padding:0;overflow-y:auto;max-height:600px;}
+  .cv-doc-inner{font-family:'Be Vietnam Pro',sans-serif;background:#fff;color:#1a1a2e;font-size:10px;line-height:1.4;}
+  .cv-top{background:#1e3a5f;color:#fff;display:flex;gap:0;}
+  .cv-sidebar-doc{width:38%;background:#1e3a5f;padding:16px 14px;display:flex;flex-direction:column;gap:12px;}
+  .cv-avatar{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#4f9cf9,#38d9a9);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;margin-bottom:8px;}
+  .cv-field-lbl{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#89aacc;margin-bottom:3px;}
+  .cv-field-val{font-size:9px;color:#cce0f5;}
+  .cv-section-header{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#89aacc;border-bottom:1px solid #2d4f7a;padding-bottom:3px;margin-bottom:6px;margin-top:8px;}
+  .cv-skill-tag{display:inline-block;background:rgba(79,156,249,.2);color:#7ec7fa;padding:2px 6px;border-radius:3px;font-size:8px;margin:1px;}
+  .cv-main-doc{flex:1;padding:16px 14px;background:#fff;}
+  .cv-name{font-size:16px;font-weight:800;color:#1e3a5f;letter-spacing:-.3px;}
+  .cv-subtitle{font-size:9px;color:#666;margin-bottom:10px;}
+  .cv-section{margin-bottom:10px;}
+  .cv-sec-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#1e3a5f;border-left:3px solid #4f9cf9;padding-left:6px;margin-bottom:5px;}
+  .cv-entry{margin-bottom:6px;}
+  .cv-entry-name{font-size:10px;font-weight:700;color:#1a1a2e;}
+  .cv-entry-meta{font-size:8px;color:#888;}
+  .cv-entry-desc{font-size:8px;color:#444;margin-top:2px;}
+  .cv-bullet{font-size:8px;color:#444;display:flex;gap:4px;margin-top:2px;}
+  .cv-bullet::before{content:'•';color:#4f9cf9;}
+
+  .download-btn{padding:14px;background:linear-gradient(135deg,var(--accent),#7c3aed);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;letter-spacing:.3px;}
+  .download-btn:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 8px 24px rgba(79,156,249,.3);}
+
+  ::-webkit-scrollbar{width:5px;} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">AI</div>
+    <div class="logo-text">AI-Career<br><span>Bridge</span></div>
+  </div>
+  <div class="sidebar-user">
+    <div class="user-avatar">NVA</div>
+    <div><div class="user-name">Nguyễn Văn A</div><div class="user-mssv">MSSV: 102210001</div></div>
+  </div>
+  <nav>
+    <div class="nav-section">Chính</div>
+    <a href="dashboard.html" class="nav-item"><span class="icon">⊞</span> Dashboard</a>
+    <a href="roadmap.html" class="nav-item"><span class="icon">🗺</span> Lộ trình & AI</a>
+    <a href="community.html" class="nav-item"><span class="icon">👥</span> Cộng đồng<span class="nav-badge">3</span></a>
+    <a href="recruitment.html" class="nav-item"><span class="icon">💼</span> Tuyển dụng<span class="nav-badge">2</span></a>
+    <div class="nav-section" style="margin-top:8px">Cá nhân</div>
+    <a href="profile.html" class="nav-item active"><span class="icon">👤</span> Tài khoản & CV</a>
+  </nav>
+  <div class="sidebar-bottom"><div class="logout-btn"><span>↩</span> Đăng xuất</div></div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title">👤 Tài khoản & CV</div>
+    <div class="topbar-actions">
+      <div class="notif-btn">🔔</div>
+      <div class="notif-btn">⚙</div>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- FORM -->
+    <div class="form-panel">
+      <div class="card">
+        <div class="section-title">📋 Thông tin cá nhân</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Họ và tên</label>
+            <input type="text" value="Nguyễn Văn A" oninput="updateCV()">
+          </div>
+          <div class="form-group">
+            <label>MSSV</label>
+            <input type="text" value="102210001" oninput="updateCV()">
+          </div>
+          <div class="form-group">
+            <label>Lớp</label>
+            <input type="text" value="CNTT K20A" oninput="updateCV()">
+          </div>
+          <div class="form-group">
+            <label>Điện thoại</label>
+            <input type="text" value="0912 345 678" oninput="updateCV()">
+          </div>
+          <div class="form-group full">
+            <label>Email</label>
+            <input type="email" value="nguyenvana@email.com" oninput="updateCV()">
+          </div>
+          <div class="form-group full">
+            <label>LinkedIn / GitHub</label>
+            <input type="text" placeholder="github.com/username" oninput="updateCV()">
+          </div>
+          <div class="form-group full">
+            <label>Mục tiêu nghề nghiệp</label>
+            <textarea oninput="updateCV()" placeholder="Mô tả ngắn về mục tiêu của bạn...">Sinh viên năm 3 CNTT, định hướng trở thành AI Engineer. Đam mê Machine Learning và phát triển phần mềm ứng dụng AI.</textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">🛠 Kỹ năng</div>
+        <div class="skill-tags" id="skillTags">
+          <div class="skill-tag">Python <span class="rm">✕</span></div>
+          <div class="skill-tag">Machine Learning <span class="rm">✕</span></div>
+          <div class="skill-tag">SQL <span class="rm">✕</span></div>
+          <div class="skill-tag">Git / GitHub <span class="rm">✕</span></div>
+          <div class="skill-tag">React.js <span class="rm">✕</span></div>
+          <div class="skill-tag">Linux <span class="rm">✕</span></div>
+          <div class="add-skill" onclick="addSkill()">+ Thêm kỹ năng</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">🚀 Dự án cá nhân</div>
+        <div class="project-item">
+          <div class="project-icon">🤖</div>
+          <div class="project-body">
+            <div class="project-name">AI Chatbot Hỗ trợ Sinh viên</div>
+            <div class="project-desc">Chatbot tư vấn lịch học và thông tin trường dùng NLP và Gemini API</div>
+            <div class="project-tags">
+              <span class="pt">Python</span><span class="pt">Gemini API</span><span class="pt">FastAPI</span>
+            </div>
+          </div>
+        </div>
+        <div class="project-item">
+          <div class="project-icon">🌐</div>
+          <div class="project-body">
+            <div class="project-name">Website Quản lý Thư viện</div>
+            <div class="project-desc">Ứng dụng web full-stack quản lý sách, độc giả và mượn trả</div>
+            <div class="project-tags">
+              <span class="pt">React.js</span><span class="pt">Node.js</span><span class="pt">MySQL</span>
+            </div>
+          </div>
+        </div>
+        <div class="add-project">+ Thêm dự án mới</div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">🏅 Chứng chỉ & Thành tựu</div>
+        <div class="form-grid">
+          <div class="form-group full">
+            <textarea placeholder="VD: AWS Cloud Practitioner (2024), TOEIC 700 (2023)..." rows="3">AWS Cloud Practitioner (Amazon, 2024)
+TOEIC 700 (IIG Vietnam, 2023)
+Python for Data Science (Coursera, 2023)</textarea>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px">
+        <button class="save-btn" onclick="saveProfile()">💾 Lưu thông tin</button>
+      </div>
+    </div>
+
+    <!-- CV PREVIEW -->
+    <div class="cv-panel">
+      <div class="cv-preview-card">
+        <div class="cv-preview-header">
+          <span class="cv-preview-title">📄 CV CỦA BẠN – Xem trước</span>
+          <span class="cv-preview-badge">Live Preview</span>
+        </div>
+        <div class="cv-doc">
+          <div class="cv-doc-inner">
+            <div style="display:flex;min-height:100%">
+              <!-- CV SIDEBAR -->
+              <div class="cv-sidebar-doc">
+                <div class="cv-avatar">NVA</div>
+                <div>
+                  <div class="cv-field-lbl">Họ và tên</div>
+                  <div class="cv-field-val" id="cvName">Nguyễn Văn A</div>
+                </div>
+                <div>
+                  <div class="cv-field-lbl">MSSV</div>
+                  <div class="cv-field-val">102210001</div>
+                </div>
+                <div>
+                  <div class="cv-field-lbl">Học tại</div>
+                  <div class="cv-field-val">Đại học ...</div>
+                </div>
+                <div>
+                  <div class="cv-field-lbl">Lớp</div>
+                  <div class="cv-field-val">CNTT K20A</div>
+                </div>
+                <div class="cv-section-header">Liên hệ</div>
+                <div class="cv-field-val">📞 0912 345 678</div>
+                <div class="cv-field-val" style="margin-top:3px">✉ nguyenvana@email.com</div>
+                <div class="cv-section-header">Kỹ năng</div>
+                <div>
+                  <span class="cv-skill-tag">Python</span>
+                  <span class="cv-skill-tag">ML</span>
+                  <span class="cv-skill-tag">SQL</span>
+                  <span class="cv-skill-tag">Git</span>
+                  <span class="cv-skill-tag">React</span>
+                  <span class="cv-skill-tag">Linux</span>
+                </div>
+                <div class="cv-section-header">Ngôn ngữ</div>
+                <div class="cv-field-val">Tiếng Việt – Mẹ đẻ</div>
+                <div class="cv-field-val" style="margin-top:2px">Tiếng Anh – TOEIC 700</div>
+              </div>
+              <!-- CV MAIN -->
+              <div class="cv-main-doc">
+                <div class="cv-name" id="cvNameMain">NGUYỄN VĂN A</div>
+                <div class="cv-subtitle">Sinh viên CNTT – AI Engineer định hướng</div>
+                <div class="cv-section">
+                  <div class="cv-sec-title">Mục tiêu nghề nghiệp</div>
+                  <div style="font-size:8px;color:#444;line-height:1.5">Sinh viên năm 3 CNTT, định hướng AI Engineer. Đam mê Machine Learning và phát triển ứng dụng AI thực tiễn.</div>
+                </div>
+                <div class="cv-section">
+                  <div class="cv-sec-title">Học vấn</div>
+                  <div class="cv-entry">
+                    <div class="cv-entry-name">Đại học ... – Ngành CNTT</div>
+                    <div class="cv-entry-meta">2021 – 2025 · GPA: 3.4/4.0</div>
+                  </div>
+                </div>
+                <div class="cv-section">
+                  <div class="cv-sec-title">Dự án nổi bật</div>
+                  <div class="cv-entry">
+                    <div class="cv-entry-name">AI Chatbot Hỗ trợ Sinh viên</div>
+                    <div class="cv-entry-meta">Python · Gemini API · FastAPI</div>
+                    <div class="cv-bullet">Chatbot tư vấn lịch học dùng NLP và Gemini API</div>
+                  </div>
+                  <div class="cv-entry">
+                    <div class="cv-entry-name">Website Quản lý Thư viện</div>
+                    <div class="cv-entry-meta">React.js · Node.js · MySQL</div>
+                    <div class="cv-bullet">Ứng dụng web full-stack quản lý sách và mượn trả</div>
+                  </div>
+                </div>
+                <div class="cv-section">
+                  <div class="cv-sec-title">Chứng chỉ</div>
+                  <div class="cv-bullet">AWS Cloud Practitioner (Amazon, 2024)</div>
+                  <div class="cv-bullet">TOEIC 700 (IIG Vietnam, 2023)</div>
+                  <div class="cv-bullet">Python for Data Science (Coursera, 2023)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="download-btn" onclick="alert('Đang xuất CV dạng PDF... (tính năng demo)')">
+        📥 TẢI CV DẠNG PDF
+      </button>
+    </div>
+  </div>
+</main>
+
+<script>
+function updateCV() {
+  const name = document.querySelector('input[value="Nguyễn Văn A"]') || document.querySelector('input');
+  // Live update preview
+}
+function addSkill() {
+  const skill = prompt('Nhập kỹ năng mới:');
+  if (!skill) return;
+  const tags = document.getElementById('skillTags');
+  const addBtn = tags.querySelector('.add-skill');
+  const tag = document.createElement('div');
+  tag.className = 'skill-tag';
+  tag.innerHTML = skill + ' <span class="rm">✕</span>';
+  tags.insertBefore(tag, addBtn);
+}
+function saveProfile() {
+  const btn = event.target;
+  btn.textContent = '✓ Đã lưu!';
+  btn.style.background = 'var(--success)';
+  setTimeout(() => { btn.textContent = '💾 Lưu thông tin'; btn.style.background = ''; }, 2000);
+}
+</script>
+</body>
+</html>

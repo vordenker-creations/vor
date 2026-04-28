@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI-Career Bridge – Tuyển dụng</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0d1117;--sidebar:#161b22;--card:#1a2030;--card2:#1e2840;--border:#2a3447;--accent:#4f9cf9;--accent2:#38d9a9;--accent3:#f77f00;--text:#e6edf3;--text2:#8b949e;--text3:#c9d1d9;--success:#3fb950;--sidebar-w:240px;--radius:12px;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;}
+  .sidebar{width:var(--sidebar-w);background:var(--sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;}
+  .sidebar-logo{padding:20px 18px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);}
+  .logo-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--accent),#7c3aed);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;}
+  .logo-text{font-size:14px;font-weight:700;line-height:1.2;} .logo-text span{color:var(--accent);}
+  .sidebar-user{padding:16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);}
+  .user-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#4f9cf9,#38d9a9);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0;}
+  .user-name{font-size:13px;font-weight:600;} .user-mssv{font-size:11px;color:var(--text2);}
+  nav{padding:12px 8px;flex:1;}
+  .nav-section{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text2);padding:8px 10px 4px;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);transition:all .2s;text-decoration:none;margin-bottom:2px;}
+  .nav-item:hover{background:var(--card);color:var(--text);}
+  .nav-item.active{background:rgba(79,156,249,.15);color:var(--accent);}
+  .nav-item .icon{width:18px;text-align:center;font-size:16px;}
+  .nav-badge{margin-left:auto;background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;}
+  .sidebar-bottom{padding:12px 8px;border-top:1px solid var(--border);}
+  .logout-btn{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--text2);}
+  .main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;}
+  .topbar{background:var(--sidebar);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+  .topbar-title{font-size:18px;font-weight:700;}
+  .topbar-actions{display:flex;align-items:center;gap:12px;}
+  .notif-btn{width:36px;height:36px;background:var(--card);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;}
+  .content{padding:28px;flex:1;}
+
+  /* SEARCH BAR */
+  .search-section{display:flex;gap:12px;margin-bottom:24px;align-items:center;}
+  .search-input-wrap{flex:1;position:relative;}
+  .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text2);font-size:16px;}
+  .search-input{width:100%;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px 10px 38px;color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:border-color .2s;}
+  .search-input:focus{border-color:var(--accent);}
+  .search-input::placeholder{color:var(--text2);}
+  .filter-btn{padding:10px 16px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--text2);font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .2s;white-space:nowrap;}
+  .filter-btn:hover,.filter-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(79,156,249,.08);}
+
+  /* STATS ROW */
+  .stats-row{display:flex;gap:12px;margin-bottom:24px;}
+  .mini-stat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 18px;flex:1;display:flex;align-items:center;gap:10px;}
+  .ms-icon{font-size:22px;}
+  .ms-val{font-size:20px;font-weight:800;line-height:1;}
+  .ms-lbl{font-size:11px;color:var(--text2);margin-top:2px;}
+
+  /* JOB CARDS */
+  .jobs-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;}
+  .job-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:all .2s;cursor:pointer;position:relative;overflow:hidden;}
+  .job-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3);}
+  .job-card.featured::before{content:'⭐ Nổi bật';position:absolute;top:12px;right:12px;background:rgba(247,127,0,.15);color:var(--accent3);font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;}
+  .job-card.new-post::before{content:'🆕 Mới';position:absolute;top:12px;right:12px;background:rgba(63,185,80,.15);color:var(--success);font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;}
+
+  .job-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;}
+  .company-logo{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;border:1px solid var(--border);}
+  .job-title{font-size:15px;font-weight:700;margin-bottom:3px;}
+  .company-name{font-size:12px;color:var(--text2);}
+  .job-meta{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+  .jm-tag{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text2);}
+  .job-skills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+  .skill-pill{padding:3px 10px;border-radius:20px;font-size:11px;background:rgba(79,156,249,.1);color:var(--accent);border:1px solid rgba(79,156,249,.2);}
+  .skill-match{background:rgba(63,185,80,.12);color:var(--success);border-color:rgba(63,185,80,.2);}
+  .job-footer{display:flex;align-items:center;justify-content:space-between;}
+  .job-salary{font-size:14px;font-weight:700;color:var(--accent2);}
+  .job-match{font-size:11px;font-weight:600;color:var(--success);background:rgba(63,185,80,.1);padding:3px 8px;border-radius:6px;}
+  .apply-btn{padding:7px 16px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;}
+  .apply-btn:hover{opacity:.85;transform:translateY(-1px);}
+  .apply-btn.saved{background:transparent;border:1px solid var(--border);color:var(--text2);}
+  .apply-btn.saved:hover{border-color:var(--accent);color:var(--accent);}
+
+  .deadline{font-size:10px;color:var(--text2);}
+
+  ::-webkit-scrollbar{width:5px;} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+  @keyframes fadeSlide{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  .job-card{animation:fadeSlide .4s ease both;}
+  .job-card:nth-child(2){animation-delay:.05s;}
+  .job-card:nth-child(3){animation-delay:.1s;}
+  .job-card:nth-child(4){animation-delay:.15s;}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-logo"><div class="logo-icon">AI</div><div class="logo-text">AI-Career<br><span>Bridge</span></div></div>
+  <div class="sidebar-user"><div class="user-avatar">NVA</div><div><div class="user-name">Nguyễn Văn A</div><div class="user-mssv">MSSV: 102210001</div></div></div>
+  <nav>
+    <div class="nav-section">Chính</div>
+    <a href="dashboard.html" class="nav-item"><span class="icon">⊞</span> Dashboard</a>
+    <a href="roadmap.html" class="nav-item"><span class="icon">🗺</span> Lộ trình & AI</a>
+    <a href="community.html" class="nav-item"><span class="icon">👥</span> Cộng đồng<span class="nav-badge">3</span></a>
+    <a href="recruitment.html" class="nav-item active"><span class="icon">💼</span> Tuyển dụng<span class="nav-badge">2</span></a>
+    <div class="nav-section" style="margin-top:8px">Cá nhân</div>
+    <a href="profile.html" class="nav-item"><span class="icon">👤</span> Tài khoản & CV</a>
+  </nav>
+  <div class="sidebar-bottom"><div class="logout-btn"><span>↩</span> Đăng xuất</div></div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title">💼 Tuyển dụng</div>
+    <div class="topbar-actions"><div class="notif-btn">🔔</div><div class="notif-btn">⚙</div></div>
+  </div>
+  <div class="content">
+    <!-- SEARCH -->
+    <div class="search-section">
+      <div class="search-input-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" type="text" placeholder="Tìm kiếm việc làm, công ty, kỹ năng...">
+      </div>
+      <div class="filter-btn active">🏷 Tất cả</div>
+      <div class="filter-btn">💻 IT/Tech</div>
+      <div class="filter-btn">🎓 Thực tập</div>
+      <div class="filter-btn">🏠 Remote</div>
+      <div class="filter-btn">⭐ Phù hợp</div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="mini-stat">
+        <span class="ms-icon">💼</span>
+        <div><div class="ms-val" style="color:var(--accent)">47</div><div class="ms-lbl">Tin tuyển dụng</div></div>
+      </div>
+      <div class="mini-stat">
+        <span class="ms-icon">⭐</span>
+        <div><div class="ms-val" style="color:var(--success)">12</div><div class="ms-lbl">Phù hợp với bạn</div></div>
+      </div>
+      <div class="mini-stat">
+        <span class="ms-icon">👁</span>
+        <div><div class="ms-val" style="color:var(--accent3)">5</div><div class="ms-lbl">Công ty đã xem CV</div></div>
+      </div>
+      <div class="mini-stat">
+        <span class="ms-icon">📨</span>
+        <div><div class="ms-val" style="color:#c678dd">2</div><div class="ms-lbl">Lời mời phỏng vấn</div></div>
+      </div>
+    </div>
+
+    <!-- JOBS GRID -->
+    <div class="jobs-grid">
+
+      <div class="job-card featured">
+        <div class="job-header">
+          <div class="company-logo" style="background:rgba(79,156,249,.1)">🏢</div>
+          <div>
+            <div class="job-title">AI/ML Engineer Intern</div>
+            <div class="company-name">FPT Software · Hà Nội</div>
+          </div>
+        </div>
+        <div class="job-meta">
+          <span class="jm-tag">🕐 Thực tập</span>
+          <span class="jm-tag">📍 Hà Nội</span>
+          <span class="jm-tag">⏰ Full-time</span>
+        </div>
+        <div class="job-skills">
+          <span class="skill-pill skill-match">Python ✓</span>
+          <span class="skill-pill skill-match">Machine Learning ✓</span>
+          <span class="skill-pill">TensorFlow</span>
+          <span class="skill-pill skill-match">SQL ✓</span>
+        </div>
+        <div class="job-footer">
+          <div>
+            <div class="job-salary">5 – 8 triệu/tháng</div>
+            <div class="deadline">⏳ Hết hạn: 15/05/2026</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+            <span class="job-match">🎯 95% phù hợp</span>
+            <button class="apply-btn">Ứng tuyển ngay</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="job-card new-post">
+        <div class="job-header">
+          <div class="company-logo" style="background:rgba(56,217,169,.1)">🌐</div>
+          <div>
+            <div class="job-title">Java Backend Developer</div>
+            <div class="company-name">VNPT Technology · TP. HCM</div>
+          </div>
+        </div>
+        <div class="job-meta">
+          <span class="jm-tag">💼 Junior</span>
+          <span class="jm-tag">📍 TP. HCM</span>
+          <span class="jm-tag">🏠 Hybrid</span>
+        </div>
+        <div class="job-skills">
+          <span class="skill-pill">Java Spring Boot</span>
+          <span class="skill-pill skill-match">SQL ✓</span>
+          <span class="skill-pill">Docker</span>
+          <span class="skill-pill skill-match">Git ✓</span>
+        </div>
+        <div class="job-footer">
+          <div>
+            <div class="job-salary">12 – 18 triệu/tháng</div>
+            <div class="deadline">⏳ Hết hạn: 30/05/2026</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+            <span class="job-match">🎯 72% phù hợp</span>
+            <button class="apply-btn">Ứng tuyển ngay</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="job-card">
+        <div class="job-header">
+          <div class="company-logo" style="background:rgba(247,127,0,.1)">🔶</div>
+          <div>
+            <div class="job-title">Data Analyst Intern</div>
+            <div class="company-name">Viettel Digital · Hà Nội</div>
+          </div>
+        </div>
+        <div class="job-meta">
+          <span class="jm-tag">🎓 Thực tập</span>
+          <span class="jm-tag">📍 Hà Nội</span>
+          <span class="jm-tag">⏰ Part-time OK</span>
+        </div>
+        <div class="job-skills">
+          <span class="skill-pill skill-match">Python ✓</span>
+          <span class="skill-pill skill-match">SQL ✓</span>
+          <span class="skill-pill">Power BI</span>
+          <span class="skill-pill">Excel</span>
+        </div>
+        <div class="job-footer">
+          <div>
+            <div class="job-salary">4 – 6 triệu/tháng</div>
+            <div class="deadline">⏳ Hết hạn: 20/05/2026</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+            <span class="job-match">🎯 85% phù hợp</span>
+            <button class="apply-btn">Ứng tuyển ngay</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="job-card">
+        <div class="job-header">
+          <div class="company-logo" style="background:rgba(198,120,221,.1)">🦄</div>
+          <div>
+            <div class="job-title">Frontend React Developer</div>
+            <div class="company-name">Tiki Corporation · Remote</div>
+          </div>
+        </div>
+        <div class="job-meta">
+          <span class="jm-tag">💼 Fresher</span>
+          <span class="jm-tag">🏠 Full Remote</span>
+          <span class="jm-tag">⏰ Full-time</span>
+        </div>
+        <div class="job-skills">
+          <span class="skill-pill skill-match">React.js ✓</span>
+          <span class="skill-pill">TypeScript</span>
+          <span class="skill-pill">Tailwind CSS</span>
+          <span class="skill-pill skill-match">Git ✓</span>
+        </div>
+        <div class="job-footer">
+          <div>
+            <div class="job-salary">10 – 15 triệu/tháng</div>
+            <div class="deadline">⏳ Hết hạn: 10/06/2026</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+            <span class="job-match">🎯 78% phù hợp</span>
+            <button class="apply-btn">Ứng tuyển ngay</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</main>
+</body>
+</html>
