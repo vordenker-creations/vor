@@ -5,6 +5,7 @@ from components import SaaSCard
 class DashboardPage(ctk.CTkScrollableFrame):
     def __init__(self, parent, controller):
         super().__init__(parent, fg_color="transparent")
+        self.controller = controller
         content_pad = 35
 
         hero_banner = ctk.CTkFrame(self, fg_color="#1E3A8A", corner_radius=12) 
@@ -59,9 +60,18 @@ class DashboardPage(ctk.CTkScrollableFrame):
     def add_course_item(self, parent, title, status, color, progress):
         frame = ctk.CTkFrame(parent, fg_color="transparent")
         frame.pack(fill="x", padx=25, pady=10)
-        ctk.CTkLabel(frame, text=title, text_color=COLOR_TEXT_MAIN, font=ctk.CTkFont(family=FONT_MAIN, size=14, weight="bold")).pack(anchor="w")
-        ctk.CTkLabel(frame, text=status, text_color=COLOR_TEXT_SUB, font=ctk.CTkFont(family=FONT_MAIN, size=12)).pack(anchor="w", pady=(0, 5))
-        ctk.CTkProgressBar(frame, progress_color=color, fg_color=COLOR_BG_APP, height=6, corner_radius=3).pack(fill="x")
+        
+        # Biến title thành một nút bấm
+        title_btn = ctk.CTkButton(
+            frame, text=title, text_color=COLOR_TEXT_MAIN, 
+            font=ctk.CTkFont(family=FONT_MAIN, size=14, weight="bold"),
+            fg_color="transparent", hover_color=COLOR_BG_APP, anchor="w",
+            command=lambda: self.controller.show_page("CourseDetailPage") # Lệnh chuyển trang
+        )
+        title_btn.pack(anchor="w", fill="x")
+        
+        ctk.CTkLabel(frame, text=status, text_color=COLOR_TEXT_SUB, font=ctk.CTkFont(family=FONT_MAIN, size=12)).pack(anchor="w", pady=(0, 5), padx=10)
+        ctk.CTkProgressBar(frame, progress_color=color, fg_color=COLOR_BG_APP, height=6, corner_radius=3).pack(fill="x", padx=10)
         ctk.CTkFrame(parent, height=1, fg_color=COLOR_BORDER).pack(fill="x", pady=(15, 0))
 
     def add_event_item(self, parent, date, title, time):

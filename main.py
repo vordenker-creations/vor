@@ -14,6 +14,7 @@ try:
     from pages.community import CommunityPage
     from pages.recruitment import RecruitmentPage
     from pages.profile import ProfilePage
+    from pages.course_detail import CourseDetailPage  
 except ImportError:
     pass
 
@@ -202,17 +203,54 @@ class AICareerBridgeEnterprise(ctk.CTk):
         self.setup_sidebar()
         self.setup_topbar()
         
+        # Container chính chứa các trang
         self.main_container = ctk.CTkFrame(self, corner_radius=0, fg_color=COLOR_BG_APP)
         self.main_container.grid(row=1, column=1, sticky="nsew")
         self.main_container.grid_rowconfigure(0, weight=1)
         self.main_container.grid_columnconfigure(0, weight=1)
 
-        for PageClass in (DashboardPage, RoadmapPage, CommunityPage, RecruitmentPage, ProfilePage):
+        # Danh sách tất cả các trang cần đăng ký
+        page_list = (
+            DashboardPage, 
+            RoadmapPage, 
+            CommunityPage, 
+            RecruitmentPage, 
+            ProfilePage,
+            CourseDetailPage  # <-- Đảm bảo đã thêm dòng này
+        )
+
+        # Vòng lặp khởi tạo các trang và lưu vào dictionary frames
+        for PageClass in page_list:
             page_name = PageClass.__name__
             frame = PageClass(parent=self.main_container, controller=self)
             self.frames[page_name] = frame
 
+        # Mặc định hiển thị trang Dashboard khi mở app
+       
+
+        self.add_button = ctk.CTkButton(
+            self, 
+            text="+", 
+            width=56, 
+            height=56, 
+            corner_radius=28,
+            font=ctk.CTkFont(size=28, weight="bold"),
+            fg_color=COLOR_PRIMARY,
+            hover_color="#1E40AF",
+            command=self.handle_add_action
+        )
+        # Mặc định lúc mở app là Dashboard nên ta hiện luôn
+        self.add_button.place(relx=1.0, rely=1.0, x=-30, y=-30, anchor="se")
         self.show_page("DashboardPage")
+    
+    def handle_add_action(self):
+        from tkinter import filedialog, messagebox
+        file_path = filedialog.askopenfilename(
+            title="Chọn tài liệu tải lên",
+            filetypes=[("Tài liệu", "*.pdf *.docx *.txt"), ("Tất cả", "*.*")]
+        )
+        if file_path:
+            messagebox.showinfo("Thông báo", f"Đã nhận file: {file_path.split('/')[-1]}")
 
     def setup_sidebar(self):
         self.sidebar = ctk.CTkFrame(self, width=75, corner_radius=0, fg_color=COLOR_BG_CARD, border_width=1, border_color=COLOR_BORDER)
@@ -308,18 +346,31 @@ class AICareerBridgeEnterprise(ctk.CTk):
         PopupMenu(self, self.settings_btn, items, anchor_pos="bottom")
 
     def show_page(self, page_name):
+        # 1. Reset màu và indicator của sidebar
         for name, elements in self.nav_buttons.items():
             elements["btn"].configure(fg_color="transparent", text_color=COLOR_TEXT_SUB)
             elements["indicator"].configure(fg_color="transparent")
         
-        active_elements = self.nav_buttons[page_name]
-        active_elements["btn"].configure(fg_color=COLOR_PRIMARY_LIGHT, text_color=COLOR_PRIMARY)
-        active_elements["indicator"].configure(fg_color=COLOR_PRIMARY)
+        # 2. Highlight nút đang chọn (nếu trang đó có trên sidebar)
+        if page_name in self.nav_buttons:
+            active_elements = self.nav_buttons[page_name]
+            active_elements["btn"].configure(fg_color=COLOR_PRIMARY_LIGHT, text_color=COLOR_PRIMARY)
+            active_elements["indicator"].configure(fg_color=COLOR_PRIMARY)
         
+        # 3. Chuyển đổi Frame hiển thị
         for frame in self.frames.values():
             frame.grid_forget()
+        
         if page_name in self.frames:
             self.frames[page_name].grid(row=0, column=0, sticky="nsew")
+
+        # 4. Logic ẩn/hiện nút dấu cộng
+        # Lưu ý: "DashboardPage" là tên class trang Tổng quát của bạn
+        if page_name == "DashboardPage":
+            self.add_button.place(relx=1.0, rely=1.0, x=-30, y=-30, anchor="se")
+            self.add_button.lift() # Đảm bảo nút luôn nằm trên cùng
+        else:
+            self.add_button.place_forget()
 
 if __name__ == "__main__":
     app = AICareerBridgeEnterprise()
