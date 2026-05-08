@@ -6,35 +6,78 @@ class TimetableTab(ctk.CTkFrame):
     def __init__(self, parent):
         super().__init__(parent, fg_color="transparent")
         
-        grid_container = ctk.CTkFrame(self, fg_color="transparent")
-        grid_container.pack(fill="both", expand=True)
-        grid_container.grid_columnconfigure(0, weight=8)
-        grid_container.grid_columnconfigure(1, weight=2)
+        # Header
+        header = ctk.CTkFrame(self, fg_color="transparent")
+        header.pack(fill="x", padx=10, pady=(10, 20))
+        
+        ctk.CTkLabel(header, text="SMART TIMETABLE: WEEKLY VIEW (Oct 14 - Oct 20)", 
+                     font=ctk.CTkFont(size=20, weight="bold")).pack(side="left")
+        
+        nav = ctk.CTkFrame(header, fg_color="transparent")
+        nav.pack(side="right")
+        ctk.CTkLabel(nav, text="Oct 14 - Oct 20", font=ctk.CTkFont(size=12)).pack(side="left", padx=10)
+        ctk.CTkButton(nav, text="<", width=30, height=30, fg_color=COLOR_BG_CARD).pack(side="left", padx=2)
+        ctk.CTkButton(nav, text=">", width=30, height=30, fg_color=COLOR_BG_CARD).pack(side="left", padx=2)
 
-        # Bảng lịch học
-        sheet = SaaSCard(grid_container)
+        # Main Grid
+        main_grid = ctk.CTkFrame(self, fg_color="transparent")
+        main_grid.pack(fill="both", expand=True)
+        main_grid.grid_columnconfigure(0, weight=8)
+        main_grid.grid_columnconfigure(1, weight=2)
+
+        # Bảng lịch (Left)
+        sheet = SaaSCard(main_grid)
         sheet.grid(row=0, column=0, sticky="nsew", padx=(0, 10))
         
-        days = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6"]
+        days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
         for i, day in enumerate(days):
-            ctk.CTkLabel(sheet, text=day, font=ctk.CTkFont(weight="bold")).grid(row=0, column=i+1, pady=15, padx=20)
+            ctk.CTkLabel(sheet, text=day, font=ctk.CTkFont(size=12, weight="bold"), text_color=COLOR_TEXT_SUB).grid(row=0, column=i+1, pady=15, padx=10)
         
-        hours = ["08:00", "10:00", "13:00", "15:00"]
-        for i, hour in enumerate(hours):
-            ctk.CTkLabel(sheet, text=hour, text_color=COLOR_TEXT_SUB).grid(row=i+1, column=0, pady=25, padx=15)
-            
-            # Thêm một vài môn học mẫu
-            if i % 2 == 0:
-                box = ctk.CTkFrame(sheet, fg_color=COLOR_PRIMARY_LIGHT, corner_radius=6, border_width=1, border_color=COLOR_PRIMARY)
-                box.grid(row=i+1, column=i+1, sticky="nsew", padx=4, pady=4)
-                ctk.CTkLabel(box, text="Lập trình AI", text_color=COLOR_PRIMARY, font=ctk.CTkFont(size=11, weight="bold")).pack(expand=True)
+        times = ["9:00", "10:00", "14:00", "18:00", "23:00", "23:30"]
+        for i, t in enumerate(times):
+            ctk.CTkLabel(sheet, text=t, font=ctk.CTkFont(size=11), text_color=COLOR_TEXT_SUB).grid(row=i+1, column=0, pady=20, padx=15)
 
-        # Cột Sidebar thông báo
-        sidebar = SaaSCard(grid_container)
-        sidebar.grid(row=0, column=1, sticky="nsew")
-        ctk.CTkLabel(sidebar, text="DEADLINES", font=ctk.CTkFont(weight="bold")).pack(pady=20)
+        # Thêm các block mẫu (Course, Event, Practice, Deadline)
+        self.add_block(sheet, 1, 1, "COURSES\nCS101 @ 9:00", COLOR_PRIMARY)
+        self.add_block(sheet, 1, 4, "COURSES\nCS101 @ 9:00", COLOR_PRIMARY)
+        self.add_block(sheet, 1, 5, "EVENTS\nAI WORKSHOP\n@ 10:00", COLOR_ACCENT)
         
-        for task in ["Project Python", "Quiz Toán RR"]:
-            t = ctk.CTkFrame(sidebar, fg_color="#FEE2E2", height=70, corner_radius=10)
-            t.pack(fill="x", padx=15, pady=8)
-            ctk.CTkLabel(t, text=task, text_color="#B91C1C", font=ctk.CTkFont(weight="bold")).pack(pady=15)
+        self.add_block(sheet, 3, 1, "PYTHON\nPRACTICE\n@ 14:00", COLOR_SUCCESS)
+        self.add_block(sheet, 3, 2, "PYTHON\nPRACTICE\n@ 14:00", COLOR_SUCCESS)
+        self.add_block(sheet, 3, 4, "PYTHON\nPRACTICE\n@ 14:00", COLOR_SUCCESS)
+        self.add_block(sheet, 3, 5, "PYTHON\nPRACTICE\n@ 14:00", COLOR_SUCCESS)
+        
+        self.add_block(sheet, 5, 1, "DEADLINES\nAssignment 2\ndue @ 23:59", COLOR_WARNING)
+        self.add_block(sheet, 5, 4, "DEADLINES\nAssignment 2\ndue @ 23:59", COLOR_WARNING)
+
+        # Sidebar Reminders (Right)
+        sidebar = SaaSCard(main_grid)
+        sidebar.grid(row=0, column=1, sticky="nsew")
+        
+        ctk.CTkLabel(sidebar, text="REMINDERS", font=ctk.CTkFont(size=13, weight="bold")).pack(anchor="w", padx=20, pady=20)
+        
+        reminders = [
+            ("URGENT: ASSIGNMENT 2\nDEADLINE", "(Tom @ 23:59)", COLOR_WARNING),
+            ("URGENT: ASSIGNMENT 2\nDEADLINE", "(Tom @ 23:59)", COLOR_WARNING),
+            ("URGENT: ASSIGNMENT 2.1\nDEADLINE COONG", "(Tom @ 23:59)", COLOR_WARNING),
+        ]
+        
+        for text, time, color in reminders:
+            r = ctk.CTkFrame(sidebar, fg_color=COLOR_BG_APP, height=80, corner_radius=8)
+            r.pack(fill="x", padx=15, pady=8)
+            r.pack_propagate(False)
+            
+            # Thanh màu bên trái
+            ctk.CTkFrame(r, width=5, fg_color=color).pack(side="left", fill="y")
+            
+            txt_box = ctk.CTkFrame(r, fg_color="transparent")
+            txt_box.pack(side="left", padx=10, fill="both")
+            ctk.CTkLabel(txt_box, text=text, font=ctk.CTkFont(size=10, weight="bold"), justify="left", text_color=color).pack(anchor="w", pady=(10, 0))
+            ctk.CTkLabel(txt_box, text=time, font=ctk.CTkFont(size=9), text_color=COLOR_TEXT_SUB).pack(anchor="w")
+            
+            ctk.CTkLabel(r, text="⭐", text_color=color).pack(side="right", padx=10)
+
+    def add_block(self, parent, row, col, text, color):
+        block = ctk.CTkFrame(parent, fg_color=color, corner_radius=4)
+        block.grid(row=row, column=col, sticky="nsew", padx=2, pady=2)
+        ctk.CTkLabel(block, text=text, font=ctk.CTkFont(size=9, weight="bold"), text_color="white", justify="left").pack(expand=True, padx=5)

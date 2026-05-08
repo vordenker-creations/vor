@@ -15,7 +15,9 @@ class DashboardPage(ctk.CTkScrollableFrame):
         hero_text.pack(side="left", padx=40, pady=35)
         ctk.CTkLabel(hero_text, text="HỆ THỐNG AI MENTOR ĐÃ KÍCH HOẠT", font=ctk.CTkFont(family=FONT_MAIN, size=11, weight="bold"), text_color="#93C5FD").pack(anchor="w", pady=(0, 10))
         ctk.CTkLabel(hero_text, text="Tối ưu hóa Lộ trình Học tập\nKiến tạo Tương lai Kỹ sư.", font=ctk.CTkFont(family=FONT_MAIN, size=28, weight="bold"), text_color="white", justify="left").pack(anchor="w")
-        ctk.CTkButton(hero_text, text="Tiếp tục Học tập  ➔", font=ctk.CTkFont(family=FONT_MAIN, size=13, weight="bold"), fg_color=COLOR_PRIMARY, text_color="white", height=40, corner_radius=6).pack(anchor="w", pady=(20, 0))
+        ctk.CTkButton(hero_text, text="Tiếp tục Học tập  ➔", font=ctk.CTkFont(family=FONT_MAIN, size=13, weight="bold"), 
+                      fg_color=COLOR_PRIMARY, text_color="white", height=40, corner_radius=6,
+                      command=lambda: self.controller.show_page("LearningPage")).pack(anchor="w", pady=(20, 0))
 
         stats_frame = ctk.CTkFrame(self, fg_color="transparent")
         stats_frame.pack(fill="x", padx=content_pad-5, pady=10) 

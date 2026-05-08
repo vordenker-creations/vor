@@ -12,11 +12,9 @@ class RoadmapPage(ctk.CTkFrame):
         super().__init__(parent, fg_color="transparent")
         self.controller = controller
 
-        ctk.CTkLabel(self, text="Lộ Trình Học Tập", font=ctk.CTkFont(family=FONT_MAIN, size=24, weight="bold"), text_color=COLOR_TEXT_MAIN).pack(anchor="w", padx=35, pady=(35, 10))
-
-        # Thanh Tab
-        self.tab_nav = ctk.CTkFrame(self, fg_color=COLOR_BG_CARD, height=50, corner_radius=8, border_width=1, border_color=COLOR_BORDER)
-        self.tab_nav.pack(fill="x", padx=35, pady=(0, 15))
+        # Thanh Tab Navigation (Style mới)
+        self.tab_nav = ctk.CTkFrame(self, fg_color="transparent", height=60)
+        self.tab_nav.pack(fill="x", padx=35, pady=(20, 10))
         
         self.tab_buttons = {}
         tabs = [
@@ -29,8 +27,9 @@ class RoadmapPage(ctk.CTkFrame):
         for text, command in tabs:
             btn = ctk.CTkButton(self.tab_nav, text=text, fg_color="transparent", text_color=COLOR_TEXT_SUB,
                                 font=ctk.CTkFont(family=FONT_MAIN, size=13, weight="bold"),
-                                width=120, hover_color=COLOR_BG_APP, command=command)
-            btn.pack(side="left", padx=5, pady=8)
+                                width=120, height=35, hover_color=COLOR_BG_CARD, corner_radius=18,
+                                command=command)
+            btn.pack(side="left", padx=5)
             self.tab_buttons[text] = btn
 
         # Container chứa nội dung
