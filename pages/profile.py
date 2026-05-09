@@ -1,7 +1,7 @@
 import customtkinter as ctk
 import tkinter as tk
 from config import *
-from components import SaaSCard
+from components import SaaSCard, AnimatedCircularProgress, AnimationEngine, CountUpLabel
 import i18n
 from i18n import _
 
@@ -114,9 +114,9 @@ class ProfilePage(ctk.CTkFrame):
             ("📄", "Core Resume - Applied AI", _("prof_create_resume")),
             ("📄", "General CV - Software Engineering", _("prof_view_resume", "View CV"))
         ]
-        for icon, title, sub in resumes:
+        for i, (icon, title, sub) in enumerate(resumes):
             item = ctk.CTkFrame(left_card, fg_color="transparent")
-            item.pack(fill="x", padx=20, pady=10)
+            AnimationEngine.fade_in_widget(item, delay_ms=i*150)
             
             icon_box = ctk.CTkFrame(item, fg_color=COLOR_BG_APP, corner_radius=6, width=40, height=40)
             icon_box.pack(side="left", padx=(0, 15))
@@ -148,14 +148,11 @@ class ProfilePage(ctk.CTkFrame):
         ring_box = ctk.CTkFrame(match_frame, fg_color="transparent")
         ring_box.pack(fill="x")
         
-        ring = ctk.CTkFrame(ring_box, fg_color="transparent", width=120, height=120)
+        # Use new AnimatedCircularProgress
+        ring = AnimatedCircularProgress(ring_box, size=120)
         ring.pack(side="left", padx=(0, 20))
-        ring.pack_propagate(False)
-        cvs = tk.Canvas(ring, width=120, height=120, bg=get_color(COLOR_BG_CARD), highlightthickness=0)
-        cvs.place(relx=0.5, rely=0.5, anchor="center")
-        cvs.create_oval(10, 10, 110, 110, outline=get_color(COLOR_BORDER), width=8)
-        cvs.create_arc(10, 10, 110, 110, start=90, extent=-330, outline=get_color(COLOR_PRIMARY), width=8, style="arc")
-        cvs.create_text(60, 60, text="92%", fill=get_color(COLOR_TEXT_MAIN), font=("Segoe UI", 24, "bold"))
+        # Trigger animation after a slight delay
+        self.after(300, lambda: ring.set_target(0.92))
         
         # Network graph placeholder
         net = ctk.CTkFrame(ring_box, fg_color="transparent", height=120)
@@ -177,16 +174,16 @@ class ProfilePage(ctk.CTkFrame):
         
         ctk.CTkLabel(right_card, text=_("prof_ai_sug"), font=ctk.CTkFont(size=14, weight="bold")).pack(anchor="w", padx=20, pady=(20, 10))
         
-        def add_suggestion(parent, title, text, color):
+        def add_suggestion(parent, title, text, color, delay=0):
             box = ctk.CTkFrame(parent, fg_color="transparent")
-            box.pack(fill="x", padx=20, pady=5)
+            AnimationEngine.fade_in_widget(box, delay_ms=delay)
             ctk.CTkFrame(box, width=3, fg_color=color).pack(side="left", fill="y")
             txt_box = ctk.CTkFrame(box, fg_color="transparent")
             txt_box.pack(side="left", fill="x", expand=True, padx=10)
             ctk.CTkLabel(txt_box, text=f"{title}: {text}", justify="left", text_color=COLOR_TEXT_SUB, font=ctk.CTkFont(size=12), wraplength=250).pack(anchor="w")
 
-        add_suggestion(right_card, "SUGGESTION" if i18n.CURRENT_LANG=="en" else "GỢI Ý", _("prof_sug_1"), COLOR_SUCCESS)
-        add_suggestion(right_card, "IMPROVEMENT" if i18n.CURRENT_LANG=="en" else "CẢI THIỆN", _("prof_sug_2"), COLOR_WARNING)
+        add_suggestion(right_card, "SUGGESTION" if i18n.CURRENT_LANG=="en" else "GỢI Ý", _("prof_sug_1"), COLOR_SUCCESS, delay=400)
+        add_suggestion(right_card, "IMPROVEMENT" if i18n.CURRENT_LANG=="en" else "CẢI THIỆN", _("prof_sug_2"), COLOR_WARNING, delay=550)
         
         btn_box = ctk.CTkFrame(right_card, fg_color="transparent")
         btn_box.pack(fill="x", padx=20, pady=(25, 20))
@@ -234,7 +231,9 @@ class ProfilePage(ctk.CTkFrame):
         preview.grid(row=0, column=1, sticky="nsew", padx=10, pady=10)
         ctk.CTkLabel(preview, text=_("prof_preview"), font=ctk.CTkFont(size=16, weight="bold")).pack(anchor="w", pady=(10, 20))
         
-        paper = ctk.CTkFrame(preview, fg_color="#F8FAFC", width=340, height=520, corner_radius=2)
+        # Theme-aware paper color (Light: Off-white, Dark: Slightly lighter than BG_CARD)
+        paper_color = ("#F8FAFC", "#2D3748")
+        paper = ctk.CTkFrame(preview, fg_color=paper_color, width=340, height=520, corner_radius=2)
         paper.pack(anchor="n")
         paper.pack_propagate(False)
         

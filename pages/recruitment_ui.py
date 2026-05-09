@@ -23,7 +23,7 @@ class CircularProgress(ctk.CTkFrame):
         # Draw percentage text
         self.canvas.create_text(size//2, size//2, text=f"{percentage}%", font=(FONT_MAIN, 10, "bold"), fill=get_color(COLOR_TEXT_MAIN))
 
-class RecruitmentPage(ctk.CTkScrollableFrame):
+class RecruitmentUI(ctk.CTkScrollableFrame):
     def __init__(self, parent, controller=None):
         super().__init__(parent, fg_color="transparent")
         
