@@ -1,0 +1,24 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16    
+    container_name: aicareer-db
+    restart: always
+    environment:
+      - POSTGRES_USER=vor
+      - POSTGRES_PASSWORD=coolpassword1234
+      - POSTGRES_DB=aicareer_bridge
+    volumes:
+      - ./storage/pg_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  backend:
+    build: .
+    container_name: aicareer-backend
+    restart: always
+    environment:
+      - DATABASE_URL=postgresql://vor:coolpassword1234@db:5432/aicareer_bridge
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
