@@ -150,3 +150,50 @@ class CountUpLabel(QLabel):
             self._curr = self._target; self.timer.stop()
         else: self._curr += (self._target - self._curr) / 10
         self.setText(self.format_str.format(int(self._curr)) + self.suffix)
+
+class ModernSwitch(QWidget):
+    def __init__(self, parent=None, active_color=COLOR_PRIMARY, bg_color=COLOR_BORDER):
+        super().__init__(parent)
+        self.setFixedSize(44, 24)
+        self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self._active_color = active_color
+        self._bg_color = bg_color
+        self._circle_color = "#FFFFFF"
+        self._state = False
+        self._x_pos = 4.0
+        self.animation = QPropertyAnimation(self, b"x_pos")
+        self.animation.setDuration(200)
+        self.animation.setEasingCurve(QEasingCurve.Type.OutCubic)
+
+    @pyqtProperty(float)
+    def x_pos(self): return self._x_pos
+    @x_pos.setter
+    def x_pos(self, pos):
+        self._x_pos = pos
+        self.update()
+
+    def is_checked(self): return self._state
+    
+    def set_checked(self, checked):
+        if self._state == checked: return
+        self._state = checked
+        self.animation.setEndValue(24.0 if self._state else 4.0)
+        self.animation.start()
+
+    def mousePressEvent(self, event):
+        self._state = not self._state
+        self.animation.setEndValue(24.0 if self._state else 4.0)
+        self.animation.start()
+        self.update()
+        super().mousePressEvent(event)
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setPen(Qt.PenStyle.NoPen)
+        # Draw background
+        painter.setBrush(QColor(self._active_color if self._state else self._bg_color))
+        painter.drawRoundedRect(0, 0, self.width(), self.height(), 12, 12)
+        # Draw circle
+        painter.setBrush(QColor(self._circle_color))
+        painter.drawEllipse(QRectF(self._x_pos, 4, 16, 16))
