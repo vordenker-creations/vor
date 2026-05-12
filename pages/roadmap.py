@@ -1,68 +1,55 @@
-import customtkinter as ctk
+import sys
+from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
+                             QPushButton, QFrame, QStackedWidget)
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QCursor
 from config import *
 
-# Import các Tab từ thư mục con
+# Import Tabs
 from pages.roadmap_tabs.overview_tab import OverviewTab
 from pages.roadmap_tabs.skill_tree_tab import SkillTreeTab
 from pages.roadmap_tabs.year_details_tab import YearDetailsTab
 from pages.roadmap_tabs.timetable_tab import TimetableTab
 
-class RoadmapPage(ctk.CTkFrame):
-    def __init__(self, parent, controller):
-        super().__init__(parent, fg_color="transparent")
+class RoadmapPage(QWidget):
+    def __init__(self, parent=None, controller=None):
+        super().__init__(parent)
         self.controller = controller
-
-        # Thanh Tab Navigation (Style mới)
-        self.tab_nav = ctk.CTkFrame(self, fg_color="transparent", height=60)
-        self.tab_nav.pack(fill="x", padx=35, pady=(20, 10))
+        self.setObjectName("RoadmapPage")
+        self.main_layout = QVBoxLayout(self)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
         
-        self.tab_buttons = {}
-        tabs = [
-            ("OVERVIEW", self.show_overview),
-            ("SKILL TREE", self.show_skill_tree),
-            ("Y1 DETAILS", self.show_y1_details),
-            ("TIMETABLE", self.show_timetable)
-        ]
+        # Tab Nav
+        self.tab_nav = QWidget()
+        self.tab_nav.setFixedHeight(60)
+        self.nav_layout = QHBoxLayout(self.tab_nav)
+        self.nav_layout.setContentsMargins(35, 20, 35, 10)
+        self.nav_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        
+        self.tab_btns = {}
+        tabs = [("OVERVIEW", 0), ("SKILL TREE", 1), ("Y1 DETAILS", 2), ("TIMETABLE", 3)]
+        for text, idx in tabs:
+            btn = QPushButton(text); btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor)); btn.setFixedHeight(35)
+            btn.setStyleSheet(f"QPushButton {{ background: transparent; color: {COLOR_TEXT_SUB}; font-weight: bold; border-radius: 18px; padding: 0 15px; }}")
+            btn.clicked.connect(lambda ch, i=idx: self.show_tab(i))
+            self.nav_layout.addWidget(btn); self.tab_btns[idx] = btn
+            
+        self.main_layout.addWidget(self.tab_nav)
+        
+        # Tab Container
+        self.tab_stack = QStackedWidget()
+        self.tab_stack.addWidget(OverviewTab())     # 0
+        self.tab_stack.addWidget(SkillTreeTab())    # 1
+        self.tab_stack.addWidget(YearDetailsTab()) # 2
+        self.tab_stack.addWidget(TimetableTab())   # 3
+        
+        self.main_layout.addWidget(self.tab_stack)
+        self.show_tab(0)
 
-        for text, command in tabs:
-            btn = ctk.CTkButton(self.tab_nav, text=text, fg_color="transparent", text_color=COLOR_TEXT_SUB,
-                                font=ctk.CTkFont(family=FONT_MAIN, size=13, weight="bold"),
-                                width=120, height=35, hover_color=COLOR_BG_CARD, corner_radius=18,
-                                command=command)
-            btn.pack(side="left", padx=5)
-            self.tab_buttons[text] = btn
-
-        # Container chứa nội dung
-        self.container = ctk.CTkFrame(self, fg_color="transparent")
-        self.container.pack(fill="both", expand=True, padx=30, pady=5)
-
-        self.show_overview()
-
-    def clear_container(self):
-        for widget in self.container.winfo_children():
-            widget.destroy()
-        for btn in self.tab_buttons.values():
-            btn.configure(fg_color="transparent", text_color=COLOR_TEXT_SUB)
-
-    def set_active_tab(self, tab_name):
-        self.tab_buttons[tab_name].configure(fg_color=COLOR_PRIMARY, text_color="white")
-
-    def show_overview(self):
-        self.clear_container()
-        self.set_active_tab("OVERVIEW")
-        OverviewTab(self.container).pack(fill="both", expand=True)
-
-    def show_skill_tree(self):
-        self.clear_container()
-        self.set_active_tab("SKILL TREE")
-        SkillTreeTab(self.container).pack(fill="both", expand=True)
-
-    def show_y1_details(self):
-        self.clear_container()
-        self.set_active_tab("Y1 DETAILS")
-        YearDetailsTab(self.container).pack(fill="both", expand=True)
-
-    def show_timetable(self):
-        self.clear_container()
-        self.set_active_tab("TIMETABLE")
-        TimetableTab(self.container).pack(fill="both", expand=True)
+    def show_tab(self, index):
+        self.tab_stack.setCurrentIndex(index)
+        for idx, btn in self.tab_btns.items():
+            if idx == index:
+                btn.setStyleSheet(f"QPushButton {{ background: {COLOR_PRIMARY}; color: white; font-weight: bold; border-radius: 18px; padding: 0 15px; }}")
+            else:
+                btn.setStyleSheet(f"QPushButton {{ background: transparent; color: {COLOR_TEXT_SUB}; font-weight: bold; border-radius: 18px; padding: 0 15px; }}")

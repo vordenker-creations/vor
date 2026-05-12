@@ -3,6 +3,10 @@ from PyQt6.QtWidgets import QApplication
 
 # --- DESIGN SYSTEM ---
 FONT_MAIN = "Segoe UI"
+if sys.platform == "darwin":
+    FONT_MAIN = "SF Pro Text"
+elif sys.platform == "linux":
+    FONT_MAIN = "Ubuntu"
 
 # Theme Colors (Using Dark Theme as default for the new UI)
 COLOR_BG_APP = "#0B192C"
@@ -25,70 +29,13 @@ def get_global_stylesheet():
         color: {COLOR_TEXT_MAIN};
         font-family: "{FONT_MAIN}";
     }}
-    
-    /* Typography */
-    QLabel {{
-        color: {COLOR_TEXT_MAIN};
-        font-family: "{FONT_MAIN}";
-    }}
-    QLabel.SubText {{
-        color: {COLOR_TEXT_SUB};
-    }}
-    QLabel.Header {{
-        font-size: 24px;
-        font-weight: bold;
-    }}
-    
-    /* Buttons */
-    QPushButton {{
-        background-color: {COLOR_PRIMARY};
-        color: #000000;
-        border-radius: 8px;
-        font-weight: bold;
-        padding: 10px;
-    }}
-    QPushButton:hover {{
-        background-color: #00B4D8;
-    }}
-    QPushButton.NavButton {{
-        background-color: transparent;
-        color: {COLOR_TEXT_SUB};
-        font-size: 20px;
-        border-radius: 12px;
-    }}
-    QPushButton.NavButton:hover {{
-        background-color: {COLOR_BG_CARD};
-    }}
-    QPushButton.NavButton:checked {{
-        background-color: {COLOR_PRIMARY_LIGHT};
-        color: {COLOR_PRIMARY};
-        border-left: 3px solid {COLOR_PRIMARY};
-        border-radius: 0px;
-    }}
-    
-    /* Inputs */
-    QLineEdit {{
-        background-color: {COLOR_BG_APP};
-        border: 1px solid {COLOR_BORDER};
-        border-radius: 8px;
-        padding: 8px 12px;
-        color: {COLOR_TEXT_MAIN};
-    }}
-    QLineEdit:focus {{
-        border: 1px solid {COLOR_PRIMARY};
-    }}
-    
-    /* Progress Bars */
-    QProgressBar {{
-        border: none;
-        background-color: {COLOR_BORDER};
-        border-radius: 4px;
-        height: 8px;
-        text-align: center;
-        color: transparent;
-    }}
-    QProgressBar::chunk {{
-        background-color: {COLOR_PRIMARY};
-        border-radius: 4px;
-    }}
+    QLabel {{ color: {COLOR_TEXT_MAIN}; font-family: "{FONT_MAIN}"; }}
+    QLabel.SubText {{ color: {COLOR_TEXT_SUB}; }}
+    QLabel.Header {{ font-size: 24px; font-weight: bold; }}
+    QPushButton {{ background-color: {COLOR_PRIMARY}; color: #000000; border-radius: 8px; font-weight: bold; padding: 10px; font-family: "{FONT_MAIN}"; }}
+    QPushButton:hover {{ background-color: #00B4D8; }}
+    QLineEdit {{ background-color: {COLOR_BG_APP}; border: 1px solid {COLOR_BORDER}; border-radius: 8px; padding: 8px 12px; color: {COLOR_TEXT_MAIN}; font-family: "{FONT_MAIN}"; }}
+    QLineEdit:focus {{ border: 1px solid {COLOR_PRIMARY}; }}
+    QProgressBar {{ border: none; background-color: {COLOR_BORDER}; border-radius: 4px; height: 8px; text-align: center; color: transparent; }}
+    QProgressBar::chunk {{ background-color: {COLOR_PRIMARY}; border-radius: 4px; }}
     """

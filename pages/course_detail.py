@@ -1,7 +1,11 @@
-import customtkinter as ctk
+import sys
+from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
+                             QPushButton, QScrollArea, QFrame, QStackedWidget)
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QCursor
 from config import *
 
-# Import các Tab con
+# Import Tabs
 from pages.course_tabs.roadmap_tab import RoadmapTab
 from pages.course_tabs.documents_tab import DocumentsTab
 from pages.course_tabs.exercises_tab import ExercisesTab
@@ -9,88 +13,59 @@ from pages.course_tabs.projects_tab import ProjectsTab
 from pages.course_tabs.results_tab import ResultsTab
 from pages.course_tabs.analytics_tab import AnalyticsTab
 
-class CourseDetailPage(ctk.CTkFrame):
-    def __init__(self, parent, controller):
-        super().__init__(parent, fg_color="transparent")
+class CourseDetailPage(QWidget):
+    def __init__(self, parent=None, controller=None):
+        super().__init__(parent)
         self.controller = controller
-        content_pad = 35
-
-        # 1. Header & Nút quay lại
-        header_frame = ctk.CTkFrame(self, fg_color="transparent")
-        header_frame.pack(fill="x", padx=content_pad, pady=(content_pad, 10))
+        self.setObjectName("CourseDetailPage")
+        self.main_layout = QVBoxLayout(self)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
         
-        btn_back = ctk.CTkButton(header_frame, text="⬅ Quay lại Dashboard", 
-                                 fg_color="transparent", text_color=COLOR_TEXT_SUB, 
-                                 hover_color=COLOR_BG_APP, width=150, font=ctk.CTkFont(family=FONT_MAIN, weight="bold"),
-                                 command=lambda: self.controller.show_page("DashboardPage"))
-        btn_back.pack(side="left")
-
-        # Tiêu đề học phần
-        ctk.CTkLabel(self, text="CHI TIẾT: LẬP TRÌNH PYTHON NÂNG CAO", 
-                     font=ctk.CTkFont(family=FONT_MAIN, size=18, weight="bold"), 
-                     text_color=COLOR_TEXT_MAIN).pack(anchor="w", padx=content_pad, pady=(10, 10))
-
-        # 2. Thanh Tabs điều hướng ngang
-        tabs_frame = ctk.CTkFrame(self, fg_color="transparent")
-        tabs_frame.pack(fill="x", padx=content_pad, pady=(0, 10))
+        self.scroll = QScrollArea()
+        self.scroll.setWidgetResizable(True); self.scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self.scroll.setStyleSheet("background: transparent;")
+        self.container = QWidget(); self.container_layout = QVBoxLayout(self.container)
+        self.container_layout.setContentsMargins(35, 35, 35, 35)
         
-        self.tab_buttons = {}
-        tabs = [
-            ("Đường lộ trình", self.show_roadmap), 
-            ("Tài liệu", self.show_documents), 
-            ("Bài tập", self.show_exercises), 
-            ("Đồ án", self.show_projects), 
-            ("Kết quả", self.show_results),
-            ("Phân tích", self.show_analytics)
-        ]
-        
-        for name, command in tabs:
-            btn = ctk.CTkButton(tabs_frame, text=name, fg_color="transparent", text_color=COLOR_TEXT_SUB, 
-                                font=ctk.CTkFont(family=FONT_MAIN, size=14, weight="bold"), 
-                                hover_color=COLOR_BG_APP, corner_radius=6, command=command)
-            btn.pack(side="left", padx=(0, 5))
-            self.tab_buttons[name] = btn
+        self._setup_header(); self._setup_tabs(); self._setup_content()
+        self.scroll.setWidget(self.container); self.main_layout.addWidget(self.scroll)
 
-        ctk.CTkFrame(self, height=1, fg_color=COLOR_BORDER).pack(fill="x", padx=content_pad)
+    def _setup_header(self):
+        btn_back = QPushButton("⬅ Quay lại Dashboard")
+        btn_back.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        btn_back.setStyleSheet(f"QPushButton {{ background: transparent; color: {COLOR_TEXT_SUB}; font-weight: bold; border: none; text-align: left; }} QPushButton:hover {{ color: {COLOR_PRIMARY}; }}")
+        btn_back.clicked.connect(lambda: self.controller and self.controller.show_page("DashboardPage"))
+        self.container_layout.addWidget(btn_back)
+        lbl_t = QLabel("CHI TIẾT: LẬP TRÌNH PYTHON NÂNG CAO")
+        lbl_t.setStyleSheet(f"color: {COLOR_TEXT_MAIN}; font-size: 18px; font-weight: bold; margin: 10px 0;")
+        self.container_layout.addWidget(lbl_t)
 
-        # 3. Main Content Container
-        self.container = ctk.CTkScrollableFrame(self, fg_color="transparent")
-        self.container.pack(fill="both", expand=True, padx=20, pady=10)
+    def _setup_tabs(self):
+        row = QHBoxLayout(); self.tab_btns = {}
+        tabs = [("Đường lộ trình", 0), ("Tài liệu", 1), ("Bài tập", 2), ("Đồ án", 3), ("Kết quả", 4), ("Phân tích", 5)]
+        for text, idx in tabs:
+            btn = QPushButton(text); btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor)); btn.setFixedHeight(35)
+            btn.setStyleSheet(f"QPushButton {{ background: transparent; color: {COLOR_TEXT_SUB}; font-weight: bold; border-radius: 6px; padding: 0 10px; }}")
+            btn.clicked.connect(lambda ch, i=idx: self.show_tab(i))
+            row.addWidget(btn); self.tab_btns[idx] = btn
+        self.container_layout.addLayout(row)
+        line = QFrame(); line.setFixedHeight(1); line.setStyleSheet(f"background: {COLOR_BORDER};"); self.container_layout.addWidget(line)
 
-        # Trạng thái ban đầu
-        self.show_roadmap()
+    def _setup_content(self):
+        self.tab_stack = QStackedWidget()
+        self.tab_stack.addWidget(RoadmapTab())   # 0
+        self.tab_stack.addWidget(DocumentsTab()) # 1
+        self.tab_stack.addWidget(ExercisesTab()) # 2
+        self.tab_stack.addWidget(ProjectsTab())  # 3
+        self.tab_stack.addWidget(ResultsTab())   # 4
+        self.tab_stack.addWidget(AnalyticsTab()) # 5
+        self.container_layout.addWidget(self.tab_stack)
+        self.show_tab(0)
 
-    def clear_container(self):
-        for widget in self.container.winfo_children():
-            widget.destroy()
-        for btn in self.tab_buttons.values():
-            btn.configure(text_color=COLOR_TEXT_SUB, fg_color="transparent")
-
-    def set_active_tab(self, tab_name):
-        self.clear_container()
-        if tab_name in self.tab_buttons:
-            self.tab_buttons[tab_name].configure(text_color=COLOR_PRIMARY, fg_color=COLOR_PRIMARY_LIGHT)
-
-    def show_roadmap(self):
-        self.set_active_tab("Đường lộ trình")
-        RoadmapTab(self.container).pack(fill="both", expand=True)
-
-    def show_documents(self):
-        self.set_active_tab("Tài liệu")
-        DocumentsTab(self.container).pack(fill="both", expand=True)
-
-    def show_exercises(self):
-        self.set_active_tab("Bài tập")
-        ExercisesTab(self.container).pack(fill="both", expand=True)
-
-    def show_projects(self):
-        self.set_active_tab("Đồ án")
-        ProjectsTab(self.container).pack(fill="both", expand=True)
-
-    def show_results(self):
-        self.set_active_tab("Kết quả")
-        ResultsTab(self.container).pack(fill="both", expand=True)
-
-    def show_analytics(self):
-        self.set_active_tab("Phân tích")
-        AnalyticsTab(self.container).pack(fill="both", expand=True)
+    def show_tab(self, index):
+        self.tab_stack.setCurrentIndex(index)
+        for idx, btn in self.tab_btns.items():
+            if idx == index:
+                btn.setStyleSheet(f"QPushButton {{ background: {COLOR_PRIMARY_LIGHT}; color: {COLOR_PRIMARY}; font-weight: bold; border-radius: 6px; padding: 0 10px; }}")
+            else:
+                btn.setStyleSheet(f"QPushButton {{ background: transparent; color: {COLOR_TEXT_SUB}; font-weight: bold; border-radius: 6px; padding: 0 10px; }}")

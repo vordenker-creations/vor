@@ -1,141 +1,77 @@
-import customtkinter as ctk
+import sys
+from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
+                             QPushButton, QScrollArea, QFrame, QGridLayout, QComboBox, QTextEdit, QLineEdit)
+from PyQt6.QtCore import Qt, QSize
+from PyQt6.QtGui import QCursor
 from config import *
-from components import SaaSCard
+from components import SaaSCard, AnimationEngine
 from i18n import _
 
-class CommunityPage(ctk.CTkScrollableFrame):
-    def __init__(self, parent, controller):
-        super().__init__(parent, fg_color="transparent")
+class CommunityPage(QWidget):
+    def __init__(self, parent=None, controller=None):
+        super().__init__(parent)
         self.controller = controller
-        
-        # ==========================================
-        # HEADER: COMMUNITY DISCUSSION & WORKFLOW
-        # ==========================================
-        header = ctk.CTkFrame(self, fg_color="transparent")
-        header.pack(fill="x", padx=35, pady=(35, 10))
-        
-        ctk.CTkLabel(header, text=_("comm_title"), 
-                     font=ctk.CTkFont(family=FONT_MAIN, size=22, weight="bold"), 
-                     text_color=COLOR_TEXT_MAIN).pack(side="left")
-        
-        target_job_frame = ctk.CTkFrame(header, fg_color="transparent")
-        target_job_frame.pack(side="right")
-        ctk.CTkLabel(target_job_frame, text=_("comm_target_job"), font=ctk.CTkFont(family=FONT_MAIN, size=12, weight="bold"), text_color=COLOR_TEXT_SUB).pack(side="left", padx=10)
-        
-        job_dropdown = ctk.CTkOptionMenu(target_job_frame, values=["ML Engineer", "Data Scientist", "Full-Stack Dev", "AI Researcher"], 
-                                         fg_color=COLOR_BG_CARD, text_color=COLOR_TEXT_MAIN, button_color=COLOR_PRIMARY, font=ctk.CTkFont(family=FONT_MAIN, weight="bold"))
-        job_dropdown.pack(side="left")
+        self.setObjectName("CommunityPage")
+        self.main_layout = QVBoxLayout(self)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
+        self.scroll = QScrollArea()
+        self.scroll.setWidgetResizable(True); self.scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self.scroll.setStyleSheet("background: transparent;")
+        self.container = QWidget(); self.container_layout = QVBoxLayout(self.container)
+        self.container_layout.setContentsMargins(35, 35, 35, 35); self.container_layout.setSpacing(15)
+        self._setup_header(); self._setup_groups(); self._setup_workflow(); self._setup_actions()
+        self.scroll.setWidget(self.container); self.main_layout.addWidget(self.scroll)
 
-        # ==========================================
-        # SECTION 1: JOIN GROUPS & CHANNELS (Lưới Nhóm)
-        # ==========================================
-        ctk.CTkLabel(self, text=_("comm_join_groups"), font=ctk.CTkFont(family=FONT_MAIN, size=16, weight="bold"), text_color=COLOR_TEXT_MAIN).pack(anchor="w", padx=35, pady=(15, 5))
+    def _setup_header(self):
+        header = QWidget(); h_layout = QHBoxLayout(header); h_layout.setContentsMargins(0, 0, 0, 0)
+        lbl_title = QLabel(_("comm_title")); lbl_title.setStyleSheet(f"color: {COLOR_TEXT_MAIN}; font-size: 22px; font-weight: bold;")
+        h_layout.addWidget(lbl_title); h_layout.addStretch()
+        target_box = QWidget(); target_layout = QHBoxLayout(target_box)
+        target_layout.addWidget(QLabel(_("comm_target_job")))
+        job_combo = QComboBox(); job_combo.addItems(["ML Engineer", "Data Scientist", "Full-Stack Dev", "AI Researcher"])
+        job_combo.setStyleSheet(f"QComboBox {{ background: {COLOR_BG_CARD}; color: {COLOR_TEXT_MAIN}; border-radius: 6px; padding: 5px; }}")
+        target_layout.addWidget(job_combo); h_layout.addWidget(target_box)
+        self.container_layout.addWidget(header)
 
-        groups_grid = ctk.CTkFrame(self, fg_color="transparent")
-        groups_grid.pack(fill="x", padx=30, pady=5)
-        groups_grid.grid_columnconfigure((0, 1, 2), weight=1, uniform="group")
+    def _setup_groups(self):
+        lbl_groups = QLabel(_("comm_join_groups")); lbl_groups.setStyleSheet(f"color: {COLOR_TEXT_MAIN}; font-size: 16px; font-weight: bold;")
+        self.container_layout.addWidget(lbl_groups); grid_widget = QWidget(); grid = QGridLayout(grid_widget)
+        grid.setContentsMargins(0, 0, 0, 0); grid.setSpacing(15)
+        groups = [("ML Engineers", "660", "2 hours ago", COLOR_PRIMARY, "🤖"), ("Full-Stack Devs", "125", "2 hours ago", "#F59E0B", "💻"), ("Python Foundations", "157", "2 hours ago", "#10B981", "🐍")]
+        for i, (title, members, time, color, icon) in enumerate(groups):
+            card = SaaSCard(border_color=color); card_layout = card.internal_layout
+            head = QHBoxLayout(); head.addWidget(QLabel(icon)); head.addStretch(); head.addWidget(QLabel("↗"))
+            card_layout.addLayout(head); t_lbl = QLabel(title); t_lbl.setStyleSheet(f"color: {COLOR_TEXT_MAIN}; font-size: 16px; font-weight: bold;")
+            card_layout.addWidget(t_lbl); m_lbl = QLabel(f"👥 {members} members"); m_lbl.setStyleSheet(f"color: {COLOR_TEXT_SUB}; font-size: 12px;")
+            card_layout.addWidget(m_lbl); card_layout.addWidget(QLabel(f"Recent: {time}"))
+            grid.addWidget(card, 0, i)
+        self.container_layout.addWidget(grid_widget)
 
-        # Dữ liệu mô phỏng các nhóm (tương tự thiết kế)
-        groups_data = [
-            ("ML Engineers", f"660 {_('comm_members')}", "2 hours ago", COLOR_PRIMARY, "🤖"),
-            ("Full-Stack Devs", f"125 {_('comm_members')}", "2 hours ago", "#F59E0B", "💻"),
-            ("Python Foundations", f"157 {_('comm_members')}", "2 hours ago", "#10B981", "🐍"),
-            ("Job Match Discussion", f"737 {_('comm_members')}", "2 hours ago", "#3B82F6", "💼"),
-            ("AI Research", f"500 {_('comm_members')}", "2 hours ago", "#8B5CF6", "🔬"),
-            ("Project Feedback", f"320 {_('comm_members')}", "1 hours ago", "#EC4899", "📝")
-        ]
+    def _setup_workflow(self):
+        lbl_wf = QLabel(_("comm_workflow")); lbl_wf.setStyleSheet(f"color: {COLOR_TEXT_MAIN}; font-size: 18px; font-weight: bold;")
+        self.container_layout.addWidget(lbl_wf); grid_widget = QWidget(); grid = QGridLayout(grid_widget)
+        grid.setContentsMargins(0, 0, 0, 0); grid.setSpacing(15)
+        col1 = SaaSCard(); c1_layout = col1.internal_layout; c1_layout.addWidget(QLabel(_("comm_step1")))
+        for g, t in [("ML Engineers", "2 mins ago"), ("Python Found", "1 hour ago")]:
+            box = QFrame(); box.setStyleSheet(f"background: {COLOR_BG_APP}; border: 1px solid {COLOR_BORDER}; border-radius: 6px;")
+            l = QVBoxLayout(box); l.addWidget(QLabel(g)); l.addWidget(QLabel(t))
+            c1_layout.addWidget(box)
+        grid.addWidget(col1, 0, 0); col2 = SaaSCard(); c2_layout = col2.internal_layout; c2_layout.addWidget(QLabel(_("comm_step2")))
+        title_in = QLineEdit(); title_in.setPlaceholderText(_("comm_post_title")); c2_layout.addWidget(title_in)
+        content_in = QTextEdit(); content_in.setPlaceholderText("Content..."); c2_layout.addWidget(content_in)
+        btn_post = QPushButton(_("comm_btn_post")); btn_post.setStyleSheet(f"background: {COLOR_PRIMARY}; color: black; font-weight: bold; height: 35px; border-radius: 6px;")
+        c2_layout.addWidget(btn_post); grid.addWidget(col2, 0, 1); col3 = SaaSCard(); c3_layout = col3.internal_layout; c3_layout.addWidget(QLabel(_("comm_step3")))
+        self._add_feedback(c3_layout, "AI SUGGESTIONS", "Optimize reach.", COLOR_PRIMARY)
+        grid.addWidget(col3, 0, 2); self.container_layout.addWidget(grid_widget)
 
-        for i, (title, members, time, color, icon) in enumerate(groups_data):
-            # Tạo card với viền màu đặc trưng
-            card = SaaSCard(groups_grid, border_color=color, border_width=1)
-            card.grid(row=i//3, column=i%3, padx=10, pady=10, sticky="nsew")
-            
-            top_card = ctk.CTkFrame(card, fg_color="transparent")
-            top_card.pack(fill="x", padx=15, pady=(15, 5))
-            
-            icon_lbl = ctk.CTkLabel(top_card, text=icon, font=ctk.CTkFont(size=24))
-            icon_lbl.pack(side="left")
-            
-            # Nút "Tham gia" thu nhỏ ở góc (giả lập icon X hoặc tick)
-            ctk.CTkLabel(top_card, text="↗", text_color=COLOR_TEXT_SUB, font=ctk.CTkFont(size=14)).pack(side="right")
-            
-            ctk.CTkLabel(card, text=title, font=ctk.CTkFont(family=FONT_MAIN, size=16, weight="bold"), text_color=COLOR_TEXT_MAIN).pack(anchor="w", padx=15, pady=(5, 0))
-            ctk.CTkLabel(card, text=f"👥 {members}", font=ctk.CTkFont(family=FONT_MAIN, size=12), text_color=COLOR_TEXT_SUB).pack(anchor="w", padx=15, pady=(2, 10))
-            
-            ctk.CTkFrame(card, height=1, fg_color=COLOR_BORDER).pack(fill="x", padx=15, pady=(5, 5))
-            ctk.CTkLabel(card, text=f"{_('comm_recent')} {time}", font=ctk.CTkFont(family=FONT_MAIN, size=11), text_color=COLOR_TEXT_SUB).pack(anchor="w", padx=15, pady=(5, 15))
+    def _setup_actions(self):
+        row = QHBoxLayout(); btns = [(_("comm_btn_mentor"), COLOR_PRIMARY), (_("comm_btn_ai"), COLOR_PRIMARY), (_("comm_btn_join"), COLOR_PRIMARY)]
+        for text, color in btns:
+            btn = QPushButton(text); btn.setFixedHeight(42); btn.setStyleSheet(f"background: {color}; color: white; font-weight: bold; border-radius: 8px;")
+            row.addWidget(btn)
+        self.container_layout.addLayout(row)
 
-        # ==========================================
-        # SECTION 2: COMMUNITY ENGAGEMENT WORKFLOW 
-        # ==========================================
-        ctk.CTkLabel(self, text=_("comm_workflow"), font=ctk.CTkFont(family=FONT_MAIN, size=18, weight="bold"), text_color=COLOR_TEXT_MAIN).pack(anchor="w", padx=35, pady=(35, 10))
-        
-        workflow_grid = ctk.CTkFrame(self, fg_color="transparent")
-        workflow_grid.pack(fill="both", expand=True, padx=30, pady=5)
-        workflow_grid.grid_columnconfigure((0, 1, 2), weight=1, uniform="wf")
-
-        # CỘT 1: Nhóm đã tham gia
-        col1 = SaaSCard(workflow_grid)
-        col1.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
-        ctk.CTkLabel(col1, text=_("comm_step1"), font=ctk.CTkFont(family=FONT_MAIN, size=13, weight="bold"), text_color=COLOR_TEXT_MAIN).pack(anchor="w", padx=15, pady=(15, 10))
-        self.add_mini_group(col1, "ML Engineers", "2 mins ago")
-        self.add_mini_group(col1, "Python Foundations", "1 hour ago")
-        self.add_mini_group(col1, "Full-Stack Devs", "1 month ago")
-
-        # CỘT 2: Đăng bài & Chia sẻ
-        col2 = SaaSCard(workflow_grid)
-        col2.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
-        ctk.CTkLabel(col2, text=_("comm_step2"), font=ctk.CTkFont(family=FONT_MAIN, size=13, weight="bold"), text_color=COLOR_TEXT_MAIN).pack(anchor="w", padx=15, pady=(15, 10))
-        
-        entry_title = ctk.CTkEntry(col2, placeholder_text=_("comm_post_title"), height=35, fg_color=COLOR_BG_APP, border_width=1, border_color=COLOR_BORDER)
-        entry_title.pack(fill="x", padx=15, pady=(0, 10))
-        
-        entry_content = ctk.CTkTextbox(col2, height=100, fg_color=COLOR_BG_APP, border_width=1, border_color=COLOR_BORDER)
-        entry_content.pack(fill="x", padx=15, pady=(0, 10))
-        entry_content.insert("0.0", "Content and snippets...\n\ncode_snippet = 'AI Model';\nprint(code_snippet)")
-        
-        # Dropdown Category
-        cat_frame = ctk.CTkFrame(col2, fg_color="transparent")
-        cat_frame.pack(fill="x", padx=15, pady=(0, 15))
-        ctk.CTkLabel(cat_frame, text=_("comm_category"), font=ctk.CTkFont(family=FONT_MAIN, size=12), text_color=COLOR_TEXT_SUB).pack(side="left", padx=(0, 10))
-        ctk.CTkOptionMenu(cat_frame, values=["Interview Help", "Project Feedback", "General QA"], fg_color=COLOR_BG_APP, text_color=COLOR_TEXT_MAIN).pack(side="left", fill="x", expand=True)
-        
-        ctk.CTkButton(col2, text=_("comm_btn_post"), fg_color=COLOR_PRIMARY, text_color="white", font=ctk.CTkFont(family=FONT_MAIN, weight="bold"), height=35).pack(fill="x", padx=15, pady=(0, 15))
-
-        # CỘT 3: Nhận phản hồi & Mạng lưới
-        col3 = SaaSCard(workflow_grid)
-        col3.grid(row=0, column=2, padx=10, pady=10, sticky="nsew")
-        ctk.CTkLabel(col3, text=_("comm_step3"), font=ctk.CTkFont(family=FONT_MAIN, size=13, weight="bold"), text_color=COLOR_TEXT_MAIN).pack(anchor="w", padx=15, pady=(15, 10))
-        
-        self.add_feedback_item(col3, "✨ AI GENERATED SUGGESTIONS", "AI has framed alternative questions for optimizing your post reach.", COLOR_PRIMARY)
-        self.add_feedback_item(col3, "👥 FIND MENTORS!", "Find mentors tailored to your suggested questions.", "#F59E0B")
-        self.add_feedback_item(col3, "📚 RESOURCE MATCH", "Recommended articles based on your code snippet.", "#10B981")
-
-        # ==========================================
-        # BOTTOM ACTION BUTTONS
-        # ==========================================
-        btn_frame = ctk.CTkFrame(self, fg_color="transparent")
-        btn_frame.pack(fill="x", padx=35, pady=(15, 35))
-        
-        # 3 nút bấm phân bổ đều
-        ctk.CTkButton(btn_frame, text=_("comm_btn_mentor"), fg_color=COLOR_PRIMARY, text_color="white", height=42, font=ctk.CTkFont(family=FONT_MAIN, weight="bold")).pack(side="left", fill="x", expand=True, padx=(0, 5))
-        ctk.CTkButton(btn_frame, text=_("comm_btn_ai"), fg_color=COLOR_PRIMARY, text_color="white", height=42, font=ctk.CTkFont(family=FONT_MAIN, weight="bold")).pack(side="left", fill="x", expand=True, padx=5)
-        ctk.CTkButton(btn_frame, text=_("comm_btn_join"), fg_color=COLOR_PRIMARY, text_color="white", height=42, font=ctk.CTkFont(family=FONT_MAIN, weight="bold")).pack(side="left", fill="x", expand=True, padx=(5, 0))
-
-    def add_mini_group(self, parent, title, time):
-        """Hàm tạo các khối nhóm nhỏ trong cột 1"""
-        frame = ctk.CTkFrame(parent, fg_color=COLOR_BG_APP, corner_radius=6, border_width=1, border_color=COLOR_BORDER)
-        frame.pack(fill="x", padx=15, pady=(0, 10))
-        ctk.CTkLabel(frame, text=title, font=ctk.CTkFont(family=FONT_MAIN, size=13, weight="bold"), text_color=COLOR_TEXT_MAIN).pack(anchor="w", padx=12, pady=(10, 0))
-        
-        bot_frame = ctk.CTkFrame(frame, fg_color="transparent")
-        bot_frame.pack(fill="x", padx=12, pady=(2, 10))
-        ctk.CTkLabel(bot_frame, text="👥 " + _("comm_members"), font=ctk.CTkFont(family=FONT_MAIN, size=11), text_color=COLOR_TEXT_SUB).pack(side="left")
-        ctk.CTkLabel(bot_frame, text=time, font=ctk.CTkFont(family=FONT_MAIN, size=11), text_color=COLOR_TEXT_SUB).pack(side="right")
-
-    def add_feedback_item(self, parent, title, desc, color):
-        """Hàm tạo các khối AI thông báo trong cột 3"""
-        frame = ctk.CTkFrame(parent, fg_color="transparent", border_width=1, border_color=COLOR_BORDER, corner_radius=6)
-        frame.pack(fill="x", padx=15, pady=(0, 10))
-        ctk.CTkLabel(frame, text=title, font=ctk.CTkFont(family=FONT_MAIN, size=12, weight="bold"), text_color=color).pack(anchor="w", padx=12, pady=(10, 2))
-        ctk.CTkLabel(frame, text=desc, font=ctk.CTkFont(family=FONT_MAIN, size=11), text_color=COLOR_TEXT_SUB, wraplength=220, justify="left").pack(anchor="w", padx=12, pady=(0, 10))
+    def _add_feedback(self, layout, title, desc, color):
+        box = QFrame(); box.setStyleSheet(f"border: 1px solid {COLOR_BORDER}; border-radius: 6px;")
+        l = QVBoxLayout(box); t = QLabel(title); t.setStyleSheet(f"color: {color}; font-weight: bold;"); l.addWidget(t)
+        d = QLabel(desc); d.setWordWrap(True); l.addWidget(d); layout.addWidget(box)

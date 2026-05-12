@@ -1,191 +1,130 @@
-import customtkinter as ctk
-import tkinter as tk
+import sys
 import random
-from config import *
-from components import GlassCard
+from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
+                             QLineEdit, QPushButton, QFrame, QApplication)
+from PyQt6.QtCore import Qt, QRect, QPoint, QSize
+from PyQt6.QtGui import QPainter, QColor, QFont, QCursor
 
-class LoginPage(ctk.CTkFrame):
-    def __init__(self, master, on_login=None, on_register_click=None):
-        super().__init__(master, fg_color=COLOR_BG_APP)
+from config import *
+from components import SaaSCard, AnimationEngine
+
+class LoginPage(QWidget):
+    def __init__(self, parent=None, on_login=None, on_register_click=None):
+        super().__init__(parent)
         self.on_login = on_login
         self.on_register_click = on_register_click
-        
-        # Main Grid System (3:7 ratio)
-        self.grid_columnconfigure(0, weight=3)
-        self.grid_columnconfigure(1, weight=7)
-        self.grid_rowconfigure(0, weight=1)
-        
-        self._setup_background()
+        self.setObjectName("LoginPage")
+        self.setStyleSheet(f"background-color: {COLOR_BG_APP};")
+        self.main_layout = QHBoxLayout(self)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
+        self.main_layout.setSpacing(0)
         self._setup_sidebar()
         self._setup_content()
-        self._setup_footer()
+        self.circles = []
+        self._generate_circles()
 
-    def _setup_background(self):
-        # Canvas for floating deep space circles
-        self.canvas = tk.Canvas(
-            self, bg=get_color(COLOR_BG_APP), highlightthickness=0, 
-            bd=0, relief="flat"
-        )
-        self.canvas.place(relx=0, rely=0, relwidth=1, relheight=1)
-        self.bind("<Configure>", lambda e: self._draw_decorations())
-
-    def _draw_decorations(self):
-        self.canvas.delete("all")
-        w = self.winfo_width()
-        h = self.winfo_height()
-        if w < 10 or h < 10: return
-
-        colors = ["#00D1FF", "#10B981", "#6366F1"] # Cyan, Green, Indigo
+    def _generate_circles(self):
+        colors = [QColor("#00D1FF"), QColor("#10B981"), QColor("#6366F1")]
         for _ in range(15):
-            x = random.randint(0, w)
-            y = random.randint(0, h)
+            x = random.randint(0, 1200)
+            y = random.randint(0, 800)
             r = random.randint(20, 80)
             color = random.choice(colors)
-            # Simulating blur with multiple concentric circles
+            self.circles.append((x, y, r, color))
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        for x, y, r, color in self.circles:
             for i in range(5):
                 alpha_r = r + (i * 10)
-                self.canvas.create_oval(
-                    x - alpha_r, y - alpha_r, x + alpha_r, y + alpha_r,
-                    outline=color, width=1, tags="decor"
-                )
+                painter.setPen(QColor(color.red(), color.green(), color.blue(), 30))
+                painter.drawEllipse(QPoint(x, y), alpha_r, alpha_r)
 
     def _setup_sidebar(self):
-        # Column 0: AI Insight Sidebar
-        self.sidebar = ctk.CTkFrame(self, fg_color="transparent")
-        self.sidebar.grid(row=0, column=0, sticky="nsew", padx=40, pady=60)
-        
-        ctk.CTkLabel(
-            self.sidebar, text="AI INSIGHT", 
-            font=ctk.CTkFont(family=FONT_MAIN, size=34, weight="bold"),
-            text_color=COLOR_PRIMARY, anchor="w"
-        ).pack(fill="x", pady=(0, 10))
-        
-        ctk.CTkLabel(
-            self.sidebar, text="Elevate your career with AI-driven analytics and personal roadmaps.",
-            font=ctk.CTkFont(family=FONT_MAIN, size=14),
-            text_color=COLOR_TEXT_SUB, wraplength=250, justify="left", anchor="w"
-        ).pack(fill="x", pady=(0, 40))
-
-        # Skill Tags Container
-        tag_frame = ctk.CTkFrame(self.sidebar, fg_color="transparent")
-        tag_frame.pack(fill="x")
-        
+        sidebar = QWidget()
+        sidebar.setFixedWidth(400)
+        sidebar_layout = QVBoxLayout(sidebar)
+        sidebar_layout.setContentsMargins(60, 100, 40, 60)
+        sidebar_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        lbl_insight = QLabel("AI INSIGHT")
+        lbl_insight.setStyleSheet(f"color: {COLOR_PRIMARY}; font-size: 34px; font-weight: bold;")
+        sidebar_layout.addWidget(lbl_insight)
+        lbl_desc = QLabel("Elevate your career with AI-driven analytics and personal roadmaps.")
+        lbl_desc.setWordWrap(True)
+        lbl_desc.setStyleSheet(f"color: {COLOR_TEXT_SUB}; font-size: 14px; margin-top: 10px;")
+        sidebar_layout.addWidget(lbl_desc)
+        sidebar_layout.addSpacing(40)
         tags = ["Python", "Neural Networks", "NLP", "Computer Vision", "Data Science", "Cloud AI"]
         for tag in tags:
-            btn = ctk.CTkButton(
-                tag_frame, text=f"• {tag}", width=100, height=32, corner_radius=16,
-                fg_color=COLOR_BG_CARD, text_color=COLOR_TEXT_MAIN,
-                border_width=1, border_color=COLOR_BORDER,
-                font=ctk.CTkFont(family=FONT_MAIN, size=11), hover=False
-            )
-            btn.pack(side="top", anchor="w", pady=5)
+            btn = QPushButton(f"• {tag}")
+            btn.setFixedSize(150, 32)
+            btn.setStyleSheet(f"QPushButton {{ background-color: {COLOR_BG_CARD}; color: {COLOR_TEXT_MAIN}; border: 1px solid {COLOR_BORDER}; border-radius: 16px; font-size: 11px; text-align: left; padding-left: 15px; }}")
+            sidebar_layout.addWidget(btn)
+            sidebar_layout.addSpacing(5)
+        self.main_layout.addWidget(sidebar)
 
     def _setup_content(self):
-        # Column 1: Main Login Card
-        self.main_area = ctk.CTkFrame(self, fg_color="transparent")
-        self.main_area.grid(row=0, column=1, sticky="nsew")
-        
-        # Header Controls (Top Right)
-        self.header = ctk.CTkFrame(self.main_area, fg_color="transparent")
-        self.header.place(relx=1.0, rely=0, x=-30, y=30, anchor="ne")
-        
-        self.theme_switch = ctk.CTkSwitch(
-            self.header, text="🌙", command=self.toggle_theme,
-            progress_color=COLOR_PRIMARY, font=ctk.CTkFont(size=16)
-        )
-        self.theme_switch.pack(side="right")
-        if ctk.get_appearance_mode() == "Light":
-            self.theme_switch.select()
-            self.theme_switch.configure(text="☀️")
+        content_area = QWidget()
+        content_layout = QVBoxLayout(content_area)
+        content_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.card = SaaSCard()
+        self.card.setFixedSize(500, 600)
+        card_layout = self.card.internal_layout
+        card_layout.setContentsMargins(60, 50, 60, 50)
+        lbl_login = QLabel("LOGIN")
+        lbl_login.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        lbl_login.setStyleSheet(f"color: {COLOR_TEXT_MAIN}; font-size: 28px; font-weight: bold;")
+        card_layout.addWidget(lbl_login)
+        lbl_sub = QLabel("Access your professional bridge.")
+        lbl_sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        lbl_sub.setStyleSheet(f"color: {COLOR_TEXT_SUB}; font-size: 14px;")
+        card_layout.addWidget(lbl_sub)
+        card_layout.addSpacing(40)
+        self.email_lbl, self.email_entry = self._create_input("Email Address", "👤 email@vku.udn.vn")
+        card_layout.addWidget(self.email_lbl)
+        card_layout.addWidget(self.email_entry)
+        card_layout.addSpacing(15)
+        self.pass_lbl, self.pass_entry = self._create_input("Password", "🔒 ••••••••", is_password=True)
+        card_layout.addWidget(self.pass_lbl)
+        card_layout.addWidget(self.pass_entry)
+        card_layout.addSpacing(40)
+        btn_login = QPushButton("LOGIN")
+        btn_login.setFixedHeight(45)
+        btn_login.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        btn_login.setStyleSheet(f"QPushButton {{ background-color: {COLOR_PRIMARY}; color: white; font-weight: bold; font-size: 14px; border-radius: 10px; }} QPushButton:hover {{ background-color: #00B4D8; }}")
+        btn_login.clicked.connect(self._handle_login)
+        card_layout.addWidget(btn_login)
+        card_layout.addSpacing(15)
+        reg_layout = QHBoxLayout()
+        reg_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        lbl_new = QLabel("New here?")
+        lbl_new.setStyleSheet(f"color: {COLOR_TEXT_SUB}; font-size: 12px;")
+        reg_layout.addWidget(lbl_new)
+        btn_reg = QPushButton("Create Account")
+        btn_reg.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        btn_reg.setStyleSheet(f"color: {COLOR_PRIMARY}; font-weight: bold; font-size: 12px; background: transparent; border: none;")
+        btn_reg.clicked.connect(self.on_register_click)
+        reg_layout.addWidget(btn_reg)
+        card_layout.addLayout(reg_layout)
+        content_layout.addWidget(self.card)
+        self.main_layout.addWidget(content_area)
 
-        # Login Card
-        self.card = GlassCard(self.main_area, enable_glow=True)
-        self.card.place(relx=0.5, rely=0.5, anchor="center", relwidth=0.6, relheight=0.75)
-        
-        # Branding
-        ctk.CTkLabel(
-            self.card, text="LOGIN",
-            font=ctk.CTkFont(family=FONT_MAIN, size=28, weight="bold"),
-            text_color=COLOR_TEXT_MAIN
-        ).pack(pady=(50, 5))
-        
-        ctk.CTkLabel(
-            self.card, text="Access your professional bridge.",
-            font=ctk.CTkFont(family=FONT_MAIN, size=14),
-            text_color=COLOR_TEXT_SUB
-        ).pack(pady=(0, 40))
-
-        # Input Container
-        form = ctk.CTkFrame(self.card, fg_color="transparent")
-        form.pack(fill="x", padx=60)
-
-        self.email_entry = self._create_input(form, "Email Address", "👤 email@vku.udn.vn")
-        self.pass_entry = self._create_input(form, "Password", "🔒 ••••••••", show="*")
-
-        # Action Buttons
-        self.login_btn = ctk.CTkButton(
-            self.card, text="LOGIN", height=45, corner_radius=10,
-            fg_color=COLOR_PRIMARY, text_color="white",
-            font=ctk.CTkFont(family=FONT_MAIN, size=14, weight="bold"),
-            hover_color="#00B4D8", command=self._handle_login
-        )
-        self.login_btn.pack(fill="x", padx=60, pady=(40, 15))
-
-        # Register Redirect
-        reg_frame = ctk.CTkFrame(self.card, fg_color="transparent")
-        reg_frame.pack(pady=(0, 40))
-        ctk.CTkLabel(reg_frame, text="New here?", font=(FONT_MAIN, 12), text_color=COLOR_TEXT_SUB).pack(side="left")
-        ctk.CTkButton(reg_frame, text="Create Account", fg_color="transparent", text_color=COLOR_PRIMARY, 
-                      font=ctk.CTkFont(family=FONT_MAIN, size=12, weight="bold"), width=100, hover=False, 
-                      command=self.on_register_click).pack(side="left")
-
-    def _setup_footer(self):
-        # Random AI Quotes
-        quotes = [
-            "\"AI is the new electricity.\" - Andrew Ng",
-            "\"Machine learning is the last invention humanity will ever need.\" - Nick Bostrom",
-            "\"The goal is to turn data into information, and information into insight.\" - Carly Fiorina",
-            "\"AI will either be the best or worst thing for humanity.\" - Stephen Hawking"
-        ]
-        
-        self.quote_lbl = ctk.CTkLabel(
-            self, text=random.choice(quotes),
-            font=ctk.CTkFont(family=FONT_MAIN, size=11, slant="italic"),
-            text_color=COLOR_TEXT_SUB
-        )
-        self.quote_lbl.place(relx=0.5, rely=0.96, anchor="center")
-
-    def _create_input(self, parent, label, placeholder, show=None):
-        ctk.CTkLabel(parent, text=label, font=(FONT_MAIN, 11, "bold"), text_color=COLOR_TEXT_MAIN).pack(anchor="w", pady=(15, 5))
-        entry = ctk.CTkEntry(
-            parent, placeholder_text=placeholder, show=show,
-            height=40, corner_radius=10, border_color=COLOR_BORDER,
-            fg_color=COLOR_BG_APP
-        )
-        entry.pack(fill="x")
-        entry.bind("<FocusIn>", lambda e: entry.configure(border_color=COLOR_PRIMARY, border_width=2))
-        entry.bind("<FocusOut>", lambda e: entry.configure(border_color=COLOR_BORDER, border_width=1))
-        return entry
-
-    def toggle_theme(self):
-        if ctk.get_appearance_mode() == "Dark":
-            ctk.set_appearance_mode("Light")
-            self.theme_switch.configure(text="☀️")
-        else:
-            ctk.set_appearance_mode("Dark")
-            self.theme_switch.configure(text="🌙")
-        self.configure(fg_color=COLOR_BG_APP)
-        self.canvas.configure(bg=get_color(COLOR_BG_APP))
-        self._draw_decorations()
+    def _create_input(self, label_text, placeholder, is_password=False):
+        lbl = QLabel(label_text)
+        lbl.setStyleSheet(f"color: {COLOR_TEXT_MAIN}; font-size: 11px; font-weight: bold;")
+        entry = QLineEdit()
+        entry.setPlaceholderText(placeholder)
+        if is_password: entry.setEchoMode(QLineEdit.EchoMode.Password)
+        entry.setFixedHeight(40)
+        entry.setStyleSheet(f"QLineEdit {{ background-color: {COLOR_BG_APP}; border: 1px solid {COLOR_BORDER}; border-radius: 10px; padding: 0 12px; color: {COLOR_TEXT_MAIN}; }} QLineEdit:focus {{ border: 2px solid {COLOR_PRIMARY}; }}")
+        return lbl, entry
 
     def _handle_login(self):
-        if self.on_login:
-            self.on_login(self.email_entry.get(), self.pass_entry.get())
-
-if __name__ == "__main__":
-    app = ctk.CTk()
-    app.geometry("1100x700")
-    app.title("AI-Career Bridge | Login")
-    login = LoginPage(app, on_register_click=lambda: print("Switch to Register"))
-    login.pack(fill="both", expand=True)
-    app.mainloop()
+        email = self.email_entry.text()
+        password = self.pass_entry.text()
+        if not email or not password:
+            self.email_entry.setPlaceholderText("❌ Vui lòng nhập email")
+            self.pass_entry.setPlaceholderText("❌ Vui lòng nhập mật khẩu")
+            return
+        if self.on_login: self.on_login(email, password)

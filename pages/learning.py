@@ -1,167 +1,80 @@
-import customtkinter as ctk
+import sys
+from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
+                             QPushButton, QScrollArea, QFrame, QGridLayout, QProgressBar)
+from PyQt6.QtCore import Qt, QSize
+from PyQt6.QtGui import QCursor
 from config import *
-from components import SaaSCard
+from components import SaaSCard, AnimationEngine
 
-class LearningPage(ctk.CTkScrollableFrame):
-    def __init__(self, parent, controller):
-        super().__init__(parent, fg_color="transparent")
+class LearningPage(QWidget):
+    def __init__(self, parent=None, controller=None):
+        super().__init__(parent)
         self.controller = controller
-        content_pad = 35
+        self.setObjectName("LearningPage")
+        self.main_layout = QVBoxLayout(self)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
+        self.scroll = QScrollArea()
+        self.scroll.setWidgetResizable(True); self.scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self.scroll.setStyleSheet("background: transparent;")
+        self.container = QWidget(); self.container_layout = QVBoxLayout(self.container)
+        self.container_layout.setContentsMargins(35, 35, 35, 35); self.container_layout.setSpacing(15)
+        self._setup_header(); self._setup_breadcrumb(); self._setup_content()
+        self.scroll.setWidget(self.container); self.main_layout.addWidget(self.scroll)
 
-        # 1. Header Section
-        header_frame = ctk.CTkFrame(self, fg_color="transparent")
-        header_frame.pack(fill="x", padx=content_pad, pady=(content_pad, 10))
-        
-        title_box = ctk.CTkFrame(header_frame, fg_color="transparent")
-        title_box.pack(side="left")
-        
-        ctk.CTkLabel(title_box, text="AI Art Creation Studio", 
-                     font=ctk.CTkFont(family=FONT_MAIN, size=24, weight="bold"), 
-                     text_color=COLOR_TEXT_MAIN).pack(anchor="w")
-        ctk.CTkLabel(title_box, text="Nâng cao kỹ năng - Tiếp tục học tập", 
-                     font=ctk.CTkFont(family=FONT_MAIN, size=14), 
-                     text_color=COLOR_TEXT_SUB).pack(anchor="w")
-        
-        # 2. Breadcrumb
-        breadcrumb_frame = ctk.CTkFrame(self, fg_color="transparent")
-        breadcrumb_frame.pack(fill="x", padx=content_pad, pady=(0, 20))
-        
-        ctk.CTkButton(breadcrumb_frame, text="Dashboard", fg_color="transparent", text_color=COLOR_TEXT_SUB, 
-                      hover_color=COLOR_BG_APP, width=60, font=ctk.CTkFont(size=12),
-                      command=lambda: self.controller.show_page("DashboardPage")).pack(side="left")
-        ctk.CTkLabel(breadcrumb_frame, text=" > Khóa học", 
-                     font=ctk.CTkFont(family=FONT_MAIN, size=12), 
-                     text_color=COLOR_TEXT_SUB).pack(side="left")
+    def _setup_header(self):
+        header = QWidget(); layout = QVBoxLayout(header); layout.setContentsMargins(0, 0, 0, 0)
+        title = QLabel("AI Art Creation Studio"); title.setStyleSheet(f"color: {COLOR_TEXT_MAIN}; font-size: 24px; font-weight: bold;")
+        layout.addWidget(title); sub = QLabel("Nâng cao kỹ năng - Tiếp tục học tập"); sub.setStyleSheet(f"color: {COLOR_TEXT_SUB}; font-size: 14px;")
+        layout.addWidget(sub); self.container_layout.addWidget(header)
 
-        # 3. Main Content Area (Grid)
-        content_grid = ctk.CTkFrame(self, fg_color="transparent")
-        content_grid.pack(fill="both", expand=True, padx=content_pad-5)
-        content_grid.grid_columnconfigure(0, weight=7)
-        content_grid.grid_columnconfigure(1, weight=3)
+    def _setup_breadcrumb(self):
+        bread = QWidget(); layout = QHBoxLayout(bread); layout.setContentsMargins(0, 0, 0, 20)
+        btn_dash = QPushButton("Dashboard"); btn_dash.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        btn_dash.setStyleSheet(f"QPushButton {{ background: transparent; color: {COLOR_TEXT_SUB}; font-size: 12px; border: none; }} QPushButton:hover {{ color: {COLOR_PRIMARY}; }}")
+        btn_dash.clicked.connect(lambda: self.controller and self.controller.show_page("DashboardPage"))
+        layout.addWidget(btn_dash); layout.addWidget(QLabel(" > Khóa học"))
+        layout.addStretch(); self.container_layout.addWidget(bread)
 
-        left_col = ctk.CTkFrame(content_grid, fg_color="transparent")
-        left_col.grid(row=0, column=0, sticky="nsew", padx=5)
-        
-        right_col = ctk.CTkFrame(content_grid, fg_color="transparent")
-        right_col.grid(row=0, column=1, sticky="nsew", padx=5)
+    def _setup_content(self):
+        grid_widget = QWidget(); grid_layout = QGridLayout(grid_widget); grid_layout.setContentsMargins(0, 0, 0, 0); grid_layout.setSpacing(10)
+        grid_layout.setColumnStretch(0, 7); grid_layout.setColumnStretch(1, 3)
+        left_col = QWidget(); left_layout = QVBoxLayout(left_col); left_layout.setContentsMargins(0, 0, 0, 0)
+        lbl_mine = QLabel("Học phần của bạn"); lbl_mine.setStyleSheet(f"color: {COLOR_TEXT_MAIN}; font-size: 18px; font-weight: bold; margin-bottom: 15px;")
+        left_layout.addWidget(lbl_mine); course_grid = QWidget(); c_layout = QGridLayout(course_grid); c_layout.setSpacing(15)
+        self._add_course_card(c_layout, 0, 0, "Lập trình Python Nâng cao", 0.8, "80%", [("Pandas", True), ("TensorFlow", False)])
+        self._add_course_card(c_layout, 0, 1, "Tạo Ảnh Nghệ Thuật với AI", 0.35, "35%", [("Prompt Eng", True), ("ControlNet", False)])
+        left_layout.addWidget(course_grid); left_layout.addStretch(); grid_layout.addWidget(left_col, 0, 0)
+        right_col = QWidget(); right_layout = QVBoxLayout(right_col); right_layout.setContentsMargins(0, 0, 0, 0)
+        deadline_card = SaaSCard(); d_layout = deadline_card.internal_layout
+        lbl_d = QLabel("Sự kiện & Deadline"); lbl_d.setStyleSheet(f"color: {COLOR_TEXT_MAIN}; font-size: 16px; font-weight: bold;")
+        d_layout.addWidget(lbl_d); self._add_event_item(d_layout, "12", "Th4", "Workshop AI"); self._add_event_item(d_layout, "15", "Th4", "Nộp đồ án")
+        right_layout.addWidget(deadline_card); creativity_card = SaaSCard(); crea_layout = creativity_card.internal_layout
+        lbl_c = QLabel("Mức độ sáng tạo"); lbl_c.setStyleSheet(f"color: {COLOR_TEXT_MAIN}; font-size: 14px; font-weight: bold;")
+        crea_layout.addWidget(lbl_c); pb = QProgressBar(); pb.setFixedHeight(8); pb.setValue(75); pb.setTextVisible(False)
+        pb.setStyleSheet(f"QProgressBar {{ background: {COLOR_BORDER}; border-radius: 4px; border: none; }} QProgressBar::chunk {{ background: {COLOR_SUCCESS}; border-radius: 4px; }}")
+        crea_layout.addWidget(pb); right_layout.addWidget(creativity_card); right_layout.addStretch(); grid_layout.addWidget(right_col, 0, 1)
+        self.container_layout.addWidget(grid_widget)
 
-        # Left Column: "Học phần của bạn"
-        ctk.CTkLabel(left_col, text="Học phần của bạn", 
-                     font=ctk.CTkFont(family=FONT_MAIN, size=18, weight="bold"), 
-                     text_color=COLOR_TEXT_MAIN).pack(anchor="w", pady=(0, 15))
+    def _add_course_card(self, layout, r, c, title, val, txt, tasks):
+        card = SaaSCard(); c_layout = card.internal_layout
+        img = QFrame(); img.setFixedHeight(120); img.setStyleSheet(f"background: {COLOR_BG_APP}; border-radius: 6px;")
+        img_l = QVBoxLayout(img); lbl_icon = QLabel("📷"); lbl_icon.setStyleSheet("font-size: 40px;"); img_l.addWidget(lbl_icon, alignment=Qt.AlignmentFlag.AlignCenter)
+        c_layout.addWidget(img); lbl_t = QLabel(title); lbl_t.setStyleSheet(f"color: {COLOR_TEXT_MAIN}; font-size: 14px; font-weight: bold;")
+        c_layout.addWidget(lbl_t); pb = QProgressBar(); pb.setFixedHeight(6); pb.setValue(int(val * 100)); pb.setTextVisible(False)
+        pb.setStyleSheet(f"QProgressBar {{ background: {COLOR_BORDER}; border-radius: 3px; border: none; }} QProgressBar::chunk {{ background: {COLOR_PRIMARY}; border-radius: 3px; }}")
+        c_layout.addWidget(pb); lbl_p = QLabel(f"{txt} Hoàn thành"); lbl_p.setStyleSheet(f"color: {COLOR_TEXT_SUB}; font-size: 11px;"); c_layout.addWidget(lbl_p)
+        for t_name, done in tasks:
+            t_layout = QHBoxLayout(); lbl_check = QLabel("✓" if done else "🔵"); lbl_check.setStyleSheet(f"color: {COLOR_PRIMARY if done else COLOR_TEXT_SUB}; font-weight: bold;")
+            t_layout.addWidget(lbl_check); lbl_task = QLabel(t_name); lbl_task.setStyleSheet(f"color: {COLOR_TEXT_MAIN}; font-size: 11px;"); t_layout.addWidget(lbl_task); t_layout.addStretch(); c_layout.addLayout(t_layout)
+        btn_row = QHBoxLayout(); btn_cont = QPushButton("Tiếp tục"); btn_cont.setFixedHeight(32); btn_cont.setStyleSheet(f"QPushButton {{ background: {COLOR_PRIMARY}; color: white; font-weight: bold; border-radius: 6px; }}")
+        btn_cont.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn_cont.clicked.connect(lambda: self.controller and self.controller.show_page("CourseDetailPage"))
+        btn_row.addWidget(btn_cont); c_layout.addLayout(btn_row); layout.addWidget(card, r, c)
 
-        course_grid = ctk.CTkFrame(left_col, fg_color="transparent")
-        course_grid.pack(fill="both", expand=True)
-        course_grid.grid_columnconfigure((0, 1), weight=1)
-
-        # Course Card 1
-        self.create_course_card(course_grid, 0, 0, "Lập trình Python Nâng cao", "80% Hoàn thành", 0.8, 
-                                [("Xử lý dữ liệu với Pandas", "Đã xong"), 
-                                 ("Mô hình học máy với TensorFlow", "Đang học, Bài 12/15"),
-                                 ("Thực hành Tạo thành", "Đã xong")])
-
-        # Course Card 2
-        self.create_course_card(course_grid, 0, 1, "Tạo Ảnh Nghệ Thuật với AI", "35% Hoàn thành", 0.35,
-                                [("Prompt Engineering Cơ bản", "Đã xong"),
-                                 ("Điều khiển Kiểu dáng & Tỷ lệ", "Đang học, Bài 4/10"),
-                                 ("Thực hành Tạo Ảnh", "Sẵn sàng")])
-        
-        # Course Card 3 (Architecture)
-        self.create_course_card(course_grid, 1, 0, "Kiến trúc Bền vững với AI", "55% Hoàn thành", 0.55,
-                                [("Mô phỏng Năng lượng", "Đã xong"),
-                                 ("Lựa chọn Vật liệu thông minh", "Đang học, Bài 7/12")])
-
-        # Right Column: "Sự kiện & Deadline"
-        deadline_card = SaaSCard(right_col)
-        deadline_card.pack(fill="x", pady=(0, 20))
-        
-        ctk.CTkLabel(deadline_card, text="Sự kiện & Deadline", 
-                     font=ctk.CTkFont(family=FONT_MAIN, size=16, weight="bold"), 
-                     text_color=COLOR_TEXT_MAIN).pack(anchor="w", padx=20, pady=(20, 15))
-        
-        self.add_event_item(deadline_card, "12", "Th4", "Workshop AI", ["Ras Sàng", "Anime", "Abstract"])
-        self.add_event_item(deadline_card, "15", "Th4", "Nộp đồ án Cơ 2", ["1:1", "4:3"])
-
-        # Creativity Level Card
-        creativity_card = SaaSCard(right_col)
-        creativity_card.pack(fill="x")
-        ctk.CTkLabel(creativity_card, text="Mức độ sáng tạo", 
-                     font=ctk.CTkFont(family=FONT_MAIN, size=14, weight="bold"), 
-                     text_color=COLOR_TEXT_MAIN).pack(anchor="w", padx=20, pady=(15, 5))
-        
-        creativity_pb = ctk.CTkProgressBar(creativity_card, height=8, progress_color="#10B981")
-        creativity_pb.pack(fill="x", padx=20, pady=10)
-        creativity_pb.set(0.75)
-
-    def create_course_card(self, parent, row, col, title, progress_text, progress_val, tasks):
-        card = SaaSCard(parent)
-        card.grid(row=row, column=col, padx=10, pady=10, sticky="nsew")
-        
-        # Image placeholder
-        img_placeholder = ctk.CTkFrame(card, height=120, fg_color=COLOR_BG_APP, corner_radius=6)
-        img_placeholder.pack(fill="x", padx=15, pady=(15, 10))
-        ctk.CTkLabel(img_placeholder, text="📷", font=ctk.CTkFont(size=40)).place(relx=0.5, rely=0.5, anchor="center")
-
-        # Title and menu
-        header = ctk.CTkFrame(card, fg_color="transparent")
-        header.pack(fill="x", padx=15)
-        ctk.CTkLabel(header, text=title, font=ctk.CTkFont(family=FONT_MAIN, size=14, weight="bold"), text_color=COLOR_TEXT_MAIN).pack(side="left")
-        ctk.CTkLabel(header, text="⋮", font=ctk.CTkFont(size=16), text_color=COLOR_TEXT_SUB).pack(side="right")
-
-        # Progress bar
-        progress_frame = ctk.CTkFrame(card, fg_color="transparent")
-        progress_frame.pack(fill="x", padx=15, pady=(5, 10))
-        
-        pb = ctk.CTkProgressBar(progress_frame, height=6, progress_color=COLOR_PRIMARY)
-        pb.pack(fill="x")
-        pb.set(progress_val)
-        
-        ctk.CTkLabel(progress_frame, text=progress_text, font=ctk.CTkFont(size=11), text_color=COLOR_TEXT_SUB).pack(anchor="w", pady=(2, 0))
-
-        # Tasks
-        for task_name, status in tasks:
-            task_frame = ctk.CTkFrame(card, fg_color="transparent")
-            task_frame.pack(fill="x", padx=15, pady=2)
-            icon = "✓" if "Đã xong" in status else "🔵"
-            color = COLOR_PRIMARY if "Đã xong" in status else COLOR_TEXT_SUB
-            ctk.CTkLabel(task_frame, text=icon, text_color=color, font=ctk.CTkFont(size=12, weight="bold")).pack(side="left", padx=(0, 5))
-            ctk.CTkLabel(task_frame, text=f"{task_name} - {status}", font=ctk.CTkFont(size=11), text_color=COLOR_TEXT_MAIN, wraplength=180, justify="left").pack(side="left")
-
-        # Buttons
-        btn_frame = ctk.CTkFrame(card, fg_color="transparent")
-        btn_frame.pack(fill="x", padx=15, pady=(15, 15))
-        
-        primary_btn_text = "Tiếp tục bài học"
-        if "Studio" in title or "Tạo Ảnh" in title: primary_btn_text = "Đến Studio"
-        if "Kiến trúc" in title: primary_btn_text = "Mở đồ án"
-
-        secondary_btn_text = "Xem chi tiết"
-        if "Tạo Ảnh" in title: secondary_btn_text = "Tải nguyên liệu"
-        if "Kiến trúc" in title: secondary_btn_text = "Xem tài liệu"
-
-        ctk.CTkButton(btn_frame, text=primary_btn_text, 
-                      fg_color=COLOR_PRIMARY, text_color="white", height=32, font=ctk.CTkFont(family=FONT_MAIN, size=12, weight="bold"),
-                      command=lambda: self.controller.show_page("CourseDetailPage")).pack(side="left", expand=True, padx=(0, 5))
-        
-        ctk.CTkButton(btn_frame, text=secondary_btn_text, 
-                      fg_color=COLOR_BG_APP, text_color=COLOR_TEXT_MAIN, height=32, font=ctk.CTkFont(family=FONT_MAIN, size=12, weight="bold")).pack(side="left", expand=True, padx=(5, 0))
-
-    def add_event_item(self, parent, day, month, title, tags):
-        item = ctk.CTkFrame(parent, fg_color="transparent")
-        item.pack(fill="x", padx=20, pady=10)
-        
-        date_box = ctk.CTkFrame(item, width=45, height=50, fg_color=COLOR_PRIMARY_LIGHT, corner_radius=6)
-        date_box.pack(side="left")
-        date_box.pack_propagate(False)
-        ctk.CTkLabel(date_box, text=day, font=ctk.CTkFont(size=16, weight="bold"), text_color=COLOR_PRIMARY).pack(pady=(5, 0))
-        ctk.CTkLabel(date_box, text=month, font=ctk.CTkFont(size=10), text_color=COLOR_PRIMARY).pack()
-
-        info_box = ctk.CTkFrame(item, fg_color="transparent")
-        info_box.pack(side="left", padx=10, fill="both", expand=True)
-        ctk.CTkLabel(info_box, text=title, font=ctk.CTkFont(family=FONT_MAIN, size=13, weight="bold"), text_color=COLOR_TEXT_MAIN).pack(anchor="w")
-        
-        tag_frame = ctk.CTkFrame(info_box, fg_color="transparent")
-        tag_frame.pack(fill="x", pady=(2, 0))
-        for tag in tags:
-            ctk.CTkButton(tag_frame, text=tag, height=22, width=60, fg_color=COLOR_BG_APP, text_color=COLOR_TEXT_SUB, 
-                          font=ctk.CTkFont(family=FONT_MAIN, size=10), corner_radius=4).pack(side="left", padx=(0, 4))
+    def _add_event_item(self, layout, day, month, title):
+        item = QWidget(); i_layout = QHBoxLayout(item); i_layout.setContentsMargins(0, 5, 0, 5)
+        date_box = QFrame(); date_box.setFixedSize(45, 50); date_box.setStyleSheet(f"background: {COLOR_PRIMARY_LIGHT}; border-radius: 6px;")
+        d_layout = QVBoxLayout(date_box); d_layout.setContentsMargins(0, 5, 0, 5); lbl_d = QLabel(day); lbl_d.setStyleSheet(f"color: {COLOR_PRIMARY}; font-size: 16px; font-weight: bold;")
+        d_layout.addWidget(lbl_d, alignment=Qt.AlignmentFlag.AlignCenter); lbl_m = QLabel(month); lbl_m.setStyleSheet(f"color: {COLOR_PRIMARY}; font-size: 10px;")
+        d_layout.addWidget(lbl_m, alignment=Qt.AlignmentFlag.AlignCenter); i_layout.addWidget(date_box); lbl_title = QLabel(title); lbl_title.setStyleSheet(f"color: {COLOR_TEXT_MAIN}; font-size: 13px; font-weight: bold;")
+        i_layout.addWidget(lbl_title); i_layout.addStretch(); layout.addWidget(item)

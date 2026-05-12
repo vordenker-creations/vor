@@ -69,6 +69,19 @@ TRANSLATIONS = {
         "prof_exp": "KINH NGHIỆM",
         "prof_skills": "KỸ NĂNG",
         "prof_preview": "XEM TRƯỚC",
+        
+        "dash_hero_activated": "HỆ THỐNG AI MENTOR ĐÃ KÍCH HOẠT",
+        "dash_hero_title": "Tối ưu hóa Lộ trình Học tập\nKiến tạo Tương lai Kỹ sư.",
+        "dash_btn_continue": "Tiếp tục Học tập  ➔",
+        "dash_stat_progress": "Tiến độ Lộ trình",
+        "dash_stat_credits": "Tín chỉ Tích lũy",
+        "dash_stat_gpa": "Điểm GPA",
+        "dash_current_courses": "Học phần đang diễn ra",
+        "dash_events_deadlines": "Sự kiện & Deadline",
+        "recruit_title": "TUYỂN DỤNG VỚI AI",
+        "recruit_apply": "Ứng tuyển ngay",
+        "recruit_missing": "⚠ Thiếu:",
+        "recruit_has": "✓ Đã có:",
     },
     "en": {
         "app_title": "AI-Career Bridge - Enterprise Edition",
@@ -138,6 +151,10 @@ TRANSLATIONS = {
         "prof_exp": "EXPERIENCE",
         "prof_skills": "SKILLS",
         "prof_preview": "PREVIEW",
+        "recruit_title": "AI RECRUITMENT MATCHING",
+        "recruit_apply": "Apply Now",
+        "recruit_missing": "⚠ Missing:",
+        "recruit_has": "✓ Has:",
     }
 }
 

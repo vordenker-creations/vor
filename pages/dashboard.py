@@ -1,82 +1,190 @@
-import customtkinter as ctk
-import tkinter as tk
 import json
 import random
-from config import *
-from components import BasePage, GlassCard, AnimatedProgressBar, StatusPulse, AnimationEngine, CountUpLabel, SkeletonLoader
+from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, 
+                             QLabel, QPushButton, QProgressBar, QFrame, QScrollArea)
+from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtGui import QPainter, QColor
 
-class DashboardPage(BasePage):
-    def __init__(self, parent, controller):
-        super().__init__(parent, controller)
+from config import *
+from components import SaaSCard, CountUpLabel, AnimatedProgressBar, StatusPulse, AnimationEngine
+from i18n import _
+
+# --- Hero Banner Component ---
+
+class HeroBanner(SaaSCard):
+    # PyQt6 update: Handled canvas drawing directly within QWidget via paintEvent
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.circles = []
+        self.setStyleSheet(f"""
+            HeroBanner {{
+                background-color: {COLOR_PRIMARY_LIGHT};
+                border: 1px solid {COLOR_BORDER};
+                border-radius: 16px;
+            }}
+        """)
+
+    def enterEvent(self, event): pass # UI Fix: Disable SaaSCard hover effect for HeroBanner
+
+    def leaveEvent(self, event): pass # UI Fix: Disable SaaSCard hover effect for HeroBanner
+
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._generate_circles()
+
+    def _generate_circles(self):
+        self.circles = []
+        w = self.width()
+        h = self.height()
+        if w < 10: return
+        for _ in range(8):
+            x, y = random.randint(0, w), random.randint(0, h)
+            r = random.randint(20, 60)
+            self.circles.append((x, y, r))
+        self.update()
+
+    def paintEvent(self, event):
+        super().paintEvent(event) # Let QFrame draw the stylesheet background
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setPen(QColor(COLOR_PRIMARY))
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        for x, y, r in self.circles:
+            painter.drawEllipse(x - r, y - r, r * 2, r * 2)
+
+# --- Main Dashboard Page ---
+
+class DashboardPage(QWidget):
+    # PyQt6 update: Inheriting from QWidget
+    def __init__(self, parent=None, controller=None):
+        super().__init__(parent)
+        self.controller = controller
         self.content_pad = 35
-        self.scrollable = ctk.CTkScrollableFrame(self, fg_color="transparent")
-        self.scrollable.pack(fill="both", expand=True)
+
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+
+        # PyQt6 update: Using QScrollArea instead of CTkScrollableFrame
+        self.scrollable = QScrollArea(self)
+        self.scrollable.setWidgetResizable(True)
+        self.scrollable.setFrameShape(QFrame.Shape.NoFrame)
+        self.scrollable.setStyleSheet("background: transparent;")
+
+        self.scroll_content = QWidget()
+        self.scroll_content.setStyleSheet("background: transparent;")
+        self.scroll_layout = QVBoxLayout(self.scroll_content)
+        self.scroll_layout.setContentsMargins(self.content_pad, self.content_pad, self.content_pad, self.content_pad)
+        self.scroll_layout.setSpacing(15)
+
+        self.scrollable.setWidget(self.scroll_content)
+        main_layout.addWidget(self.scrollable)
+
         self._build_bento_grid()
         self._load_mock_data_async()
 
+        from components import AnimationEngine
+        AnimationEngine.fade_in_widget(self.hero_banner, delay_ms=200)
+
     def _build_bento_grid(self):
-        self.hero_banner = GlassCard(self.scrollable, fg_color=COLOR_PRIMARY_LIGHT, hover_effect=False)
-        self.hero_banner.pack(fill="x", padx=self.content_pad, pady=(self.content_pad, 15))
-        
-        self.hero_canvas = tk.Canvas(self.hero_banner, bg=get_color(COLOR_PRIMARY_LIGHT), highlightthickness=0, bd=0)
-        self.hero_canvas.place(relx=0, rely=0, relwidth=1, relheight=1)
-        self.hero_banner.bind("<Configure>", lambda e: self._draw_hero_decor())
+        self.hero_banner = HeroBanner(self)
+        QWidget().setLayout(self.hero_banner.layout()) # Remove SaaSCard's default layout
+        hero_layout = QHBoxLayout(self.hero_banner)
+        hero_layout.setContentsMargins(40, 35, 40, 35)
 
-        hero_text = ctk.CTkFrame(self.hero_banner, fg_color="transparent")
-        hero_text.pack(side="left", padx=40, pady=35)
-        
-        status_frame = ctk.CTkFrame(hero_text, fg_color="transparent")
-        status_frame.pack(anchor="w", pady=(0, 10))
-        self.ai_pulse = StatusPulse(status_frame, size=8)
-        self.ai_pulse.pack(side="left", padx=(0, 5))
-        ctk.CTkLabel(status_frame, text="HỆ THỐNG AI MENTOR ĐÃ KÍCH HOẠT", 
-                     font=ctk.CTkFont(family=FONT_MAIN, size=11, weight="bold"), 
-                     text_color=COLOR_PRIMARY).pack(side="left")
-        
-        ctk.CTkLabel(hero_text, text="Tối ưu hóa Lộ trình Học tập\nKiến tạo Tương lai Kỹ sư.", 
-                     font=ctk.CTkFont(family=FONT_MAIN, size=28, weight="bold"), 
-                     text_color=COLOR_TEXT_MAIN, justify="left").pack(anchor="w")
-        
-        ctk.CTkButton(hero_text, text="Tiếp tục Học tập  ➔", 
-                      font=ctk.CTkFont(family=FONT_MAIN, size=13, weight="bold"), 
-                      fg_color=COLOR_PRIMARY, text_color="white", height=40, corner_radius=6,
-                      command=lambda: self.controller.show_page("LearningPage")).pack(anchor="w", pady=(20, 0))
+        hero_text = QWidget()
+        hero_text_layout = QVBoxLayout(hero_text)
+        hero_text_layout.setContentsMargins(0, 0, 0, 0)
+        hero_text_layout.setAlignment(Qt.AlignmentFlag.AlignTop) # PyQt6 update: Enum usage
 
-        self.grid_frame = ctk.CTkFrame(self.scrollable, fg_color="transparent")
-        self.grid_frame.pack(fill="both", expand=True, padx=self.content_pad-5, pady=10)
-        self.grid_frame.grid_columnconfigure((0, 1, 2), weight=1)
+        status_frame = QWidget()
+        status_layout = QHBoxLayout(status_frame)
+        status_layout.setContentsMargins(0, 0, 0, 0)
+        status_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+
+        self.ai_pulse = StatusPulse(size=8)
+        status_layout.addWidget(self.ai_pulse)
+
+        lbl_ai = QLabel(_("dash_hero_activated"))
+        lbl_ai.setStyleSheet(f"color: {COLOR_PRIMARY}; font-weight: bold; font-size: 11px;")
+        status_layout.addWidget(lbl_ai)
+
+        hero_text_layout.addWidget(status_frame)
+
+        lbl_title = QLabel(_("dash_hero_title"))
+        lbl_title.setStyleSheet(f"color: {COLOR_TEXT_MAIN}; font-weight: bold; font-size: 28px;")
+        hero_text_layout.addWidget(lbl_title)
+
+        btn_continue = QPushButton(_("dash_btn_continue"))
+        # PyQt6 update: CSS styling for button instead of CTk attributes
+        btn_continue.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {COLOR_PRIMARY}; 
+                color: white; 
+                font-weight: bold; 
+                border-radius: 6px; 
+                padding: 10px;
+            }}
+        """)
+        btn_continue.setCursor(Qt.CursorShape.PointingHandCursor)
+        # PyQt6 update: Signal/Slot lambda
+        btn_continue.clicked.connect(lambda: getattr(self, "controller", None) and self.controller.show_page("LearningPage"))
+        hero_text_layout.addWidget(btn_continue)
+
+        hero_layout.addWidget(hero_text)
+        self.scroll_layout.addWidget(self.hero_banner)
+
+        # Grid Layout for Bento
+        self.grid_frame = QWidget()
+        grid_layout = QGridLayout(self.grid_frame)
+        grid_layout.setContentsMargins(0, 0, 0, 0)
+        grid_layout.setSpacing(10)
+        self.scroll_layout.addWidget(self.grid_frame)
 
         self.stats = {}
-        self.stats['progress'] = self._create_stat_card(self.grid_frame, 0, 0, "Tiến độ Lộ trình", suffix="%")
-        self.stats['credits'] = self._create_stat_card(self.grid_frame, 0, 1, "Tín chỉ Tích lũy", format_str="{}/120")
-        self.stats['gpa'] = self._create_stat_card(self.grid_frame, 0, 2, "Điểm GPA", format_str="{}")
+        self.stats['progress'] = self._create_stat_card(grid_layout, 0, 0, _("dash_stat_progress"), suffix="%")
+        self.stats['credits'] = self._create_stat_card(grid_layout, 0, 1, _("dash_stat_credits"), format_str="{}/120")
+        self.stats['gpa'] = self._create_stat_card(grid_layout, 0, 2, _("dash_stat_gpa"), format_str="{}")
 
-        self.left_col = GlassCard(self.grid_frame)
-        self.left_col.grid(row=1, column=0, columnspan=2, sticky="nsew", padx=5, pady=5)
-        header_l = ctk.CTkFrame(self.left_col, fg_color="transparent")
-        header_l.pack(fill="x", padx=25, pady=(25, 15))
-        ctk.CTkLabel(header_l, text="Học phần đang diễn ra", font=ctk.CTkFont(family=FONT_MAIN, size=16, weight="bold"), text_color=COLOR_TEXT_MAIN).pack(side="left")
-        self.courses_container = ctk.CTkFrame(self.left_col, fg_color="transparent")
-        self.courses_container.pack(fill="both", expand=True)
-        # Skeleton loaders for initial state
-        for _ in range(3): SkeletonLoader(self.courses_container, width=300, height=60).pack(fill="x", padx=25, pady=10)
+        self.left_col = SaaSCard()
+        left_layout = self.left_col.internal_layout # UI Fix: Use pre-existing internal_layout
+        grid_layout.addWidget(self.left_col, 1, 0, 1, 2)
 
-        self.right_col = GlassCard(self.grid_frame)
-        self.right_col.grid(row=1, column=2, sticky="nsew", padx=5, pady=5)
-        ctk.CTkLabel(self.right_col, text="Sự kiện & Deadline", font=ctk.CTkFont(family=FONT_MAIN, size=16, weight="bold"), text_color=COLOR_TEXT_MAIN).pack(anchor="w", padx=25, pady=(25, 15))
-        self.events_container = ctk.CTkFrame(self.right_col, fg_color="transparent")
-        self.events_container.pack(fill="both", expand=True)
-        # Skeleton loaders
-        for _ in range(2): SkeletonLoader(self.events_container, width=200, height=50).pack(fill="x", padx=25, pady=10)
+        lbl_left = QLabel(_("dash_current_courses"))
+        lbl_left.setStyleSheet(f"color: {COLOR_TEXT_MAIN}; font-size: 16px; font-weight: bold;")
+        left_layout.addWidget(lbl_left)
 
-    def _create_stat_card(self, parent, row, col, title, suffix="", format_str="{}"):
-        card = GlassCard(parent)
-        card.grid(row=row, column=col, padx=5, pady=5, sticky="nsew")
-        top_box = ctk.CTkFrame(card, fg_color="transparent")
-        top_box.pack(fill="x", padx=20, pady=(20, 5))
-        ctk.CTkLabel(top_box, text=title, font=ctk.CTkFont(family=FONT_MAIN, size=13, weight="bold"), text_color=COLOR_TEXT_SUB).pack(side="left")
-        val_lbl = CountUpLabel(card, format_str=format_str, suffix=suffix, font=ctk.CTkFont(family=FONT_MAIN, size=24, weight="bold"), text_color=COLOR_TEXT_MAIN)
-        val_lbl.pack(anchor="w", padx=20, pady=(0, 20))
+        self.courses_container = QWidget()
+        self.courses_layout = QVBoxLayout(self.courses_container)
+        self.courses_layout.setContentsMargins(0, 0, 0, 0)
+        left_layout.addWidget(self.courses_container)
+
+        self.right_col = SaaSCard()
+        right_layout = self.right_col.internal_layout # UI Fix: Use pre-existing internal_layout
+        grid_layout.addWidget(self.right_col, 1, 2)
+
+        lbl_right = QLabel(_("dash_events_deadlines"))
+        lbl_right.setStyleSheet(f"color: {COLOR_TEXT_MAIN}; font-size: 16px; font-weight: bold;")
+        right_layout.addWidget(lbl_right)
+
+        self.events_container = QWidget()
+        self.events_layout = QVBoxLayout(self.events_container)
+        self.events_layout.setContentsMargins(0, 0, 0, 0)
+        right_layout.addWidget(self.events_container)
+
+    def _create_stat_card(self, parent_layout, row, col, title, suffix="", format_str="{}"):
+        card = SaaSCard()
+        layout = card.internal_layout # UI Fix: Use pre-existing internal_layout
+
+        lbl_title = QLabel(title)
+        lbl_title.setStyleSheet(f"color: {COLOR_TEXT_SUB}; font-size: 13px; font-weight: bold;")
+        layout.addWidget(lbl_title)
+
+        val_lbl = CountUpLabel(format_str=format_str, suffix=suffix)
+        val_lbl.setStyleSheet(f"color: {COLOR_TEXT_MAIN}; font-size: 24px; font-weight: bold;")
+        layout.addWidget(val_lbl)
+
+        parent_layout.addWidget(card, row, col)
         return val_lbl
 
     def _load_mock_data_async(self):
@@ -94,78 +202,111 @@ class DashboardPage(BasePage):
                 ]
             }
             self.update_data(mock_payload)
-        self.after(800, fetch_data) # Reduced delay for snappier feel
+        # PyQt6 update: QTimer.singleShot instead of tkinter's after()
+        QTimer.singleShot(800, fetch_data)
 
-    def _draw_hero_decor(self):
-        self.hero_canvas.delete("all")
-        w = self.hero_banner.winfo_width()
-        h = self.hero_banner.winfo_height()
-        if w < 10: return
-        for _ in range(8):
-            x, y = random.randint(0, w), random.randint(0, h)
-            r = random.randint(20, 60)
-            self.hero_canvas.create_oval(x-r, y-r, x+r, y+r, outline=get_color(COLOR_PRIMARY), width=1)
+    def _add_course_item(self, parent_layout, title, status, color, progress, delay=0):
+        frame = QWidget()
+        layout = QVBoxLayout(frame)
+        layout.setContentsMargins(0, 5, 0, 5)
 
-    def _add_course_item(self, parent, title, status, color, progress, delay=0):
-        frame = ctk.CTkFrame(parent, fg_color="transparent")
-        AnimationEngine.fade_in_widget(frame, delay_ms=delay)
-        
-        title_btn = ctk.CTkButton(
-            frame, text=title, text_color=COLOR_TEXT_MAIN, 
-            font=ctk.CTkFont(family=FONT_MAIN, size=14, weight="bold"),
-            fg_color="transparent", hover_color=COLOR_BG_APP, anchor="w",
-            command=lambda: getattr(self, "controller", None) and self.controller.show_page("CourseDetailPage")
-        )
-        title_btn.pack(anchor="w", fill="x")
-        ctk.CTkLabel(frame, text=status, text_color=COLOR_TEXT_SUB, font=ctk.CTkFont(family=FONT_MAIN, size=12)).pack(anchor="w", pady=(0, 5), padx=10)
-        
-        bar = AnimatedProgressBar(frame, color=color, height=6)
-        bar.pack(fill="x", padx=10)
+        title_btn = QPushButton(title)
+        title_btn.setStyleSheet(f"color: {COLOR_TEXT_MAIN}; text-align: left; font-size: 14px; font-weight: bold; background: transparent; border: none;")
+        title_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        title_btn.clicked.connect(lambda: getattr(self, "controller", None) and self.controller.show_page("CourseDetailPage"))
+        layout.addWidget(title_btn)
+
+        lbl_status = QLabel(status)
+        lbl_status.setStyleSheet(f"color: {COLOR_TEXT_SUB}; font-size: 12px;")
+        layout.addWidget(lbl_status)
+
+        bar = AnimatedProgressBar(color=color)
         bar.set_target(progress)
-        ctk.CTkFrame(parent, height=1, fg_color=COLOR_BORDER).pack(fill="x", pady=(15, 0))
+        layout.addWidget(bar)
+
+        line = QFrame()
+        line.setFrameShape(QFrame.Shape.HLine)
+        line.setStyleSheet(f"background-color: {COLOR_BORDER};")
+        layout.addWidget(line)
+
+        parent_layout.addWidget(frame)
+
+    def _add_event_item(self, parent_layout, date, title, time_str, delay=0):
+        frame = QWidget()
+        layout = QHBoxLayout(frame)
+        layout.setContentsMargins(0, 5, 0, 5)
+
+        date_box = QFrame()
+        date_box.setFixedSize(50, 50)
+        date_box.setStyleSheet(f"background-color: {COLOR_PRIMARY_LIGHT}; border-radius: 6px;")
+        date_layout = QVBoxLayout(date_box)
+        date_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        parts = date.split()
+        lbl_d1 = QLabel(parts[0])
+        lbl_d1.setStyleSheet(f"color: {COLOR_PRIMARY}; font-size: 15px; font-weight: bold;")
+        date_layout.addWidget(lbl_d1, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        if len(parts) > 1:
+            lbl_d2 = QLabel(parts[1])
+            lbl_d2.setStyleSheet(f"color: {COLOR_PRIMARY}; font-size: 11px;")
+            date_layout.addWidget(lbl_d2, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        layout.addWidget(date_box)
+
+        txt_box = QWidget()
+        txt_layout = QVBoxLayout(txt_box)
+        txt_layout.setContentsMargins(10, 0, 0, 0)
+
+        lbl_title = QLabel(title)
+        lbl_title.setStyleSheet(f"color: {COLOR_TEXT_MAIN}; font-size: 14px; font-weight: bold;")
+        txt_layout.addWidget(lbl_title)
+
+        lbl_time = QLabel(time_str)
+        lbl_time.setStyleSheet(f"color: {COLOR_TEXT_SUB}; font-size: 12px;")
+        txt_layout.addWidget(lbl_time)
+
+        layout.addWidget(txt_box)
+        parent_layout.addWidget(frame)
+
+    # PyQt6 update: Helper method to clear items from layout dynamically
+    def clear_layout(self, layout):
+        while layout.count():
+            item = layout.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                widget.deleteLater()
+            elif item.layout() is not None:
+                self.clear_layout(item.layout())
 
     def update_data(self, json_payload):
         try:
             data = json.loads(json_payload) if isinstance(json_payload, str) else json_payload
-            
+
             if "stats" in data:
                 self.stats['progress'].set_target(data["stats"].get("progress", "0"))
                 self.stats['credits'].set_target(data["stats"].get("credits", "0"))
                 self.stats['gpa'].set_target(float(data["stats"].get("gpa", "0.0")))
 
             if "courses" in data:
-                for widget in self.courses_container.winfo_children(): widget.destroy()
+                self.clear_layout(self.courses_layout)
                 for i, course in enumerate(data["courses"]):
-                    self._add_course_item(self.courses_container, course["title"], course["status"], 
+                    self._add_course_item(self.courses_layout, course["title"], course["status"], 
                                           course.get("color", COLOR_PRIMARY), course["progress"], delay=i*100)
 
             if "events" in data:
-                for widget in self.events_container.winfo_children(): widget.destroy()
+                self.clear_layout(self.events_layout)
                 for i, event in enumerate(data["events"]):
-                    self._add_event_item(self.events_container, event["date"], event["title"], event["time"], delay=i*100)
+                    self._add_event_item(self.events_layout, event["date"], event["title"], event["time"], delay=i*100)
 
-        except Exception as e: print(f"Lỗi update_data: {e}")
-
-    def _add_event_item(self, parent, date, title, time_str, delay=0):
-        frame = ctk.CTkFrame(parent, fg_color="transparent")
-        AnimationEngine.fade_in_widget(frame, delay_ms=delay)
-        
-        date_box = ctk.CTkFrame(frame, fg_color=COLOR_PRIMARY_LIGHT, corner_radius=6, width=50, height=50)
-        date_box.pack(side="left", padx=(0, 15))
-        date_box.pack_propagate(False)
-        parts = date.split()
-        ctk.CTkLabel(date_box, text=parts[0], font=ctk.CTkFont(family=FONT_MAIN, size=15, weight="bold"), text_color=COLOR_PRIMARY).pack(pady=(5,0))
-        ctk.CTkLabel(date_box, text=parts[1] if len(parts)>1 else "", font=ctk.CTkFont(family=FONT_MAIN, size=11), text_color=COLOR_PRIMARY).pack()
-        
-        txt_box = ctk.CTkFrame(frame, fg_color="transparent")
-        txt_box.pack(side="left", fill="x", expand=True)
-        ctk.CTkLabel(txt_box, text=title, text_color=COLOR_TEXT_MAIN, font=ctk.CTkFont(family=FONT_MAIN, size=14, weight="bold")).pack(anchor="w")
-        ctk.CTkLabel(txt_box, text=time_str, text_color=COLOR_TEXT_SUB, font=ctk.CTkFont(family=FONT_MAIN, size=12)).pack(anchor="w")
+        except Exception as e: 
+            print(f"Lỗi update_data: {e}")
 
 if __name__ == "__main__":
-    app = ctk.CTk()
-    app.geometry("1100x800")
-    app.configure(fg_color=COLOR_BG_APP)
-    page = DashboardPage(app, None)
-    page.pack(fill="both", expand=True)
-    app.mainloop()
+    import sys
+    from PyQt6.QtWidgets import QApplication
+    app = QApplication(sys.argv)
+    page = DashboardPage()
+    page.resize(1100, 800)
+    page.show()
+    sys.exit(app.exec())
