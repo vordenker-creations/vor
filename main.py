@@ -12,6 +12,7 @@ from pages.roadmap import RoadmapPage
 from pages.recruitment import RecruitmentPage
 from pages.ai_mentor_ui import AIMentorPage
 from pages.course_detail import CourseDetailPage
+from pages.settings import SettingsPage
 from login import LoginPage
 from register import RegisterPage
 
@@ -42,6 +43,7 @@ class MainWindow(QMainWindow):
         self.pages_container.addWidget(RecruitmentPage(controller=self)) # 5
         self.pages_container.addWidget(AIMentorPage(controller=self))    # 6
         self.pages_container.addWidget(CourseDetailPage(controller=self))# 7
+        self.pages_container.addWidget(SettingsPage(controller=self))    # 8
         
         self.central_widget.addWidget(self.main_app_widget) # 2
         self.setStyleSheet(get_global_stylesheet())
@@ -58,7 +60,8 @@ class MainWindow(QMainWindow):
             ("👥", 3, _("nav_community")), 
             ("🧭", 4, _("nav_roadmap")), 
             ("💼", 5, _("nav_recruitment")), 
-            ("🤖", 6, _("nav_ai_mentor"))
+            ("🤖", 6, _("nav_ai_mentor")),
+            ("⚙️", 8, "Settings")
         ]
         for icon, idx, tooltip in nav:
             btn = QPushButton(icon); btn.setCheckable(True); btn.setFixedSize(60, 60)
@@ -66,18 +69,21 @@ class MainWindow(QMainWindow):
             btn.setStyleSheet(self._nav_style()); btn.clicked.connect(lambda ch, i=idx: self.pages_container.setCurrentIndex(i))
             layout.addWidget(btn, alignment=Qt.AlignmentFlag.AlignCenter); layout.addSpacing(10); self.nav_group.addButton(btn, idx)
             if idx == 0: btn.setChecked(True)
+        
+        # We can add a spacer here if we want settings to be at the bottom, but the original loop just adds them top-down. 
+        # I'll let it be top-down, but perhaps I should add a stretch before the settings button? Let's just follow the original loop structure.
+        
         self.main_app_layout.addWidget(self.sidebar)
 
     def _nav_style(self):
         return f"QPushButton {{ background: transparent; color: {COLOR_TEXT_SUB}; font-size: 24px; border-radius: 12px; }} QPushButton:hover {{ background: {COLOR_BG_CARD}; }} QPushButton:checked {{ background: {COLOR_PRIMARY_LIGHT}; color: {COLOR_PRIMARY}; border-left: 3px solid {COLOR_PRIMARY}; border-radius: 0px; }}"
 
     def show_page(self, name):
-        mapping = {"DashboardPage":0, "ProfilePage":1, "LearningPage":2, "CommunityPage":3, "RoadmapPage":4, "RecruitmentPage":5, "AIMentorPage":6, "CourseDetailPage":7}
+        mapping = {"DashboardPage":0, "ProfilePage":1, "LearningPage":2, "CommunityPage":3, "RoadmapPage":4, "RecruitmentPage":5, "AIMentorPage":6, "CourseDetailPage":7, "SettingsPage":8}
         idx = mapping.get(name, 0)
         self.pages_container.setCurrentIndex(idx)
-        if idx < 7: 
-            btn = self.nav_group.button(idx)
-            if btn: btn.setChecked(True)
+        btn = self.nav_group.button(idx)
+        if btn: btn.setChecked(True)
         else: 
             for b in self.nav_group.buttons(): b.setChecked(False)
 
