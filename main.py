@@ -61,11 +61,7 @@ class MainWindow(QMainWindow):
             ("🧭", 4, _("nav_roadmap")), 
             ("💼", 5, _("nav_recruitment")), 
             ("🤖", 6, _("nav_ai_mentor")),
-<<<<<<< HEAD
             ("⚙️", 8, "Settings")
-=======
-            ("⚙️", 8, _("settings_tooltip"))
->>>>>>> 9b699e38554945b1a68fc554b4f59c385a4b5718
         ]
         for icon, idx, tooltip in nav:
             btn = QPushButton(icon); btn.setCheckable(True); btn.setFixedSize(60, 60)
@@ -87,12 +83,7 @@ class MainWindow(QMainWindow):
         idx = mapping.get(name, 0)
         self.pages_container.setCurrentIndex(idx)
         btn = self.nav_group.button(idx)
-<<<<<<< HEAD
         if btn: btn.setChecked(True)
-=======
-        if btn:
-            btn.setChecked(True)
->>>>>>> 9b699e38554945b1a68fc554b4f59c385a4b5718
         else: 
             for b in self.nav_group.buttons(): b.setChecked(False)
 
