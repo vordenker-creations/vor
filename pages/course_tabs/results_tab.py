@@ -26,7 +26,7 @@ class ResultsTab(QWidget):
 
         # Column 1
         c1 = SaaSCard()
-        c1.setStyleSheet(f"SaaSCard {{ background-color: {COLOR_BG_CARD}; border: 2px solid #A855F7; border-radius: 16px; }}")
+        c1.setStyleSheet(f"SaaSCard {{ background-color: {COLOR_BG_CARD}; border: 2px solid #3b82f6; border-radius: 16px; }}")
         l1 = c1.internal_layout
         l1.setAlignment(Qt.AlignmentFlag.AlignTop)
         

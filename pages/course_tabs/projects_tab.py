@@ -41,7 +41,7 @@ class ProjectsTab(QWidget):
         lbl_tl.setStyleSheet(f"color: {COLOR_TEXT_MAIN}; font-weight: bold; margin-top: 10px;")
         ll.addWidget(lbl_tl)
         
-        pb_tl = AnimatedProgressBar(color="#00A2FF")
+        pb_tl = AnimatedProgressBar(color="#3b82f6")
         pb_tl.set_target(0.7)
         ll.addWidget(pb_tl)
         
@@ -52,7 +52,7 @@ class ProjectsTab(QWidget):
         ch_ly.addWidget(QLabel("Current status", styleSheet=f"color: {COLOR_TEXT_SUB}; margin-top: 10px;"))
         ll.addLayout(ch_ly)
         
-        pb_ch = AnimatedProgressBar(color="#00A2FF")
+        pb_ch = AnimatedProgressBar(color="#3b82f6")
         pb_ch.set_target(0.5)
         ll.addWidget(pb_ch)
         

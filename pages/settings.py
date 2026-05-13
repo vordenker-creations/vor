@@ -21,8 +21,8 @@ class SettingsPage(QWidget):
         content_layout.setContentsMargins(20, 20, 20, 20)
         
         # Main Settings Card
-        card = SaaSCard(border_color="#00A2FF")
-        card.setStyleSheet(f"SaaSCard {{ background-color: {COLOR_BG_APP}; border: 2px solid #00A2FF; border-radius: 16px; }}")
+        card = SaaSCard(border_color="#3b82f6")
+        card.setStyleSheet(f"SaaSCard {{ background-color: {COLOR_BG_APP}; border: 2px solid #3b82f6; border-radius: 16px; }}")
         
         card_layout = QHBoxLayout()
         card_layout.setContentsMargins(20, 20, 20, 20)
@@ -35,7 +35,7 @@ class SettingsPage(QWidget):
         
         # System & Preferences
         lbl_sys = QLabel("⚙️ System & Preferences")
-        lbl_sys.setStyleSheet(f"color: #00E5FF; font-size: 18px; font-weight: bold;")
+        lbl_sys.setStyleSheet(f"color: #205c75; font-size: 18px; font-weight: bold;")
         left_col.addWidget(lbl_sys)
         left_col.addSpacing(5)
         
@@ -47,7 +47,7 @@ class SettingsPage(QWidget):
         
         # Security & Login
         lbl_sec = QLabel("🔒 Security & Login")
-        lbl_sec.setStyleSheet(f"color: #00E5FF; font-size: 18px; font-weight: bold;")
+        lbl_sec.setStyleSheet(f"color: #205c75; font-size: 18px; font-weight: bold;")
         left_col.addWidget(lbl_sec)
         left_col.addSpacing(5)
         
@@ -66,7 +66,7 @@ class SettingsPage(QWidget):
         
         # Account & Support
         lbl_acc = QLabel("👤 Account & Support")
-        lbl_acc.setStyleSheet(f"color: #00E5FF; font-size: 18px; font-weight: bold;")
+        lbl_acc.setStyleSheet(f"color: #205c75; font-size: 18px; font-weight: bold;")
         left_col.addWidget(lbl_acc)
         left_col.addSpacing(5)
         
@@ -96,7 +96,7 @@ class SettingsPage(QWidget):
         slider.setValue(40)
         slider.setStyleSheet("""
             QSlider::groove:horizontal { border: 1px solid #999999; height: 8px; background: #333333; border-radius: 4px; }
-            QSlider::sub-page:horizontal { background: #00E5FF; border-radius: 4px; }
+            QSlider::sub-page:horizontal { background: #205c75; border-radius: 4px; }
             QSlider::handle:horizontal { background: #E0F7FA; border: 1px solid #5c5c5c; width: 18px; margin-top: -5px; margin-bottom: -5px; border-radius: 9px; }
         """)
         bright_layout.addWidget(slider)
@@ -107,14 +107,14 @@ class SettingsPage(QWidget):
         # Language Dropdown
         lang_cb = QComboBox()
         lang_cb.addItems(["English", "Vietnamese"])
-        lang_cb.setStyleSheet(f"background-color: transparent; border: 1px solid #00A2FF; color: {COLOR_TEXT_MAIN}; border-radius: 4px; padding: 5px;")
+        lang_cb.setStyleSheet(f"background-color: transparent; border: 1px solid #3b82f6; color: {COLOR_TEXT_MAIN}; border-radius: 4px; padding: 5px;")
         right_col.addWidget(lang_cb)
         
         right_col.addSpacing(35) # Align with Change Password
         
         # Change Password Section
         btn_cp = QPushButton("CHANGE PASSWORD")
-        btn_cp.setStyleSheet(f"background-color: transparent; color: {COLOR_TEXT_MAIN}; border: 2px solid #00E5FF; border-radius: 8px; padding: 6px; font-weight: bold;")
+        btn_cp.setStyleSheet(f"background-color: transparent; color: {COLOR_TEXT_MAIN}; border: 2px solid #205c75; border-radius: 8px; padding: 6px; font-weight: bold;")
         right_col.addWidget(btn_cp)
         right_col.addSpacing(5)
         
@@ -122,7 +122,7 @@ class SettingsPage(QWidget):
             inp = QLineEdit()
             inp.setPlaceholderText(placeholder)
             inp.setEchoMode(QLineEdit.EchoMode.Password)
-            inp.setStyleSheet(f"background-color: transparent; border: 1px solid #00A2FF; border-radius: 4px; padding: 6px; color: {COLOR_TEXT_MAIN};")
+            inp.setStyleSheet(f"background-color: transparent; border: 1px solid #3b82f6; border-radius: 4px; padding: 6px; color: {COLOR_TEXT_MAIN};")
             return inp
             
         right_col.addWidget(create_input("Current Password"))
@@ -135,7 +135,7 @@ class SettingsPage(QWidget):
         
         # Upgrade Support
         btn_upg = QPushButton("UPGRADE ACCOUNT")
-        btn_upg.setStyleSheet(f"background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #00E5FF, stop:1 #8A2BE2); color: white; border: none; border-radius: 8px; padding: 8px; font-weight: bold; font-size: 14px;")
+        btn_upg.setStyleSheet(f"background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #205c75, stop:1 #0ea5e9); color: white; border: none; border-radius: 8px; padding: 8px; font-weight: bold; font-size: 14px;")
         right_col.addWidget(btn_upg)
         right_col.addSpacing(5)
         
@@ -162,7 +162,7 @@ class SettingsPage(QWidget):
         bottom_layout.addStretch()
         
         btn_save = QPushButton("SAVE CHANGES")
-        btn_save.setStyleSheet(f"background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #00E5FF, stop:1 #0088FF); color: white; border: none; border-radius: 8px; padding: 10px 30px; font-weight: bold; font-size: 14px;")
+        btn_save.setStyleSheet(f"background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #205c75, stop:1 #1a4d63); color: white; border: none; border-radius: 8px; padding: 10px 30px; font-weight: bold; font-size: 14px;")
         bottom_layout.addWidget(btn_save)
         
         btn_cancel = QPushButton("CANCEL")

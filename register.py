@@ -1,10 +1,9 @@
 import sys
-import random
-from PyQt6.QtWidgets import *
-from PyQt6.QtCore import *
-from PyQt6.QtGui import *
-from config import *
-from components import SaaSCard, AnimationEngine
+from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, 
+                             QPushButton, QFrame, QGraphicsDropShadowEffect)
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QColor, QFont
+from neumorphic_components import NeumorphicFrame, NeumorphicInput, GlowingButton, NeumorphicButton
 from database import crud
 
 class RegisterPage(QWidget):
@@ -12,151 +11,201 @@ class RegisterPage(QWidget):
         super().__init__(parent)
         self.on_back_click = on_back_click
         self.on_register = on_register
-        self.setObjectName("RegisterPage")
-        self.setStyleSheet(f"background-color: {COLOR_BG_APP};")
-        self.main_layout = QVBoxLayout(self)
-        self.main_layout.setContentsMargins(0, 0, 0, 0)
-        self.circles = []
-        self._generate_circles()
-        self._setup_content()
-
-    def _generate_circles(self):
-        colors = [QColor("#00D1FF"), QColor("#10B981"), QColor("#6366F1")]
-        for _ in range(12):
-            x = random.randint(0, 1200)
-            y = random.randint(0, 800)
-            r = random.randint(30, 100)
-            color = random.choice(colors)
-            self.circles.append((x, y, r, color))
-
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        for x, y, r, color in self.circles:
-            for i in range(4):
-                alpha_r = r + (i * 15)
-                painter.setPen(QColor(color.red(), color.green(), color.blue(), 25))
-                painter.drawEllipse(QPoint(x, y), alpha_r, alpha_r)
-
-    def _setup_content(self):
-        content_area = QWidget()
-        content_layout = QVBoxLayout(content_area)
-        content_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.card = SaaSCard()
-        self.card.setFixedSize(800, 700)
-        card_layout = self.card.internal_layout
-        card_layout.setContentsMargins(40, 30, 40, 30)
-        title_lbl = QLabel("CREATE ACCOUNT")
-        title_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        title_lbl.setStyleSheet(f"color: {COLOR_PRIMARY}; font-size: 28px; font-weight: bold;")
-        card_layout.addWidget(title_lbl)
-        sub_lbl = QLabel("Start your AI career journey today.")
-        sub_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        sub_lbl.setStyleSheet(f"color: {COLOR_TEXT_SUB}; font-size: 13px;")
-        card_layout.addWidget(sub_lbl)
-        card_layout.addSpacing(20)
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QFrame.Shape.NoFrame)
-        scroll.setStyleSheet("background: transparent;")
-        form_widget = QWidget()
-        form_widget.setStyleSheet("background: transparent;")
-        grid = QGridLayout(form_widget)
-        grid.setSpacing(20)
-        self.name_lbl, self.name_entry = self._create_field("Full Name", "👤 Full Name")
-        grid.addWidget(self.name_lbl, 0, 0)
-        grid.addWidget(self.name_entry, 1, 0)
-        major_lbl = QLabel("Major")
-        major_lbl.setStyleSheet(f"color: {COLOR_TEXT_MAIN}; font-size: 11px; font-weight: bold;")
-        self.major_combo = QComboBox()
-        self.major_combo.addItems(["Computer Science", "Information Technology", "AI & Data Science", "Digital Business"])
-        self.major_combo.setFixedHeight(40)
-        self.major_combo.setStyleSheet(self._get_combo_style())
-        grid.addWidget(major_lbl, 0, 1)
-        grid.addWidget(self.major_combo, 1, 1)
-        self.email_lbl, self.email_entry = self._create_field("Student Email", "📧 email@vku.udn.vn")
-        grid.addWidget(self.email_lbl, 2, 0)
-        grid.addWidget(self.email_entry, 3, 0)
-        self.sem_lbl, self.sem_entry = self._create_field("Current Semester", "📖 e.g. 4")
-        grid.addWidget(self.sem_lbl, 2, 1)
-        grid.addWidget(self.sem_entry, 3, 1)
-        self.univ_lbl, self.univ_entry = self._create_field("University", "🏫 University Name")
-        grid.addWidget(self.univ_lbl, 4, 0)
-        grid.addWidget(self.univ_entry, 5, 0)
-        self.total_sem_lbl, self.total_sem_entry = self._create_field("Total Semesters", "📅 e.g. 8")
-        grid.addWidget(self.total_sem_lbl, 4, 1)
-        grid.addWidget(self.total_sem_entry, 5, 1)
-        self.pass_lbl, self.pass_entry = self._create_field("Password", "🔒 Password", is_password=True)
-        grid.addWidget(self.pass_lbl, 6, 0)
-        grid.addWidget(self.pass_entry, 7, 0)
-        self.confirm_lbl, self.confirm_entry = self._create_field("Confirm Password", "🔒 Confirm Password", is_password=True)
-        grid.addWidget(self.confirm_lbl, 6, 1)
-        grid.addWidget(self.confirm_entry, 7, 1)
-        scroll.setWidget(form_widget)
-        card_layout.addWidget(scroll)
-        self.terms_check = QCheckBox("I agree to the Terms & Conditions.")
-        self.terms_check.setStyleSheet(f"color: {COLOR_TEXT_SUB}; font-size: 11px;")
-        card_layout.addWidget(self.terms_check, alignment=Qt.AlignmentFlag.AlignCenter)
-        btn_layout = QHBoxLayout()
-        btn_cancel = QPushButton("CANCEL")
-        btn_cancel.setFixedHeight(45)
-        btn_cancel.setStyleSheet(f"QPushButton {{ background: transparent; border: 1px solid {COLOR_BORDER}; color: {COLOR_TEXT_MAIN}; border-radius: 10px; font-weight: bold; }} QPushButton:hover {{ background: {COLOR_BG_APP}; }}")
-        btn_cancel.clicked.connect(self.on_back_click)
-        btn_layout.addWidget(btn_cancel)
-        btn_reg = QPushButton("REGISTER NOW")
-        btn_reg.setFixedHeight(45)
-        btn_reg.setStyleSheet(f"QPushButton {{ background: {COLOR_PRIMARY}; color: white; border-radius: 10px; font-weight: bold; }} QPushButton:hover {{ background: #00B4D8; }}")
-        btn_reg.clicked.connect(self._handle_register)
-        btn_layout.addWidget(btn_reg)
-        card_layout.addLayout(btn_layout)
-        content_layout.addWidget(self.card)
-        self.main_layout.addWidget(content_area)
-
-    def _create_field(self, label_text, placeholder, is_password=False):
-        lbl = QLabel(label_text)
-        lbl.setStyleSheet(f"color: {COLOR_TEXT_MAIN}; font-size: 11px; font-weight: bold;")
-        entry = QLineEdit()
-        entry.setPlaceholderText(placeholder)
-        if is_password: entry.setEchoMode(QLineEdit.EchoMode.Password)
-        entry.setFixedHeight(40)
-        entry.setStyleSheet(f"QLineEdit {{ background-color: {COLOR_BG_APP}; border: 1px solid {COLOR_BORDER}; border-radius: 10px; padding: 0 12px; color: {COLOR_TEXT_MAIN}; }} QLineEdit:focus {{ border: 2px solid {COLOR_PRIMARY}; }}")
-        return lbl, entry
-
-    def _get_combo_style(self):
-        return f"QComboBox {{ background-color: {COLOR_BG_APP}; border: 1px solid {COLOR_BORDER}; border-radius: 10px; padding: 0 12px; color: {COLOR_TEXT_MAIN}; }} QComboBox::drop-down {{ border: none; }} QComboBox QAbstractItemView {{ background-color: {COLOR_BG_CARD}; color: {COLOR_TEXT_MAIN}; selection-background-color: {COLOR_PRIMARY}; border: 1px solid {COLOR_BORDER}; }}"
+        
+        self.setWindowTitle("AI INSIGHT - Đăng ký")
+        self.setStyleSheet("background-color: #F0F2F5; font-family: 'Segoe UI', sans-serif;")
+        
+        main_layout = QHBoxLayout(self)
+        main_layout.setContentsMargins(50, 50, 50, 50)
+        main_layout.setSpacing(60)
+        
+        # ==========================================
+        # LEFT COLUMN: Branding & Features
+        # ==========================================
+        left_column = QWidget()
+        left_layout = QVBoxLayout(left_column)
+        left_layout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
+        
+        # Brand Title with Badge (Properly spaced layout)
+        brand_layout = QHBoxLayout()
+        brand_layout.setSpacing(15)
+        brand_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        
+        ai_badge = NeumorphicFrame(radius=15, offset=5, blur=12)
+        ai_badge.setFixedSize(65, 65) # Icon remains fixed for design consistency
+        ai_label = QLabel("AI")
+        ai_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        ai_label.setStyleSheet("color: #6366f1; font-size: 22px; font-weight: 900;")
+        ai_badge.add_widget(ai_label)
+        
+        brand_title = QLabel("AI INSIGHT")
+        brand_title.setStyleSheet("color: #1e293b; font-size: 42px; font-weight: 900; letter-spacing: -1px;")
+        
+        brand_layout.addWidget(ai_badge)
+        brand_layout.addWidget(brand_title)
+        left_layout.addLayout(brand_layout)
+        
+        subtitle = QLabel("Nâng tầm sự nghiệp với trí tuệ nhân tạo và lộ trình cá nhân hóa.")
+        subtitle.setWordWrap(True)
+        subtitle.setStyleSheet("color: #64748b; font-size: 18px; font-weight: 500; margin-top: 10px;")
+        left_layout.addWidget(subtitle)
+        
+        left_layout.addSpacing(40)
+        
+        features = [
+            ("🐍", "Lập trình Python"), ("🧠", "Mạng nơ-ron"), ("🗣️", "Xử lý ngôn ngữ"),
+            ("👁️", "Thị giác máy tính"), ("📊", "Khoa học dữ liệu"), ("☁️", "Điện toán đám mây")
+        ]
+        for icon, text in features:
+            pill = NeumorphicButton(f"{icon}   {text}")
+            pill.setFixedHeight(55)
+            left_layout.addWidget(pill)
+            
+        main_layout.addWidget(left_column, 4)
+        
+        # ==========================================
+        # RIGHT COLUMN: The Vietnamese Register Form
+        # ==========================================
+        right_column = QWidget()
+        right_layout = QVBoxLayout(right_column)
+        right_layout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
+        
+        self.main_card = NeumorphicFrame(radius=35, offset=12, blur=30)
+        right_layout.addWidget(self.main_card)
+        
+        # --- HEADER ---
+        header_layout = QVBoxLayout()
+        
+        status_layout = QHBoxLayout()
+        status_layout.setSpacing(8)
+        check_lbl = QLabel("✔")
+        check_lbl.setStyleSheet("color: #22c55e; font-weight: bold; font-size: 16px;")
+        status_text = QLabel("HỆ THỐNG AI MENTOR ĐÃ KÍCH HOẠT")
+        status_text.setStyleSheet("color: #94a3b8; font-weight: 800; font-size: 12px; letter-spacing: 1px;")
+        status_layout.addWidget(check_lbl)
+        status_layout.addWidget(status_text)
+        status_layout.addStretch()
+        header_layout.addLayout(status_layout)
+        
+        form_title = QLabel("Đăng ký Tài khoản.")
+        form_title.setStyleSheet("color: #1e293b; font-size: 34px; font-weight: 900; margin-top: 5px;")
+        header_layout.addWidget(form_title)
+        
+        sub_nav = QLabel("TỔNG QUAN  |  PHÂN TÍCH CV  |  TẠO CV  |  Tiếp tục Học tập")
+        sub_nav.setStyleSheet("color: #64748b; font-size: 11px; font-weight: 700; letter-spacing: 0.5px;")
+        header_layout.addWidget(sub_nav)
+        
+        self.main_card.add_layout(header_layout)
+        
+        # --- SECTION 1: Thông tin tài khoản (2x2 Grid) ---
+        sec1_container = NeumorphicFrame(radius=20, offset=6, blur=15)
+        sec1_layout = QVBoxLayout()
+        sec1_lbl = QLabel("THÔNG TIN TÀI KHOẢN")
+        sec1_lbl.setStyleSheet("color: #1e293b; font-size: 11px; font-weight: 800; margin-bottom: 5px;")
+        sec1_layout.addWidget(sec1_lbl)
+        
+        grid1 = QGridLayout()
+        grid1.setSpacing(15)
+        
+        self.fullname_input = NeumorphicInput("Họ và Tên", "👤")
+        self.username_input = NeumorphicInput("Tên đăng nhập", "📧")
+        self.password_input = NeumorphicInput("Mật khẩu", "🔒", is_password=True)
+        self.confirm_input = NeumorphicInput("Xác nhận Mật khẩu", "🔒", is_password=True)
+        
+        grid1.addWidget(self.fullname_input, 0, 0)
+        grid1.addWidget(self.username_input, 0, 1)
+        grid1.addWidget(self.password_input, 1, 0)
+        grid1.addWidget(self.confirm_input, 1, 1)
+        
+        sec1_layout.addLayout(grid1)
+        sec1_container.content_layout.addLayout(sec1_layout)
+        self.main_card.add_widget(sec1_container)
+        
+        # --- SECTION 2: Hồ sơ cá nhân (3x2 Grid) ---
+        sec2_container = NeumorphicFrame(radius=20, offset=6, blur=15)
+        sec2_layout = QVBoxLayout()
+        sec2_lbl = QLabel("HỒ SƠ CÁ NHÂN")
+        sec2_lbl.setStyleSheet("color: #1e293b; font-size: 11px; font-weight: 800; margin-bottom: 5px;")
+        sec2_layout.addWidget(sec2_lbl)
+        
+        grid2 = QGridLayout()
+        grid2.setSpacing(15)
+        
+        self.birth_input = NeumorphicInput("Ngày sinh", "📅")
+        self.nation_input = NeumorphicInput("Quốc tịch", "🌍")
+        self.edu_input = NeumorphicInput("Học vấn", "🎓")
+        self.major_input = NeumorphicInput("Ngành nghề", "💼")
+        self.rank_input = NeumorphicInput("Hạng", "🏅")
+        self.job_input = NeumorphicInput("Công việc", "⚙")
+        
+        grid2.addWidget(self.birth_input, 0, 0)
+        grid2.addWidget(self.nation_input, 0, 1)
+        grid2.addWidget(self.edu_input, 0, 2)
+        grid2.addWidget(self.major_input, 1, 0)
+        grid2.addWidget(self.rank_input, 1, 1)
+        grid2.addWidget(self.job_input, 1, 2)
+        
+        sec2_layout.addLayout(grid2)
+        sec2_container.content_layout.addLayout(sec2_layout)
+        self.main_card.add_widget(sec2_container)
+        
+        # --- SUBMIT BUTTON ---
+        submit_layout = QHBoxLayout()
+        self.submit_btn = GlowingButton("ĐĂNG KÝ TÀI KHOẢN")
+        self.submit_btn.clicked.connect(self._handle_register)
+        submit_layout.addStretch()
+        submit_layout.addWidget(self.submit_btn)
+        submit_layout.addStretch()
+        self.main_card.add_layout(submit_layout)
+        
+        # --- FOOTER ---
+        footer_layout = QHBoxLayout()
+        footer_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        footer_text = QLabel("Đã có tài khoản?")
+        footer_text.setStyleSheet("color: #64748b; font-size: 14px; font-weight: 500;")
+        
+        self.back_btn = QPushButton("Đăng nhập ngay.")
+        self.back_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.back_btn.setStyleSheet("""
+            QPushButton { color: #1E5F74; font-weight: 800; font-size: 14px; border: none; background: transparent; }
+            QPushButton:hover { text-decoration: underline; }
+        """)
+        self.back_btn.clicked.connect(self.on_back_click if self.on_back_click else lambda: None)
+        
+        footer_layout.addWidget(footer_text)
+        footer_layout.addWidget(self.back_btn)
+        self.main_card.add_layout(footer_layout)
+        
+        main_layout.addWidget(right_column, 6)
 
     def _handle_register(self):
-        if not self.terms_check.isChecked():
-            print("Please agree to terms.")
-            return
+        email = self.username_input.text()
+        fullname = self.fullname_input.text()
+        password = self.password_input.text()
+        confirm = self.confirm_input.text()
         
-        email = self.email_entry.text()
-        full_name = self.name_entry.text()
-        major = self.major_combo.currentText()
-        password = self.pass_entry.text()
-        confirm = self.confirm_entry.text()
-        
-        if not email or not full_name or not password:
-            print("Please fill in all required fields.")
+        if not email or not fullname or not password:
+            print("Vui lòng điền đầy đủ thông tin.")
             return
-            
         if password != confirm:
-            print("Passwords do not match.")
+            print("Mật khẩu không khớp.")
             return
             
-        print(f"Registering student: {full_name} ({email})")
+        print(f"Đang đăng ký: {fullname} ({email})")
         try:
-            crud.save_student_profile(email, full_name, major)
+            crud.save_student_profile(email, fullname, self.major_input.text())
             if self.on_register:
                 self.on_register(email, password)
         except Exception as e:
-            print(f"Registration error: {e}")
+            print(f"Lỗi đăng ký: {e}")
 
 if __name__ == "__main__":
+    from PyQt6.QtWidgets import QApplication
     app = QApplication(sys.argv)
-    window = QMainWindow()
-    reg = RegisterPage(on_back_click=lambda: print("Back"))
-    window.setCentralWidget(reg)
-    window.resize(1100, 800)
+    window = QWidget()
+    win_layout = QVBoxLayout(window)
+    reg = RegisterPage()
+    win_layout.addWidget(reg)
+    window.resize(1300, 900)
     window.show()
     sys.exit(app.exec())

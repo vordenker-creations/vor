@@ -1,228 +1,157 @@
 import sys
-import random
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
-                             QLineEdit, QPushButton, QFrame, QApplication)
-from PyQt6.QtCore import Qt, QRect, QPoint, QSize
-from PyQt6.QtGui import QPainter, QColor, QFont, QCursor
-
-from config import COLOR_BG_APP, COLOR_PRIMARY, COLOR_TEXT_MAIN, COLOR_TEXT_SUB, COLOR_BORDER
-from components import SaaSCard
+                             QPushButton, QSpacerItem, QSizePolicy)
+from PyQt6.QtCore import Qt
+from style_utils import (GLOBAL_BG, apply_neumorphic_outer_shadow, 
+                         create_neumorphic_input, create_glowing_button)
 
 class LoginPage(QWidget):
-    def __init__(self, parent=None, on_login=None, on_register_click=None):
-        super().__init__(parent)
-        self.on_login = on_login
-        self.on_register_click = on_register_click
-        self.setObjectName("LoginPage")
+    def __init__(self, on_login=None, on_register_click=None):
+        super().__init__()
+        self.on_login_callback = on_login
+        self.on_register_click_callback = on_register_click
         
-        # Base Application Background
-        self.setStyleSheet(f"background-color: {COLOR_BG_APP};")
+        self.setWindowTitle("AI Career Bridge - Login")
+        self.setStyleSheet(f"background-color: {GLOBAL_BG}; font-family: 'Segoe UI', sans-serif;")
+        self.resize(1100, 800)
         
-        self.main_layout = QHBoxLayout(self)
-        self.main_layout.setContentsMargins(0, 0, 0, 0)
-        self.main_layout.setSpacing(0)
+        main_layout = QHBoxLayout(self)
+        main_layout.setContentsMargins(60, 60, 60, 60)
+        main_layout.setSpacing(60)
         
-        self.circles = []
-        self._generate_circles()
+        # ==========================================
+        # LEFT WIDGET: Feature Overview
+        # ==========================================
+        left_widget = QWidget()
+        left_layout = QVBoxLayout(left_widget)
+        left_layout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
         
-        self._setup_sidebar()
-        self._setup_content()
+        # Title with Badge
+        title_layout = QHBoxLayout()
+        title_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        
+        badge_lbl = QLabel("AI")
+        badge_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        badge_lbl.setFixedSize(50, 50)
+        badge_lbl.setStyleSheet("color: #6366f1; font-size: 20px; font-weight: 900; background: transparent;")
+        badge_container = apply_neumorphic_outer_shadow(badge_lbl, radius=15, offset=5, blur=15)
+        title_layout.addWidget(badge_container)
+        
+        title_text = QLabel("AI INSIGHT")
+        title_text.setStyleSheet("color: darkslategray; font-size: 38px; font-weight: 900;")
+        title_layout.addWidget(title_text)
+        
+        left_layout.addLayout(title_layout)
+        left_layout.addSpacing(15)
+        
+        # Subtitle
+        subtitle = QLabel("Elevate your career with AI-driven analytics and personal roadmaps")
+        subtitle.setWordWrap(True)
+        subtitle.setStyleSheet("color: #64748b; font-size: 18px; font-weight: 500;")
+        left_layout.addWidget(subtitle)
+        left_layout.addSpacing(40)
+        
+        # Feature Pills
+        features = [
+            ("🐍", "Python"),
+            ("🧠", "Neural Networks"),
+            ("🗣️", "NLP"),
+            ("👁️", "Computer Vision"),
+            ("📊", "Data Science"),
+            ("☁️", "Cloud AI")
+        ]
+        
+        for icon, text in features:
+            pill_btn = QPushButton(f"{icon}   {text}")
+            pill_btn.setFixedHeight(55)
+            pill_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            pill_btn.setStyleSheet("color: #334155; font-weight: 700; font-size: 15px; text-align: left; padding-left: 20px;")
+            shadowed_pill = apply_neumorphic_outer_shadow(pill_btn, radius=27, offset=6, blur=15)
+            left_layout.addWidget(shadowed_pill)
+        
+        main_layout.addWidget(left_widget, 1)
 
-    def _generate_circles(self):
-        # Modern Neon Colors for background orbs
-        colors = [QColor(0, 209, 255), QColor(16, 185, 129), QColor(99, 102, 241)] 
-        for _ in range(12):
-            x = random.randint(0, 1200)
-            y = random.randint(0, 800)
-            r = random.randint(30, 90)
-            color = random.choice(colors)
-            self.circles.append((x, y, r, color))
-
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        for x, y, r, color in self.circles:
-            for i in range(4):
-                alpha_r = r + (i * 15)
-                painter.setPen(QColor(color.red(), color.green(), color.blue(), 20))
-                painter.drawEllipse(QPoint(x, y), alpha_r, alpha_r)
-
-    def _setup_sidebar(self):
-        sidebar = QWidget()
-        sidebar.setFixedWidth(400)
-        # Using a slight semi-transparent overlay to match Glassmorphism vibe
-        sidebar.setStyleSheet(f"background-color: rgba(30, 42, 56, 0.4); border-right: 1px solid rgba(255, 255, 255, 0.05);")
+        # ==========================================
+        # RIGHT WIDGET: Login Form Card
+        # ==========================================
+        right_widget = QWidget()
+        right_layout = QVBoxLayout(right_widget)
+        right_layout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
         
-        sidebar_layout = QVBoxLayout(sidebar)
-        sidebar_layout.setContentsMargins(50, 100, 40, 60)
-        sidebar_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        form_content = QWidget()
+        form_inner = QVBoxLayout(form_content)
+        form_inner.setContentsMargins(40, 50, 40, 50)
+        form_inner.setSpacing(25)
         
-        lbl_insight = QLabel("AI INSIGHT")
-        lbl_insight.setStyleSheet(f"color: {COLOR_PRIMARY}; font-size: 36px; font-weight: 900; background: transparent;")
-        sidebar_layout.addWidget(lbl_insight)
+        welcome_title = QLabel("Welcome Back")
+        welcome_title.setStyleSheet("font-size: 32px; font-weight: 800; color: #1e293b;")
+        welcome_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        form_inner.addWidget(welcome_title)
         
-        lbl_desc = QLabel("Elevate your career with AI-driven analytics and personal roadmaps.")
-        lbl_desc.setWordWrap(True)
-        lbl_desc.setStyleSheet(f"color: {COLOR_TEXT_SUB}; font-size: 15px; margin-top: 15px; background: transparent;")
-        sidebar_layout.addWidget(lbl_desc)
+        # Inputs
+        self.email_input = create_neumorphic_input("Email Address", "📧")
+        self.password_input = create_neumorphic_input("Password", "🔒", is_password=True)
         
-        sidebar_layout.addSpacing(50)
+        self.email_entry = self.email_input
+        self.password_entry = self.password_input
         
-        tags = ["Python", "Neural Networks", "NLP", "Computer Vision", "Data Science", "Cloud AI"]
-        for tag in tags:
-            btn = QPushButton(f"• {tag}")
-            btn.setFixedSize(160, 34)
-            # Modern frosted ghost-button look for tags
-            btn.setStyleSheet(f"""
-                QPushButton {{
-                    background-color: rgba(255, 255, 255, 0.03);
-                    color: {COLOR_TEXT_MAIN};
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                    border-radius: 17px;
-                    font-size: 12px;
-                    text-align: left;
-                    padding-left: 15px;
-                }}
-            """)
-            sidebar_layout.addWidget(btn)
-            sidebar_layout.addSpacing(8)
-            
-        self.main_layout.addWidget(sidebar)
-
-    def _setup_content(self):
-        content_area = QWidget()
-        content_layout = QVBoxLayout(content_area)
-        content_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        form_inner.addWidget(self.email_input)
+        form_inner.addWidget(self.password_input)
         
-        # Central Login Card Container
-        self.card = QFrame()
-        # Ensure exact specificity so global stylesheets don't accidentally hide the card background or text
-        self.card.setStyleSheet(f"""
-            QFrame {{
-                background-color: rgba(30, 42, 56, 0.6);
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                border-radius: 20px;
-            }}
+        # Forgot Password
+        forgot_btn = QPushButton("Forgot Password?")
+        forgot_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        forgot_btn.setStyleSheet("""
+            QPushButton { color: #1E5F74; font-weight: 600; font-size: 13px; border: none; background: transparent; }
+            QPushButton:hover { color: #25758f; text-decoration: underline; }
         """)
-        self.card.setFixedSize(480, 580)
+        forgot_layout = QHBoxLayout()
+        forgot_layout.addStretch()
+        forgot_layout.addWidget(forgot_btn)
+        form_inner.addLayout(forgot_layout)
         
-        card_layout = QVBoxLayout(self.card)
-        card_layout.setContentsMargins(50, 40, 50, 40)
+        # Sign In CTA
+        self.login_btn = create_glowing_button("SIGN IN", height=50)
+        self.login_btn.btn.clicked.connect(self._handle_login)
+        form_inner.addWidget(self.login_btn)
         
-        lbl_login = QLabel("LOGIN")
-        lbl_login.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        lbl_login.setStyleSheet(f"color: {COLOR_TEXT_MAIN}; font-size: 30px; font-weight: 800; background: transparent; border: none;")
-        card_layout.addWidget(lbl_login)
+        # Footer
+        footer_layout = QHBoxLayout()
+        footer_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        footer_text = QLabel("Don't have an account?")
+        footer_text.setStyleSheet("color: #64748b; font-size: 14px; font-weight: 500;")
         
-        lbl_sub = QLabel("Access your professional bridge.")
-        lbl_sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        lbl_sub.setStyleSheet(f"color: {COLOR_TEXT_SUB}; font-size: 14px; background: transparent; border: none;")
-        card_layout.addWidget(lbl_sub)
-        
-        card_layout.addSpacing(35)
-        
-        self.email_lbl, self.email_entry = self._create_input("Email Address", "email@vku.udn.vn")
-        card_layout.addWidget(self.email_lbl)
-        card_layout.addWidget(self.email_entry)
-        
-        card_layout.addSpacing(15)
-        
-        self.pass_lbl, self.pass_entry = self._create_input("Password", "••••••••", is_password=True)
-        card_layout.addWidget(self.pass_lbl)
-        card_layout.addWidget(self.pass_entry)
-        
-        card_layout.addSpacing(40)
-        
-        btn_login = QPushButton("LOGIN")
-        btn_login.setFixedHeight(48)
-        btn_login.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        # Ensure the Login Button text stands out (dark text on bright background)
-        # Avoid inheritance from QFrame making text white on cyan
-        btn_login.setStyleSheet(f"""
-            QPushButton {{
-                background-color: {COLOR_PRIMARY};
-                color: #000000;
-                font-weight: 800;
-                font-size: 14px;
-                border-radius: 12px;
-                border: none;
-            }}
-            QPushButton:hover {{
-                background-color: #33EEFF;
-            }}
-            QPushButton:pressed {{
-                background-color: #00A6CC;
-            }}
+        self.register_btn = QPushButton("Create Account")
+        self.register_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.register_btn.setStyleSheet("""
+            QPushButton { color: #1E5F74; font-weight: 800; font-size: 14px; border: none; background: transparent; }
+            QPushButton:hover { color: #25758f; text-decoration: underline; }
         """)
-        btn_login.clicked.connect(self._handle_login)
-        card_layout.addWidget(btn_login)
+        self.register_btn.clicked.connect(self._handle_register_click)
         
-        card_layout.addSpacing(20)
+        footer_layout.addWidget(footer_text)
+        footer_layout.addWidget(self.register_btn)
+        form_inner.addLayout(footer_layout)
         
-        reg_layout = QHBoxLayout()
-        reg_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        # Apply Main Card Shadow
+        shadowed_card = apply_neumorphic_outer_shadow(form_content, radius=35, offset=12, blur=30)
+        right_layout.addWidget(shadowed_card)
         
-        lbl_new = QLabel("New here?")
-        lbl_new.setStyleSheet(f"color: {COLOR_TEXT_SUB}; font-size: 13px; background: transparent; border: none;")
-        reg_layout.addWidget(lbl_new)
-        
-        btn_reg = QPushButton("Create Account")
-        btn_reg.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        btn_reg.setStyleSheet(f"""
-            QPushButton {{
-                color: {COLOR_PRIMARY};
-                font-weight: bold;
-                font-size: 13px;
-                background: transparent;
-                border: none;
-            }}
-            QPushButton:hover {{
-                color: #33EEFF;
-                text-decoration: underline;
-            }}
-        """)
-        btn_reg.clicked.connect(self.on_register_click)
-        reg_layout.addWidget(btn_reg)
-        
-        card_layout.addLayout(reg_layout)
-        
-        content_layout.addWidget(self.card)
-        self.main_layout.addWidget(content_area)
-
-    def _create_input(self, label_text, placeholder, is_password=False):
-        lbl = QLabel(label_text)
-        lbl.setStyleSheet(f"color: {COLOR_TEXT_MAIN}; font-size: 12px; font-weight: bold; background: transparent; border: none;")
-        
-        entry = QLineEdit()
-        entry.setPlaceholderText(placeholder)
-        if is_password:
-            entry.setEchoMode(QLineEdit.EchoMode.Password)
-        entry.setFixedHeight(45)
-        # Glassmorphic input field style
-        entry.setStyleSheet(f"""
-            QLineEdit {{
-                background-color: rgba(0, 0, 0, 0.2);
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                border-radius: 10px;
-                padding: 0 15px;
-                color: {COLOR_TEXT_MAIN};
-                font-size: 13px;
-            }}
-            QLineEdit:focus {{
-                border: 1px solid {COLOR_PRIMARY};
-                background-color: rgba(0, 209, 255, 0.05);
-            }}
-        """)
-        return lbl, entry
+        main_layout.addWidget(right_widget, 1)
 
     def _handle_login(self):
         email = self.email_entry.text()
-        password = self.pass_entry.text()
-        if not email or not password:
-            self.email_entry.setPlaceholderText("❌ Input Required")
-            self.pass_entry.setPlaceholderText("❌ Input Required")
-            return
-            
-        # Logic strictly separated: passes the intent out instead of processing it locally.
-        if self.on_login: 
-            self.on_login(email, password)
+        password = self.password_entry.text()
+        if self.on_login_callback:
+            self.on_login_callback(email, password)
+
+    def _handle_register_click(self):
+        if self.on_register_click_callback:
+            self.on_register_click_callback()
+
+if __name__ == "__main__":
+    from PyQt6.QtWidgets import QApplication
+    app = QApplication(sys.argv)
+    window = LoginPage()
+    window.show()
+    sys.exit(app.exec())

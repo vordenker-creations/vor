@@ -16,12 +16,22 @@ from pages.settings import SettingsPage
 from login import LoginPage
 from register import RegisterPage
 
+from neumorphic_components import NeumorphicFrame, NeumorphicButton, GlowingButton
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("AI-Career Bridge | Masterclass")
-        self.resize(1200, 800)
-        self.central_widget = QStackedWidget(); self.setCentralWidget(self.central_widget)
+        self.resize(1300, 900)
+        
+        # Pre-calculate decorative elements
+        import random
+        random.seed(42)
+        self.bg_circles = [(random.randint(0, 1300), random.randint(0, 900), random.randint(50, 300)) for _ in range(10)]
+        self.network_nodes = [(random.randint(800, 1300), random.randint(0, 400)) for _ in range(8)]
+
+        self.central_widget = QStackedWidget()
+        self.setCentralWidget(self.central_widget)
         
         # Auth Pages
         self.login_page = LoginPage(on_login=self._handle_login, on_register_click=lambda: self.central_widget.setCurrentIndex(1))
@@ -31,9 +41,17 @@ class MainWindow(QMainWindow):
         
         # Main App Layout (Shell)
         self.main_app_widget = QWidget()
-        self.main_app_layout = QHBoxLayout(self.main_app_widget); self.main_app_layout.setContentsMargins(0,0,0,0); self.main_app_layout.setSpacing(0)
+        self.main_app_layout = QHBoxLayout(self.main_app_widget)
+        self.main_app_layout.setContentsMargins(15, 15, 15, 15)
+        self.main_app_layout.setSpacing(20)
+        
         self._setup_sidebar()
-        self.pages_container = QStackedWidget(); self.main_app_layout.addWidget(self.pages_container)
+        
+        # Container for pages with a slight margin
+        self.pages_wrapper = NeumorphicFrame(radius=30, offset=10, blur=25)
+        self.pages_container = QStackedWidget()
+        self.pages_wrapper.add_widget(self.pages_container)
+        self.main_app_layout.addWidget(self.pages_wrapper, 1)
         
         self.pages_container.addWidget(DashboardPage(controller=self))   # 0
         self.pages_container.addWidget(ProfilePage(controller=self))     # 1
@@ -48,10 +66,43 @@ class MainWindow(QMainWindow):
         self.central_widget.addWidget(self.main_app_widget) # 2
         self.setStyleSheet(get_global_stylesheet())
 
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        
+        # Subtle Background Geometry
+        painter.setPen(QPen(QColor(30, 95, 116, 15), 1))
+        for x, y, r in self.bg_circles:
+            painter.drawEllipse(QPoint(x, y), r, r)
+            
+        # Network lines
+        painter.setPen(QPen(QColor(30, 95, 116, 30), 1))
+        for i in range(len(self.network_nodes)):
+            for j in range(i + 1, len(self.network_nodes)):
+                p1 = self.network_nodes[i]
+                p2 = self.network_nodes[j]
+                # Distance check to only connect close nodes
+                dist = ((p1[0]-p2[0])**2 + (p1[1]-p2[1])**2)**0.5
+                if dist < 300:
+                    painter.drawLine(p1[0], p1[1], p2[0], p2[1])
+
     def _setup_sidebar(self):
-        self.sidebar = QWidget(); self.sidebar.setFixedWidth(80); self.sidebar.setStyleSheet("background-color: #1E2A38;")
-        layout = QVBoxLayout(self.sidebar); layout.setContentsMargins(0, 20, 0, 20); layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        self.nav_group = QButtonGroup(self); self.nav_group.setExclusive(True)
+        self.sidebar_container = NeumorphicFrame(radius=30, offset=8, blur=20)
+        self.sidebar_container.setFixedWidth(100)
+        
+        layout = QVBoxLayout()
+        layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        layout.setSpacing(15)
+        
+        # App Logo
+        logo = QLabel("AI")
+        logo.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        logo.setStyleSheet("font-size: 24px; font-weight: 900; color: #1E5F74; margin-bottom: 20px;")
+        layout.addWidget(logo)
+        
+        self.nav_group = QButtonGroup(self)
+        self.nav_group.setExclusive(True)
+        
         from i18n import _
         nav = [
             ("📊", 0, _("nav_dashboard")), 
@@ -63,20 +114,41 @@ class MainWindow(QMainWindow):
             ("🤖", 6, _("nav_ai_mentor")),
             ("⚙️", 8, "Settings")
         ]
+        
         for icon, idx, tooltip in nav:
-            btn = QPushButton(icon); btn.setCheckable(True); btn.setFixedSize(60, 60)
+            btn = QPushButton(icon)
+            btn.setCheckable(True)
+            btn.setFixedSize(60, 60)
             btn.setToolTip(tooltip)
-            btn.setStyleSheet(self._nav_style()); btn.clicked.connect(lambda ch, i=idx: self.pages_container.setCurrentIndex(i))
-            layout.addWidget(btn, alignment=Qt.AlignmentFlag.AlignCenter); layout.addSpacing(10); self.nav_group.addButton(btn, idx)
+            btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            btn.setStyleSheet(self._nav_style())
+            btn.clicked.connect(lambda ch, i=idx: self.pages_container.setCurrentIndex(i))
+            layout.addWidget(btn, alignment=Qt.AlignmentFlag.AlignCenter)
+            self.nav_group.addButton(btn, idx)
             if idx == 0: btn.setChecked(True)
         
-        # We can add a spacer here if we want settings to be at the bottom, but the original loop just adds them top-down. 
-        # I'll let it be top-down, but perhaps I should add a stretch before the settings button? Let's just follow the original loop structure.
-        
-        self.main_app_layout.addWidget(self.sidebar)
+        self.sidebar_container.content_layout.addLayout(layout)
+        self.main_app_layout.addWidget(self.sidebar_container)
 
     def _nav_style(self):
-        return f"QPushButton {{ background: transparent; color: {COLOR_TEXT_SUB}; font-size: 24px; border-radius: 12px; }} QPushButton:hover {{ background: {COLOR_BG_CARD}; }} QPushButton:checked {{ background: {COLOR_PRIMARY_LIGHT}; color: {COLOR_PRIMARY}; border-left: 3px solid {COLOR_PRIMARY}; border-radius: 0px; }}"
+        return f"""
+            QPushButton {{ 
+                background: transparent; 
+                color: {COLOR_TEXT_SUB}; 
+                font-size: 22px; 
+                border-radius: 20px; 
+                border: none;
+            }} 
+            QPushButton:hover {{ 
+                background: rgba(30, 95, 116, 0.1); 
+                color: {COLOR_PRIMARY};
+            }} 
+            QPushButton:checked {{ 
+                background: #F0F2F5; 
+                color: {COLOR_PRIMARY}; 
+                border: 2px solid rgba(30, 95, 116, 0.2);
+            }}
+        """
 
     def show_page(self, name):
         mapping = {"DashboardPage":0, "ProfilePage":1, "LearningPage":2, "CommunityPage":3, "RoadmapPage":4, "RecruitmentPage":5, "AIMentorPage":6, "CourseDetailPage":7, "SettingsPage":8}
@@ -108,9 +180,6 @@ class MainWindow(QMainWindow):
 if __name__ == "__main__":
     os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1"
     os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
-    if sys.platform == "win32":
-        try: from ctypes import windll; windll.shcore.SetProcessDpiAwareness(2)
-        except: pass
     app = QApplication(sys.argv)
     font = QFont("Segoe UI", 10)
     if sys.platform == "darwin": font = QFont("SF Pro Text", 10)

@@ -109,7 +109,7 @@ class ExercisesTab(QWidget):
         ch_ly.addWidget(QLabel("10", styleSheet=f"color: {COLOR_TEXT_MAIN}; font-weight: bold;"))
         stats_layout.addLayout(ch_ly)
         
-        pb1 = AnimatedProgressBar(color="#00A2FF")
+        pb1 = AnimatedProgressBar(color="#3b82f6")
         pb1.set_target(0.6)
         stats_layout.addWidget(pb1)
         
@@ -119,7 +119,7 @@ class ExercisesTab(QWidget):
         ml_ly.addWidget(QLabel("2.5", styleSheet=f"color: {COLOR_TEXT_MAIN}; font-weight: bold;"))
         stats_layout.addLayout(ml_ly)
         
-        pb2 = AnimatedProgressBar(color="#00A2FF")
+        pb2 = AnimatedProgressBar(color="#3b82f6")
         pb2.set_target(0.4)
         stats_layout.addWidget(pb2)
         

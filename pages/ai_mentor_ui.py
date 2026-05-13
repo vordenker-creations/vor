@@ -69,7 +69,7 @@ class AIMentorPage(QWidget):
         btn_send = QPushButton("Gửi ➔")
         btn_send.setFixedSize(100, 45)
         btn_send.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        btn_send.setStyleSheet(f"QPushButton {{ background: {COLOR_PRIMARY}; color: white; font-weight: bold; font-size: 14px; border-radius: 8px; }} QPushButton:hover {{ background: #00B4D8; }}")
+        btn_send.setStyleSheet(f"QPushButton {{ background: {COLOR_PRIMARY}; color: white; font-weight: bold; font-size: 14px; border-radius: 8px; }} QPushButton:hover {{ background: #1a4d63; }}")
         btn_send.clicked.connect(self.send_message)
         input_layout.addWidget(btn_send)
         

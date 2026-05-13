@@ -2,26 +2,21 @@ from PyQt6.QtWidgets import QFrame, QGraphicsDropShadowEffect, QVBoxLayout, QWid
 from PyQt6.QtCore import Qt, QPropertyAnimation, QEasingCurve, pyqtProperty, QRectF, QTimer
 from PyQt6.QtGui import QColor, QPainter, QPen, QBrush, QCursor
 from config import COLOR_BG_CARD, COLOR_BORDER, COLOR_PRIMARY, COLOR_BG_APP, COLOR_TEXT_MAIN, COLOR_TEXT_SUB, COLOR_PRIMARY_LIGHT
+from neumorphic_components import NeumorphicFrame
 
-class SaaSCard(QFrame):
-    def __init__(self, parent=None, border_color=COLOR_BORDER):
-        super().__init__(parent)
-        self.border_color = border_color
-        self._update_style(self.border_color)
-        shadow = QGraphicsDropShadowEffect(self)
-        shadow.setBlurRadius(20)
-        shadow.setColor(QColor(0, 0, 0, 80))
-        shadow.setOffset(0, 4)
-        self.setGraphicsEffect(shadow)
-        self.internal_layout = QVBoxLayout(self)
+class SaaSCard(NeumorphicFrame):
+    def __init__(self, parent=None, radius=20, offset=6, blur=15, border_color=None):
+        super().__init__(radius=radius, offset=offset, blur=blur, parent=parent)
+        self.internal_layout = self.content_layout
         self.internal_layout.setContentsMargins(20, 20, 20, 20)
+        
     def _update_style(self, b_color):
-        self.setStyleSheet(f"SaaSCard {{ background-color: {COLOR_BG_CARD}; border: 1px solid {b_color}; border-radius: 16px; }}")
+        pass
+        
     def enterEvent(self, event):
-        self._update_style(COLOR_PRIMARY)
         super().enterEvent(event)
+        
     def leaveEvent(self, event):
-        self._update_style(self.border_color)
         super().leaveEvent(event)
 
 class AnimatedProgressBar(QProgressBar):
