@@ -13,6 +13,7 @@ from pages.recruitment import RecruitmentPage
 from pages.ai_mentor_ui import AIMentorPage
 from pages.course_detail import CourseDetailPage
 from pages.settings import SettingsPage
+from pages.chat_ui import ChatPage
 from login import LoginPage
 from register import RegisterPage
 
@@ -62,6 +63,7 @@ class MainWindow(QMainWindow):
         self.pages_container.addWidget(AIMentorPage(controller=self))    # 6
         self.pages_container.addWidget(CourseDetailPage(controller=self))# 7
         self.pages_container.addWidget(SettingsPage(controller=self))    # 8
+        self.pages_container.addWidget(ChatPage(controller=self))        # 9
         
         self.central_widget.addWidget(self.main_app_widget) # 2
         self.setStyleSheet(get_global_stylesheet())
@@ -112,7 +114,8 @@ class MainWindow(QMainWindow):
             ("🧭", 4, _("nav_roadmap")), 
             ("💼", 5, _("nav_recruitment")), 
             ("🤖", 6, _("nav_ai_mentor")),
-            ("⚙️", 8, "Settings")
+            ("⚙️", 8, "Settings"),
+            ("💬", 9, "Chat")
         ]
         
         for icon, idx, tooltip in nav:
@@ -136,22 +139,23 @@ class MainWindow(QMainWindow):
                 background: transparent; 
                 color: {COLOR_TEXT_SUB}; 
                 font-size: 22px; 
-                border-radius: 20px; 
-                border: none;
+                border-radius: 16px; 
+                border: 1px solid transparent;
+                padding: 10px;
             }} 
             QPushButton:hover {{ 
-                background: rgba(30, 95, 116, 0.1); 
+                background: rgba(255, 255, 255, 0.4);
                 color: {COLOR_PRIMARY};
             }} 
             QPushButton:checked {{ 
-                background: #F0F2F5; 
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 rgba(30, 95, 116, 0.1), stop:1 rgba(30, 95, 116, 0.05));
                 color: {COLOR_PRIMARY}; 
-                border: 2px solid rgba(30, 95, 116, 0.2);
+                border: 1px solid rgba(30, 95, 116, 0.3);
             }}
         """
 
     def show_page(self, name):
-        mapping = {"DashboardPage":0, "ProfilePage":1, "LearningPage":2, "CommunityPage":3, "RoadmapPage":4, "RecruitmentPage":5, "AIMentorPage":6, "CourseDetailPage":7, "SettingsPage":8}
+        mapping = {"DashboardPage":0, "ProfilePage":1, "LearningPage":2, "CommunityPage":3, "RoadmapPage":4, "RecruitmentPage":5, "AIMentorPage":6, "CourseDetailPage":7, "SettingsPage":8, "ChatPage":9}
         idx = mapping.get(name, 0)
         self.pages_container.setCurrentIndex(idx)
         btn = self.nav_group.button(idx)

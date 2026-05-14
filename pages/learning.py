@@ -1,80 +1,525 @@
 import sys
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
-                             QPushButton, QScrollArea, QFrame, QGridLayout, QProgressBar)
-from PyQt6.QtCore import Qt, QSize
-from PyQt6.QtGui import QCursor
+                             QPushButton, QScrollArea, QFrame, QGridLayout, 
+                             QProgressBar, QLineEdit, QGraphicsDropShadowEffect)
+from PyQt6.QtCore import Qt, QSize, QPropertyAnimation, QEasingCurve, QRectF
+from PyQt6.QtGui import QColor, QPainter, QPen, QBrush, QCursor, QIcon, QFont
 from config import *
-from components import SaaSCard, AnimationEngine
+from components import AnimationEngine, AnimatedProgressBar, AnimatedCircularProgress
+
+class ModernCard(QFrame):
+    def __init__(self, parent=None, radius=20, border_color="#E2E8F0"):
+        super().__init__(parent)
+        self.setObjectName("ModernCard")
+        self.setStyleSheet(f"""
+            QFrame#ModernCard {{
+                background-color: #FFFFFF;
+                border: 1px solid {border_color};
+                border-radius: {radius}px;
+            }}
+        """)
+        
+        # Soft shadow
+        self.shadow = QGraphicsDropShadowEffect(self)
+        self.shadow.setBlurRadius(30)
+        self.shadow.setXOffset(0)
+        self.shadow.setYOffset(4)
+        self.shadow.setColor(QColor(0, 0, 0, 15))
+        self.setGraphicsEffect(self.shadow)
+        
+        self.layout = QVBoxLayout(self)
+        self.layout.setContentsMargins(20, 20, 20, 20)
+        self.layout.setSpacing(15)
+
+class KPICard(ModernCard):
+    def __init__(self, title, value, subtext, progress=None, icon=None, color="#38BDF8"):
+        super().__init__()
+        self.setFixedHeight(140)
+        
+        h_layout = QHBoxLayout()
+        self.layout.addLayout(h_layout)
+        h_layout.setContentsMargins(0, 0, 0, 0)
+        
+        info_layout = QVBoxLayout()
+        info_layout.setSpacing(4)
+        
+        title_lbl = QLabel(title)
+        title_lbl.setStyleSheet("color: #64748B; font-size: 13px; font-weight: 600; text-transform: uppercase;")
+        info_layout.addWidget(title_lbl)
+        
+        val_lbl = QLabel(value)
+        val_lbl.setStyleSheet("color: #0F172A; font-size: 24px; font-weight: 700;")
+        info_layout.addWidget(val_lbl)
+        
+        sub_lbl = QLabel(subtext)
+        sub_lbl.setStyleSheet("color: #94A3B8; font-size: 12px; font-weight: 500;")
+        info_layout.addWidget(sub_lbl)
+        
+        h_layout.addLayout(info_layout)
+        h_layout.addStretch()
+        
+        if progress is not None:
+            circ = AnimatedCircularProgress(size=70, color=color)
+            circ.set_target(progress)
+            h_layout.addWidget(circ)
+        elif icon:
+            icon_lbl = QLabel(icon)
+            icon_lbl.setStyleSheet(f"font-size: 32px; color: {color};")
+            h_layout.addWidget(icon_lbl)
+
+class TaskCard(ModernCard):
+    def __init__(self, title, course, deadline, priority, progress=0, ai_tag=None):
+        super().__init__(radius=16)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.layout.setSpacing(10)
+        
+        # Course Tag
+        tag_layout = QHBoxLayout()
+        course_lbl = QLabel(course)
+        course_lbl.setStyleSheet(f"""
+            background: #F1F5F9; color: #475569; 
+            padding: 4px 10px; border-radius: 6px; 
+            font-size: 11px; font-weight: 700;
+        """)
+        tag_layout.addWidget(course_lbl)
+        tag_layout.addStretch()
+        
+        # Priority Badge
+        p_colors = {"Urgent": "#EF4444", "High": "#F59E0B", "Med": "#3B82F6", "Low": "#10B981"}
+        p_color = p_colors.get(priority, "#64748B")
+        p_lbl = QLabel(priority)
+        p_lbl.setStyleSheet(f"""
+            color: {p_color}; background: {p_color}15; 
+            padding: 4px 10px; border-radius: 6px; 
+            font-size: 11px; font-weight: 700;
+        """)
+        tag_layout.addWidget(p_lbl)
+        self.layout.addLayout(tag_layout)
+        
+        # Title
+        title_lbl = QLabel(title)
+        title_lbl.setWordWrap(True)
+        title_lbl.setStyleSheet("color: #0F172A; font-size: 15px; font-weight: 600;")
+        self.layout.addWidget(title_lbl)
+        
+        # Deadline
+        dd_layout = QHBoxLayout()
+        dd_icon = QLabel("📅")
+        dd_icon.setStyleSheet("font-size: 12px;")
+        dd_lbl = QLabel(deadline)
+        dd_lbl.setStyleSheet("color: #64748B; font-size: 12px; font-weight: 500;")
+        dd_layout.addWidget(dd_icon)
+        dd_layout.addWidget(dd_lbl)
+        dd_layout.addStretch()
+        self.layout.addLayout(dd_layout)
+        
+        # Progress
+        pb = QProgressBar()
+        pb.setFixedHeight(6)
+        pb.setValue(progress)
+        pb.setTextVisible(False)
+        pb.setStyleSheet(f"""
+            QProgressBar {{ background: #F1F5F9; border-radius: 3px; border: none; }}
+            QProgressBar::chunk {{ background: {COLOR_PRIMARY}; border-radius: 3px; }}
+        """)
+        self.layout.addWidget(pb)
+        
+        # AI Recommendation
+        if ai_tag:
+            ai_layout = QHBoxLayout()
+            ai_icon = QLabel("✨")
+            ai_lbl = QLabel(ai_tag)
+            ai_lbl.setStyleSheet("color: #8B5CF6; font-size: 11px; font-weight: 600; font-style: italic;")
+            ai_layout.addWidget(ai_icon)
+            ai_layout.addWidget(ai_lbl)
+            ai_layout.addStretch()
+            self.layout.addLayout(ai_layout)
+
+class KanbanColumn(QWidget):
+    def __init__(self, title, count):
+        super().__init__()
+        self.layout = QVBoxLayout(self)
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.setSpacing(16)
+        
+        header = QHBoxLayout()
+        title_lbl = QLabel(title)
+        title_lbl.setStyleSheet("color: #0F172A; font-size: 16px; font-weight: 700;")
+        count_lbl = QLabel(str(count))
+        count_lbl.setStyleSheet("background: #E2E8F0; color: #64748B; padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: 700;")
+        
+        header.addWidget(title_lbl)
+        header.addWidget(count_lbl)
+        header.addStretch()
+        
+        add_btn = QPushButton("+")
+        add_btn.setFixedSize(24, 24)
+        add_btn.setStyleSheet("background: transparent; color: #94A3B8; font-size: 18px; border: none;")
+        header.addWidget(add_btn)
+        
+        self.layout.addLayout(header)
+        
+        self.scroll = QScrollArea()
+        self.scroll.setWidgetResizable(True)
+        self.scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self.scroll.setStyleSheet("background: transparent;")
+        
+        self.container = QWidget()
+        self.container_layout = QVBoxLayout(self.container)
+        self.container_layout.setContentsMargins(2, 2, 2, 2)
+        self.container_layout.setSpacing(12)
+        self.container_layout.addStretch()
+        
+        self.scroll.setWidget(self.container)
+        self.layout.addWidget(self.scroll)
+
+    def add_task(self, widget):
+        self.container_layout.insertWidget(self.container_layout.count() - 1, widget)
 
 class LearningPage(QWidget):
     def __init__(self, parent=None, controller=None):
         super().__init__(parent)
         self.controller = controller
         self.setObjectName("LearningPage")
+        self.setStyleSheet(f"background-color: #F8FAFC;")
+        
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
+        self.main_layout.setSpacing(0)
+        
+        # 1. Top Assignment Toolbar
+        self._setup_top_toolbar()
+        
+        # Scroll Area for main content
         self.scroll = QScrollArea()
-        self.scroll.setWidgetResizable(True); self.scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self.scroll.setWidgetResizable(True)
+        self.scroll.setFrameShape(QFrame.Shape.NoFrame)
         self.scroll.setStyleSheet("background: transparent;")
-        self.container = QWidget(); self.container_layout = QVBoxLayout(self.container)
-        self.container_layout.setContentsMargins(35, 35, 35, 35); self.container_layout.setSpacing(15)
-        self._setup_header(); self._setup_breadcrumb(); self._setup_content()
-        self.scroll.setWidget(self.container); self.main_layout.addWidget(self.scroll)
+        
+        self.content_container = QWidget()
+        self.content_layout = QHBoxLayout(self.content_container)
+        self.content_layout.setContentsMargins(24, 24, 24, 24)
+        self.content_layout.setSpacing(24)
+        
+        # 2. Main Assignments Workspace (Left)
+        self.left_area = QWidget()
+        self.left_layout = QVBoxLayout(self.left_area)
+        self.left_layout.setContentsMargins(0, 0, 0, 0)
+        self.left_layout.setSpacing(32)
+        
+        self._setup_kpi_section()
+        self._setup_kanban_section()
+        self._setup_calendar_section()
+        
+        self.content_layout.addWidget(self.left_area, stretch=7)
+        
+        # 3. Right Productivity Panel (Fixed 320px)
+        self.right_area = QWidget()
+        self.right_area.setFixedWidth(320)
+        self.right_layout = QVBoxLayout(self.right_area)
+        self.right_layout.setContentsMargins(0, 0, 0, 0)
+        self.right_layout.setSpacing(24)
+        
+        self._setup_right_panel()
+        
+        self.content_layout.addWidget(self.right_area, stretch=3)
+        
+        self.scroll.setWidget(self.content_container)
+        self.main_layout.addWidget(self.scroll)
 
-    def _setup_header(self):
-        header = QWidget(); layout = QVBoxLayout(header); layout.setContentsMargins(0, 0, 0, 0)
-        title = QLabel("AI Art Creation Studio"); title.setStyleSheet(f"color: {COLOR_TEXT_MAIN}; font-size: 24px; font-weight: bold;")
-        layout.addWidget(title); sub = QLabel("Nâng cao kỹ năng - Tiếp tục học tập"); sub.setStyleSheet(f"color: {COLOR_TEXT_SUB}; font-size: 14px;")
-        layout.addWidget(sub); self.container_layout.addWidget(header)
+    def _setup_top_toolbar(self):
+        toolbar = QWidget()
+        toolbar.setFixedHeight(80)
+        toolbar.setStyleSheet("background: #FFFFFF; border-bottom: 1px solid #E2E8F0;")
+        layout = QHBoxLayout(toolbar)
+        layout.setContentsMargins(24, 0, 24, 0)
+        layout.setSpacing(20)
+        
+        # Breadcrumbs
+        bread_layout = QVBoxLayout()
+        bread_layout.setSpacing(2)
+        bread_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        
+        top_bread = QHBoxLayout()
+        dash_btn = QPushButton("Dashboard")
+        dash_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        dash_btn.clicked.connect(lambda: self.controller and self.controller.show_page("DashboardPage"))
+        dash_btn.setStyleSheet("background: transparent; color: #64748B; font-size: 12px; font-weight: 600; padding: 0; border: none;")
+        
+        slash = QLabel("/")
+        slash.setStyleSheet("color: #CBD5E1; font-weight: bold;")
+        
+        curr_lbl = QLabel("Assignments")
+        curr_lbl.setStyleSheet("color: #64748B; font-size: 12px; font-weight: 600;")
+        
+        top_bread.addWidget(dash_btn)
+        top_bread.addWidget(slash)
+        top_bread.addWidget(curr_lbl)
+        top_bread.addStretch()
+        
+        main_title = QLabel("Fall Semester 2024")
+        main_title.setStyleSheet("color: #0F172A; font-size: 18px; font-weight: 700;")
+        
+        bread_layout.addLayout(top_bread)
+        bread_layout.addWidget(main_title)
+        layout.addLayout(bread_layout)
+        
+        # Search Bar
+        search_frame = QFrame()
+        search_frame.setFixedWidth(350)
+        search_frame.setStyleSheet("background: #F1F5F9; border-radius: 10px; border: 1px solid #E2E8F0;")
+        s_layout = QHBoxLayout(search_frame)
+        s_layout.setContentsMargins(12, 0, 12, 0)
+        
+        search_icon = QLabel("🔍")
+        search_input = QLineEdit()
+        search_input.setPlaceholderText("Search assignments...")
+        search_input.setStyleSheet("background: transparent; border: none; font-size: 13px; color: #0F172A;")
+        
+        hint_lbl = QLabel("Ctrl+K")
+        hint_lbl.setStyleSheet("color: #94A3B8; font-size: 11px; font-weight: 700; background: #FFFFFF; padding: 2px 6px; border-radius: 4px; border: 1px solid #E2E8F0;")
+        
+        s_layout.addWidget(search_icon)
+        s_layout.addWidget(search_input)
+        s_layout.addWidget(hint_lbl)
+        layout.addWidget(search_frame)
+        
+        layout.addStretch()
+        
+        # Buttons
+        ai_btn = QPushButton("✨ AI Study Plan")
+        ai_btn.setStyleSheet(f"""
+            QPushButton {{ 
+                background: #8B5CF6; color: white; border-radius: 10px; 
+                padding: 8px 16px; font-weight: 700; font-size: 13px; border: none;
+            }}
+            QPushButton:hover {{ background: #7C3AED; }}
+        """)
+        layout.addWidget(ai_btn)
+        
+        add_btn = QPushButton("+ Add Assignment")
+        add_btn.setStyleSheet(f"""
+            QPushButton {{ 
+                background: {COLOR_PRIMARY}; color: white; border-radius: 10px; 
+                padding: 8px 16px; font-weight: 700; font-size: 13px; border: none;
+            }}
+        """)
+        layout.addWidget(add_btn)
+        
+        avatar = QLabel()
+        avatar.setFixedSize(40, 40)
+        avatar.setStyleSheet("background: #E2E8F0; border-radius: 20px; border: 2px solid #FFFFFF;")
+        layout.addWidget(avatar)
+        
+        self.main_layout.addWidget(toolbar)
 
-    def _setup_breadcrumb(self):
-        bread = QWidget(); layout = QHBoxLayout(bread); layout.setContentsMargins(0, 0, 0, 20)
-        btn_dash = QPushButton("Dashboard"); btn_dash.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        btn_dash.setStyleSheet(f"QPushButton {{ background: transparent; color: {COLOR_TEXT_SUB}; font-size: 12px; border: none; }} QPushButton:hover {{ color: {COLOR_PRIMARY}; }}")
-        btn_dash.clicked.connect(lambda: self.controller and self.controller.show_page("DashboardPage"))
-        layout.addWidget(btn_dash); layout.addWidget(QLabel(" > Khóa học"))
-        layout.addStretch(); self.container_layout.addWidget(bread)
+    def _setup_kpi_section(self):
+        kpi_grid = QGridLayout()
+        kpi_grid.setSpacing(20)
+        
+        kpi_grid.addWidget(KPICard("Pending Assignments", "12", "4 due this week", progress=0.65, color="#38BDF8"), 0, 0)
+        kpi_grid.addWidget(KPICard("Completed Tasks", "48", "+12% from last month", progress=0.85, color="#2DD4BF"), 0, 1)
+        kpi_grid.addWidget(KPICard("Upcoming Exams", "3", "Next: Discrete Math", icon="🎯", color="#F59E0B"), 0, 2)
+        kpi_grid.addWidget(KPICard("Study Productivity", "92%", "Excellent focus score", progress=0.92, color="#8B5CF6"), 0, 3)
+        
+        self.left_layout.addLayout(kpi_grid)
 
-    def _setup_content(self):
-        grid_widget = QWidget(); grid_layout = QGridLayout(grid_widget); grid_layout.setContentsMargins(0, 0, 0, 0); grid_layout.setSpacing(10)
-        grid_layout.setColumnStretch(0, 7); grid_layout.setColumnStretch(1, 3)
-        left_col = QWidget(); left_layout = QVBoxLayout(left_col); left_layout.setContentsMargins(0, 0, 0, 0)
-        lbl_mine = QLabel("Học phần của bạn"); lbl_mine.setStyleSheet(f"color: {COLOR_TEXT_MAIN}; font-size: 18px; font-weight: bold; margin-bottom: 15px;")
-        left_layout.addWidget(lbl_mine); course_grid = QWidget(); c_layout = QGridLayout(course_grid); c_layout.setSpacing(15)
-        self._add_course_card(c_layout, 0, 0, "Lập trình Python Nâng cao", 0.8, "80%", [("Pandas", True), ("TensorFlow", False)])
-        self._add_course_card(c_layout, 0, 1, "Tạo Ảnh Nghệ Thuật với AI", 0.35, "35%", [("Prompt Eng", True), ("ControlNet", False)])
-        left_layout.addWidget(course_grid); left_layout.addStretch(); grid_layout.addWidget(left_col, 0, 0)
-        right_col = QWidget(); right_layout = QVBoxLayout(right_col); right_layout.setContentsMargins(0, 0, 0, 0)
-        deadline_card = SaaSCard(); d_layout = deadline_card.internal_layout
-        lbl_d = QLabel("Sự kiện & Deadline"); lbl_d.setStyleSheet(f"color: {COLOR_TEXT_MAIN}; font-size: 16px; font-weight: bold;")
-        d_layout.addWidget(lbl_d); self._add_event_item(d_layout, "12", "Th4", "Workshop AI"); self._add_event_item(d_layout, "15", "Th4", "Nộp đồ án")
-        right_layout.addWidget(deadline_card); creativity_card = SaaSCard(); crea_layout = creativity_card.internal_layout
-        lbl_c = QLabel("Mức độ sáng tạo"); lbl_c.setStyleSheet(f"color: {COLOR_TEXT_MAIN}; font-size: 14px; font-weight: bold;")
-        crea_layout.addWidget(lbl_c); pb = QProgressBar(); pb.setFixedHeight(8); pb.setValue(75); pb.setTextVisible(False)
-        pb.setStyleSheet(f"QProgressBar {{ background: {COLOR_BORDER}; border-radius: 4px; border: none; }} QProgressBar::chunk {{ background: {COLOR_SUCCESS}; border-radius: 4px; }}")
-        crea_layout.addWidget(pb); right_layout.addWidget(creativity_card); right_layout.addStretch(); grid_layout.addWidget(right_col, 0, 1)
-        self.container_layout.addWidget(grid_widget)
+    def _setup_kanban_section(self):
+        kanban_widget = QWidget()
+        k_layout = QVBoxLayout(kanban_widget)
+        k_layout.setContentsMargins(0, 0, 0, 0)
+        k_layout.setSpacing(20)
+        
+        header = QHBoxLayout()
+        title = QLabel("Study Tasks Board")
+        title.setStyleSheet("color: #0F172A; font-size: 20px; font-weight: 700;")
+        header.addWidget(title)
+        header.addStretch()
+        
+        # Mock Filter/Sort
+        for btn_text in ["Filter", "Sort", "List View"]:
+            btn = QPushButton(btn_text)
+            btn.setStyleSheet("background: #FFFFFF; color: #64748B; border: 1px solid #E2E8F0; border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 600;")
+            header.addWidget(btn)
+        
+        k_layout.addLayout(header)
+        
+        board_layout = QHBoxLayout()
+        board_layout.setSpacing(20)
+        
+        self.col_todo = KanbanColumn("Todo", 5)
+        self.col_todo.add_task(TaskCard("Lab Report: Neural Networks", "AI-101", "Oct 12", "High", 0, "Needs 2h focus"))
+        self.col_todo.add_task(TaskCard("Read Chapter 4: Calculus", "MATH-202", "Oct 15", "Low"))
+        
+        self.col_progress = KanbanColumn("In Progress", 2)
+        self.col_progress.add_task(TaskCard("Design System Project", "UX-302", "Oct 10", "Urgent", 65, "Priority for today"))
+        
+        self.col_review = KanbanColumn("Review", 1)
+        self.col_review.add_task(TaskCard("Python Scripting HW", "CS-50", "Tomorrow", "Med", 90))
+        
+        self.col_done = KanbanColumn("Completed", 12)
+        self.col_done.add_task(TaskCard("Midterm Reflection", "EDU-10", "Completed", "Low", 100))
+        
+        board_layout.addWidget(self.col_todo)
+        board_layout.addWidget(self.col_progress)
+        board_layout.addWidget(self.col_review)
+        board_layout.addWidget(self.col_done)
+        
+        k_layout.addLayout(board_layout)
+        self.left_layout.addWidget(kanban_widget)
 
-    def _add_course_card(self, layout, r, c, title, val, txt, tasks):
-        card = SaaSCard(); c_layout = card.internal_layout
-        img = QFrame(); img.setFixedHeight(120); img.setStyleSheet(f"background: {COLOR_BG_APP}; border-radius: 6px;")
-        img_l = QVBoxLayout(img); lbl_icon = QLabel("📷"); lbl_icon.setStyleSheet("font-size: 40px;"); img_l.addWidget(lbl_icon, alignment=Qt.AlignmentFlag.AlignCenter)
-        c_layout.addWidget(img); lbl_t = QLabel(title); lbl_t.setStyleSheet(f"color: {COLOR_TEXT_MAIN}; font-size: 14px; font-weight: bold;")
-        c_layout.addWidget(lbl_t); pb = QProgressBar(); pb.setFixedHeight(6); pb.setValue(int(val * 100)); pb.setTextVisible(False)
-        pb.setStyleSheet(f"QProgressBar {{ background: {COLOR_BORDER}; border-radius: 3px; border: none; }} QProgressBar::chunk {{ background: {COLOR_PRIMARY}; border-radius: 3px; }}")
-        c_layout.addWidget(pb); lbl_p = QLabel(f"{txt} Hoàn thành"); lbl_p.setStyleSheet(f"color: {COLOR_TEXT_SUB}; font-size: 11px;"); c_layout.addWidget(lbl_p)
-        for t_name, done in tasks:
-            t_layout = QHBoxLayout(); lbl_check = QLabel("✓" if done else "🔵"); lbl_check.setStyleSheet(f"color: {COLOR_PRIMARY if done else COLOR_TEXT_SUB}; font-weight: bold;")
-            t_layout.addWidget(lbl_check); lbl_task = QLabel(t_name); lbl_task.setStyleSheet(f"color: {COLOR_TEXT_MAIN}; font-size: 11px;"); t_layout.addWidget(lbl_task); t_layout.addStretch(); c_layout.addLayout(t_layout)
-        btn_row = QHBoxLayout(); btn_cont = QPushButton("Tiếp tục"); btn_cont.setFixedHeight(32); btn_cont.setStyleSheet(f"QPushButton {{ background: {COLOR_PRIMARY}; color: white; font-weight: bold; border-radius: 6px; }}")
-        btn_cont.setCursor(Qt.CursorShape.PointingHandCursor)
-        btn_cont.clicked.connect(lambda: self.controller and self.controller.show_page("CourseDetailPage"))
-        btn_row.addWidget(btn_cont); c_layout.addLayout(btn_row); layout.addWidget(card, r, c)
+    def _setup_calendar_section(self):
+        cal_widget = QWidget()
+        c_layout = QHBoxLayout(cal_widget)
+        c_layout.setContentsMargins(0, 0, 0, 0)
+        c_layout.setSpacing(24)
+        
+        # Calendar Mockup
+        cal_card = ModernCard()
+        cal_card.layout.setSpacing(20)
+        
+        header = QHBoxLayout()
+        header.addWidget(QLabel("October 2024"))
+        header.itemAt(0).widget().setStyleSheet("color: #0F172A; font-size: 16px; font-weight: 700;")
+        header.addStretch()
+        header.addWidget(QPushButton("<"))
+        header.addWidget(QPushButton(">"))
+        cal_card.layout.addLayout(header)
+        
+        grid = QGridLayout()
+        grid.setSpacing(10)
+        days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+        for i, d in enumerate(days):
+            lbl = QLabel(d)
+            lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            lbl.setStyleSheet("color: #94A3B8; font-size: 11px; font-weight: 700;")
+            grid.addWidget(lbl, 0, i)
+            
+        for day in range(1, 32):
+            lbl = QLabel(str(day))
+            lbl.setFixedSize(36, 36)
+            lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            if day == 10: # Current day
+                lbl.setStyleSheet(f"background: {COLOR_PRIMARY}; color: white; border-radius: 18px; font-weight: 700;")
+            elif day in [12, 15, 20]: # Deadline days
+                lbl.setStyleSheet("background: #F1F5F9; color: #0F172A; border-radius: 18px; border: 1px solid #38BDF8; font-weight: 700;")
+            else:
+                lbl.setStyleSheet("color: #475569; font-size: 13px; font-weight: 500;")
+            grid.addWidget(lbl, (day-1)//7 + 1, (day-1)%7)
+            
+        cal_card.layout.addLayout(grid)
+        c_layout.addWidget(cal_card, stretch=2)
+        
+        # Upcoming Deadlines
+        dl_panel = ModernCard()
+        dl_panel.layout.setSpacing(16)
+        
+        dl_title = QLabel("Upcoming Deadlines")
+        dl_title.setStyleSheet("color: #0F172A; font-size: 16px; font-weight: 700;")
+        dl_panel.layout.addWidget(dl_title)
+        
+        for icon, title, time, color in [
+            ("🔴", "UX Project Final", "In 4 hours", "#EF4444"),
+            ("🟠", "AI Ethics Essay", "Tomorrow, 11:59 PM", "#F59E0B"),
+            ("🔵", "Math Quiz", "Friday, 10:00 AM", "#3B82F6"),
+        ]:
+            item = QWidget()
+            i_layout = QHBoxLayout(item)
+            i_layout.setContentsMargins(0, 0, 0, 0)
+            
+            indicator = QLabel(icon)
+            text_layout = QVBoxLayout()
+            text_layout.setSpacing(2)
+            t_lbl = QLabel(title)
+            t_lbl.setStyleSheet("color: #0F172A; font-size: 14px; font-weight: 600;")
+            time_lbl = QLabel(time)
+            time_lbl.setStyleSheet(f"color: {color}; font-size: 12px; font-weight: 500;")
+            text_layout.addWidget(t_lbl)
+            text_layout.addWidget(time_lbl)
+            
+            i_layout.addWidget(indicator)
+            i_layout.addLayout(text_layout)
+            i_layout.addStretch()
+            dl_panel.layout.addWidget(item)
+            
+        c_layout.addWidget(dl_panel, stretch=1)
+        self.left_layout.addWidget(cal_widget)
 
-    def _add_event_item(self, layout, day, month, title):
-        item = QWidget(); i_layout = QHBoxLayout(item); i_layout.setContentsMargins(0, 5, 0, 5)
-        date_box = QFrame(); date_box.setFixedSize(45, 50); date_box.setStyleSheet(f"background: {COLOR_PRIMARY_LIGHT}; border-radius: 6px;")
-        d_layout = QVBoxLayout(date_box); d_layout.setContentsMargins(0, 5, 0, 5); lbl_d = QLabel(day); lbl_d.setStyleSheet(f"color: {COLOR_PRIMARY}; font-size: 16px; font-weight: bold;")
-        d_layout.addWidget(lbl_d, alignment=Qt.AlignmentFlag.AlignCenter); lbl_m = QLabel(month); lbl_m.setStyleSheet(f"color: {COLOR_PRIMARY}; font-size: 10px;")
-        d_layout.addWidget(lbl_m, alignment=Qt.AlignmentFlag.AlignCenter); i_layout.addWidget(date_box); lbl_title = QLabel(title); lbl_title.setStyleSheet(f"color: {COLOR_TEXT_MAIN}; font-size: 13px; font-weight: bold;")
-        i_layout.addWidget(lbl_title); i_layout.addStretch(); layout.addWidget(item)
+    def _setup_right_panel(self):
+        # 1. AI Study Assistant
+        ai_card = ModernCard(border_color="#8B5CF6")
+        ai_card.setStyleSheet(ai_card.styleSheet() + "background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #F5F3FF, stop:1 #FFFFFF);")
+        
+        ai_header = QHBoxLayout()
+        ai_icon = QLabel("🤖")
+        ai_icon.setStyleSheet("font-size: 24px;")
+        ai_title = QLabel("AI Assistant")
+        ai_title.setStyleSheet("color: #5B21B6; font-size: 16px; font-weight: 700;")
+        ai_header.addWidget(ai_icon)
+        ai_header.addWidget(ai_title)
+        ai_header.addStretch()
+        ai_card.layout.addLayout(ai_header)
+        
+        tip = QLabel("“You've been studying for 3 hours. Take a 15-minute break to avoid burnout.”")
+        tip.setWordWrap(True)
+        tip.setStyleSheet("color: #6D28D9; font-size: 13px; font-weight: 500; font-style: italic;")
+        ai_card.layout.addWidget(tip)
+        
+        suggest_btn = QPushButton("Generate Study Plan")
+        suggest_btn.setStyleSheet("background: #8B5CF6; color: white; border-radius: 8px; padding: 10px; font-weight: 700; font-size: 12px; border: none;")
+        ai_card.layout.addWidget(suggest_btn)
+        
+        self.right_layout.addWidget(ai_card)
+        
+        # 2. Recent Activity
+        activity_card = ModernCard()
+        activity_card.layout.setSpacing(16)
+        
+        act_title = QLabel("Recent Activity")
+        act_title.setStyleSheet("color: #0F172A; font-size: 16px; font-weight: 700;")
+        activity_card.layout.addWidget(act_title)
+        
+        activities = [
+            ("✅", "Completed 'SQL Basics'", "2h ago"),
+            ("📝", "Added 'Thesis Draft'", "5h ago"),
+            ("📅", "Rescheduled 'Meeting'", "Yesterday"),
+        ]
+        
+        for icon, text, time in activities:
+            item = QHBoxLayout()
+            ico = QLabel(icon)
+            info = QVBoxLayout()
+            info.setSpacing(2)
+            t = QLabel(text)
+            t.setStyleSheet("color: #475569; font-size: 13px; font-weight: 600;")
+            tm = QLabel(time)
+            tm.setStyleSheet("color: #94A3B8; font-size: 11px;")
+            info.addWidget(t)
+            info.addWidget(tm)
+            item.addWidget(ico)
+            item.addLayout(info)
+            item.addStretch()
+            activity_card.layout.addLayout(item)
+            
+        self.right_layout.addWidget(activity_card)
+        
+        # 3. Quick Notes
+        note_card = ModernCard()
+        note_card.setStyleSheet(note_card.styleSheet() + "background: #FEF9C3; border: 1px solid #FDE68A;")
+        note_card.layout.setSpacing(10)
+        
+        note_title = QLabel("📌 Quick Notes")
+        note_title.setStyleSheet("color: #854D0E; font-size: 15px; font-weight: 700;")
+        note_card.layout.addWidget(note_title)
+        
+        note_edit = QLineEdit()
+        note_edit.setPlaceholderText("Type a quick note...")
+        note_edit.setStyleSheet("background: transparent; border: none; color: #713F12; font-size: 13px;")
+        note_card.layout.addWidget(note_edit)
+        
+        mock_note = QLabel("- Don't forget to email Prof. Smith\n- Research Paper deadline is approaching!")
+        mock_note.setStyleSheet("color: #713F12; font-size: 13px; line-height: 150%;")
+        note_card.layout.addWidget(mock_note)
+        
+        self.right_layout.addWidget(note_card)
+        self.right_layout.addStretch()

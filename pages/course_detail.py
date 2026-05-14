@@ -23,9 +23,10 @@ class CourseDetailPage(QWidget):
         
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True); self.scroll.setFrameShape(QFrame.Shape.NoFrame)
-        self.scroll.setStyleSheet("background: transparent;")
+        self.scroll.setStyleSheet("background: transparent; border: none;")
         self.container = QWidget(); self.container_layout = QVBoxLayout(self.container)
-        self.container_layout.setContentsMargins(35, 35, 35, 35)
+        self.container_layout.setContentsMargins(24, 24, 24, 24)
+        self.container_layout.setSpacing(16)
         
         self._setup_header(); self._setup_tabs(); self._setup_content()
         self.scroll.setWidget(self.container); self.main_layout.addWidget(self.scroll)
@@ -33,23 +34,24 @@ class CourseDetailPage(QWidget):
     def _setup_header(self):
         btn_back = QPushButton("⬅ Quay lại Dashboard")
         btn_back.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        btn_back.setStyleSheet(f"QPushButton {{ background: transparent; color: {COLOR_TEXT_SUB}; font-weight: bold; border: none; text-align: left; }} QPushButton:hover {{ color: {COLOR_PRIMARY}; }}")
+        btn_back.setStyleSheet("QPushButton { background: transparent; color: #475569; font-weight: 600; border: none; text-align: left; font-size: 14px; } QPushButton:hover { color: #0f172a; }")
         btn_back.clicked.connect(lambda: self.controller and self.controller.show_page("DashboardPage"))
         self.container_layout.addWidget(btn_back)
         lbl_t = QLabel("CHI TIẾT: LẬP TRÌNH PYTHON NÂNG CAO")
-        lbl_t.setStyleSheet(f"color: {COLOR_TEXT_MAIN}; font-size: 18px; font-weight: bold; margin: 10px 0;")
+        lbl_t.setStyleSheet("color: #0f172a; font-size: 22px; font-weight: 700; letter-spacing: -0.3px; margin: 8px 0;")
         self.container_layout.addWidget(lbl_t)
 
     def _setup_tabs(self):
-        row = QHBoxLayout(); self.tab_btns = {}
+        row = QHBoxLayout(); row.setSpacing(8); self.tab_btns = {}
         tabs = [("Đường lộ trình", 0), ("Tài liệu", 1), ("Bài tập", 2), ("Đồ án", 3), ("Kết quả", 4), ("Phân tích", 5)]
         for text, idx in tabs:
-            btn = QPushButton(text); btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor)); btn.setFixedHeight(35)
-            btn.setStyleSheet(f"QPushButton {{ background: transparent; color: {COLOR_TEXT_SUB}; font-weight: bold; border-radius: 6px; padding: 0 10px; }}")
+            btn = QPushButton(text); btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+            btn.setStyleSheet("QPushButton { background: white; color: #475569; border: 1px solid #e2e8f0; border-radius: 8px; font-weight: 600; height: 36px; padding: 0 16px; } QPushButton:hover { background: #f8fafc; }")
             btn.clicked.connect(lambda ch, i=idx: self.show_tab(i))
             row.addWidget(btn); self.tab_btns[idx] = btn
+        row.addStretch()
         self.container_layout.addLayout(row)
-        line = QFrame(); line.setFixedHeight(1); line.setStyleSheet(f"background: {COLOR_BORDER};"); self.container_layout.addWidget(line)
+        line = QFrame(); line.setFixedHeight(1); line.setStyleSheet("background: #e2e8f0;"); self.container_layout.addWidget(line)
 
     def _setup_content(self):
         self.tab_stack = QStackedWidget()
@@ -66,6 +68,6 @@ class CourseDetailPage(QWidget):
         self.tab_stack.setCurrentIndex(index)
         for idx, btn in self.tab_btns.items():
             if idx == index:
-                btn.setStyleSheet(f"QPushButton {{ background: {COLOR_PRIMARY_LIGHT}; color: {COLOR_PRIMARY}; font-weight: bold; border-radius: 6px; padding: 0 10px; }}")
+                btn.setStyleSheet("QPushButton { background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #0f172a, stop:1 #334155); color: white; border-radius: 8px; font-weight: 600; border: none; height: 36px; padding: 0 16px; }")
             else:
-                btn.setStyleSheet(f"QPushButton {{ background: transparent; color: {COLOR_TEXT_SUB}; font-weight: bold; border-radius: 6px; padding: 0 10px; }}")
+                btn.setStyleSheet("QPushButton { background: white; color: #475569; border: 1px solid #e2e8f0; border-radius: 8px; font-weight: 600; height: 36px; padding: 0 16px; } QPushButton:hover { background: #f8fafc; }")

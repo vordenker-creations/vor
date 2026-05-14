@@ -169,28 +169,32 @@ class NeumorphicButton(QPushButton):
 
 
 class GlowingButton(QPushButton):
-    def __init__(self, text, width=None, height=50, parent=None):
+    def __init__(self, text, width=None, height=44, parent=None):
         super().__init__(text, parent)
         if width: self.setFixedWidth(width)
         self.setFixedHeight(height)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         
         self.shadow = QGraphicsDropShadowEffect(self)
-        self.shadow.setBlurRadius(20)
-        self.shadow.setColor(QColor(30, 95, 116, 120))
-        self.shadow.setOffset(0, 5)
+        self.shadow.setBlurRadius(16)
+        self.shadow.setColor(QColor(30, 95, 116, 80))
+        self.shadow.setOffset(0, 4)
         self.setGraphicsEffect(self.shadow)
         
         self.setStyleSheet(f"""
             QPushButton {{
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #1E5F74, stop:1 #123b49);
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2b84a3, stop:1 #1E5F74);
                 color: white;
                 border-radius: {height//2}px;
-                font-weight: bold;
+                font-weight: 600;
                 font-size: 14px;
-                letter-spacing: 1px;
-                border: none;
+                letter-spacing: 0.5px;
+                border: 1px solid rgba(255,255,255,0.1);
             }}
-            QPushButton:hover {{ background: #25758f; }}
-            QPushButton:pressed {{ background: #0c2730; }}
+            QPushButton:hover {{ 
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #329bbd, stop:1 #247189); 
+            }}
+            QPushButton:pressed {{ 
+                background: #174a5a; 
+            }}
         """)
