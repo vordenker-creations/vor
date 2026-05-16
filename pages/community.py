@@ -8,7 +8,9 @@ from PyQt6.QtGui import QCursor, QColor, QLinearGradient, QPainter, QBrush, QFon
 from config import *
 from i18n import _
 
-# Design Constants based on requirements
+from components import CollapsiblePanel
+
+# Design Constants
 COLOR_BG = "#F8FAFC"
 COLOR_CARD = "#FFFFFF"
 COLOR_BORDER = "#E2E8F0"
@@ -20,7 +22,6 @@ SPACING = 8
 MARGINS = 24
 
 class ModernCard(QFrame):
-    """Base card widget with modern styling and smooth hover effects."""
     def __init__(self, parent=None, radius=20, padding=16):
         super().__init__(parent)
         self.setFrameShape(QFrame.Shape.NoFrame)
@@ -32,7 +33,6 @@ class ModernCard(QFrame):
             }}
         """)
         
-        # Soft Shadow
         self.shadow = QGraphicsDropShadowEffect(self)
         self.shadow.setBlurRadius(30)
         self.shadow.setXOffset(0)
@@ -40,7 +40,6 @@ class ModernCard(QFrame):
         self.shadow.setColor(QColor(18, 55, 105, 20))
         self.setGraphicsEffect(self.shadow)
         
-        # Animations
         from PyQt6.QtCore import QPropertyAnimation, QEasingCurve
         self.anim = QPropertyAnimation(self.shadow, b"blurRadius")
         self.anim.setDuration(300)
@@ -69,7 +68,6 @@ class ModernCard(QFrame):
         super().leaveEvent(event)
 
 class Avatar(QLabel):
-    """Circular avatar placeholder."""
     def __init__(self, size=40, color="#E2E8F0", text=""):
         super().__init__()
         self.setFixedSize(size, size)
@@ -91,7 +89,6 @@ class Avatar(QLabel):
             painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, self.text)
 
 class GroupItem(QPushButton):
-    """Sidebar group item."""
     def __init__(self, name, members, icon="📁", badge=0):
         super().__init__()
         self.setFixedHeight(60)
@@ -147,14 +144,11 @@ class GroupItem(QPushButton):
             layout.addWidget(badge_lbl)
 
 class PostCard(ModernCard):
-    """Feed post card."""
     def __init__(self, user, role, time, content):
         super().__init__(radius=20, padding=20)
         
-        # Header
         header = QHBoxLayout()
         header.setSpacing(12)
-        
         header.addWidget(Avatar(size=44, color="#F1F5F9", text=user[0]))
         
         info = QVBoxLayout()
@@ -187,13 +181,11 @@ class PostCard(ModernCard):
         header.addLayout(info)
         self.layout.addLayout(header)
         
-        # Content
         text = QLabel(content)
         text.setWordWrap(True)
         text.setStyleSheet(f"color: {COLOR_TEXT_PRIMARY}; font-size: 14px; line-height: 1.5;")
         self.layout.addWidget(text)
         
-        # Actions
         actions = QHBoxLayout()
         actions.setSpacing(16)
         
@@ -230,15 +222,26 @@ class CommunityPage(QWidget):
         
         self._setup_top_header()
         
-        # Central Area
         central_container = QWidget()
         self.central_layout = QHBoxLayout(central_container)
         self.central_layout.setContentsMargins(MARGINS, MARGINS, MARGINS, MARGINS)
         self.central_layout.setSpacing(MARGINS)
         
-        self._setup_sidebar()
-        self._setup_main_feed()
-        self._setup_insights()
+        # Sidebar (Collapsible)
+        self.sidebar_content = self._setup_sidebar()
+        self.sidebar_content.setFixedWidth(260)
+        self.left_panel = CollapsiblePanel(self.sidebar_content, orientation="left")
+        self.central_layout.addWidget(self.left_panel)
+        
+        # Main Feed
+        self.feed_area = self._setup_main_feed()
+        self.central_layout.addWidget(self.feed_area, 1)
+        
+        # Insights (Collapsible)
+        self.insights_content = self._setup_insights()
+        self.insights_content.setFixedWidth(300)
+        self.right_panel = CollapsiblePanel(self.insights_content, orientation="right")
+        self.central_layout.addWidget(self.right_panel)
         
         self.main_layout.addWidget(central_container)
 
@@ -255,7 +258,6 @@ class CommunityPage(QWidget):
         
         h_layout.addStretch()
         
-        # Search Bar
         search = QLineEdit()
         search.setPlaceholderText(_("Search communities..."))
         search.setFixedWidth(300)
@@ -274,7 +276,6 @@ class CommunityPage(QWidget):
 
     def _setup_sidebar(self):
         sidebar = QFrame()
-        sidebar.setFixedWidth(280)
         sidebar.setStyleSheet("background: transparent;")
         layout = QVBoxLayout(sidebar)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -297,7 +298,6 @@ class CommunityPage(QWidget):
         
         layout.addStretch()
         
-        # Create Community Button
         btn_create = QPushButton(_("+ Create New Group"))
         btn_create.setFixedHeight(44)
         btn_create.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -315,7 +315,7 @@ class CommunityPage(QWidget):
         """)
         layout.addWidget(btn_create)
         
-        self.central_layout.addWidget(sidebar)
+        return sidebar
 
     def _setup_main_feed(self):
         scroll = QScrollArea()
@@ -323,7 +323,6 @@ class CommunityPage(QWidget):
         scroll.setFrameShape(QFrame.Shape.NoFrame)
         scroll.setStyleSheet("background: transparent; border: none;")
         
-        # Custom ScrollBar Styling
         scroll.verticalScrollBar().setStyleSheet(f"""
             QScrollBar:vertical {{ border: none; background: transparent; width: 8px; }}
             QScrollBar::handle:vertical {{ background: #CBD5E1; border-radius: 4px; min-height: 20px; }}
@@ -336,7 +335,6 @@ class CommunityPage(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(24)
         
-        # Community Banner
         banner = QFrame()
         banner.setFixedHeight(160)
         banner.setStyleSheet(f"""
@@ -358,7 +356,6 @@ class CommunityPage(QWidget):
         
         layout.addWidget(banner)
         
-        # Create Post Area
         create_post = ModernCard(radius=20, padding=20)
         cp_layout = QHBoxLayout()
         cp_layout.setSpacing(16)
@@ -394,7 +391,6 @@ class CommunityPage(QWidget):
         create_post.layout.addLayout(cp_actions)
         layout.addWidget(create_post)
         
-        # Post Cards
         posts = [
             ("Alex Rivera", "Senior ML Engineer", "2 hours ago", 
              "Just published a new guide on optimizing Transformer inference using TensorRT. Check it out in the documents tab! 🔥"),
@@ -409,16 +405,14 @@ class CommunityPage(QWidget):
         
         layout.addStretch()
         scroll.setWidget(container)
-        self.central_layout.addWidget(scroll)
+        return scroll
 
     def _setup_insights(self):
         insights = QWidget()
-        insights.setFixedWidth(320)
         layout = QVBoxLayout(insights)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(24)
         
-        # AI Recommendations
         rec_card = ModernCard(radius=20, padding=20)
         rec_card.layout.addWidget(QLabel("AI RECOMMENDATIONS", styleSheet=f"color: {COLOR_TEXT_SECONDARY}; font-weight: 800; font-size: 11px; letter-spacing: 1px;"))
         
@@ -441,7 +435,6 @@ class CommunityPage(QWidget):
         
         layout.addWidget(rec_card)
         
-        # Upcoming Events
         event_card = ModernCard(radius=20, padding=20)
         event_card.layout.addWidget(QLabel("UPCOMING EVENTS", styleSheet=f"color: {COLOR_TEXT_SECONDARY}; font-weight: 800; font-size: 11px; letter-spacing: 1px;"))
         
@@ -460,12 +453,11 @@ class CommunityPage(QWidget):
             
         layout.addWidget(event_card)
         
-        # Active Members
         active_card = ModernCard(radius=20, padding=20)
         active_card.layout.addWidget(QLabel("ACTIVE MEMBERS", styleSheet=f"color: {COLOR_TEXT_SECONDARY}; font-weight: 800; font-size: 11px; letter-spacing: 1px;"))
         
         members_row = QHBoxLayout()
-        members_row.setSpacing(-10) # Overlapping avatars
+        members_row.setSpacing(-10)
         for i in range(5):
             members_row.addWidget(Avatar(size=36, color=["#38BDF8", "#2DD4BF", "#F472B6", "#FB923C", "#A78BFA"][i], text=chr(65+i)))
         members_row.addStretch()
@@ -477,4 +469,4 @@ class CommunityPage(QWidget):
         layout.addWidget(active_card)
         layout.addStretch()
         
-        self.central_layout.addWidget(insights)
+        return insights

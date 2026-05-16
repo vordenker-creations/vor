@@ -1,5 +1,5 @@
-from PyQt6.QtWidgets import QFrame, QGraphicsDropShadowEffect, QVBoxLayout, QWidget, QLabel, QProgressBar, QPushButton
-from PyQt6.QtCore import Qt, QPropertyAnimation, QEasingCurve, pyqtProperty, QRectF, QTimer
+from PyQt6.QtWidgets import QFrame, QGraphicsDropShadowEffect, QVBoxLayout, QHBoxLayout, QWidget, QLabel, QProgressBar, QPushButton, QSizePolicy
+from PyQt6.QtCore import Qt, QPropertyAnimation, QEasingCurve, pyqtProperty, QRectF, QTimer, pyqtSignal
 from PyQt6.QtGui import QColor, QPainter, QPen, QBrush, QCursor
 from config import COLOR_BG_CARD, COLOR_BORDER, COLOR_PRIMARY, COLOR_BG_APP, COLOR_TEXT_MAIN, COLOR_TEXT_SUB, COLOR_PRIMARY_LIGHT
 from neumorphic_components import NeumorphicFrame
@@ -211,3 +211,97 @@ class ModernSwitch(QWidget):
         # Draw circle
         painter.setBrush(QColor(self._circle_color))
         painter.drawEllipse(QRectF(self._x_pos, 4, 16, 16))
+
+class CollapsiblePanel(QFrame):
+    """
+    Generic Animated Collapsible Panel.
+    Can be oriented to collapse to the left or right.
+    """
+    toggled = pyqtSignal(bool)
+
+    def __init__(self, content_widget, orientation="right", title="", parent=None):
+        super().__init__(parent)
+        self.content_widget = content_widget
+        self.orientation = orientation # "left" or "right"
+        self.is_expanded = True
+        self.max_w = content_widget.width() if content_widget.width() > 50 else 300
+        
+        self.setObjectName("CollapsiblePanel")
+        self.setStyleSheet("""
+            #CollapsiblePanel {
+                background-color: transparent;
+                border: none;
+            }
+        """)
+        
+        self.main_layout = QHBoxLayout(self)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
+        self.main_layout.setSpacing(0)
+        
+        # Toggle Button
+        self.toggle_btn = QPushButton()
+        self.toggle_btn.setFixedSize(24, 60)
+        self.toggle_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._update_button_icon()
+        
+        self.toggle_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {COLOR_BORDER};
+                color: {COLOR_TEXT_SUB};
+                border-radius: 4px;
+                font-weight: bold;
+                font-size: 14px;
+                border: none;
+            }}
+            QPushButton:hover {{
+                background-color: {COLOR_PRIMARY};
+                color: white;
+            }}
+        """)
+        self.toggle_btn.clicked.connect(self.toggle)
+        
+        # Animation
+        self.animation = QPropertyAnimation(self.content_widget, b"maximumWidth")
+        self.animation.setDuration(350)
+        self.animation.setEasingCurve(QEasingCurve.Type.OutCubic)
+        
+        # Setup Layout based on orientation
+        if orientation == "left":
+            self.main_layout.addWidget(self.content_widget)
+            self.main_layout.addWidget(self.toggle_btn, 0, Qt.AlignmentFlag.AlignVCenter)
+        else:
+            self.main_layout.addWidget(self.toggle_btn, 0, Qt.AlignmentFlag.AlignVCenter)
+            self.main_layout.addWidget(self.content_widget)
+            
+    def _update_button_icon(self):
+        if self.orientation == "left":
+            self.toggle_btn.setText("<" if self.is_expanded else ">")
+        else:
+            self.toggle_btn.setText(">" if self.is_expanded else "<")
+
+    def toggle(self):
+        if self.animation.state() == QPropertyAnimation.State.Running:
+            return
+            
+        self.is_expanded = not self.is_expanded
+        
+        start = self.content_widget.width()
+        end = self.max_w if self.is_expanded else 0
+        
+        if self.is_expanded:
+            self.content_widget.show()
+            
+        self.animation.setStartValue(start)
+        self.animation.setEndValue(end)
+        self.animation.start()
+        
+        if not self.is_expanded:
+            self.animation.finished.connect(lambda: self.content_widget.hide() if not self.is_expanded else None)
+        
+        self._update_button_icon()
+        self.toggled.emit(self.is_expanded)
+
+    def set_content_width(self, w):
+        self.max_w = w
+        if self.is_expanded:
+            self.content_widget.setMaximumWidth(w)

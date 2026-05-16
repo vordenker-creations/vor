@@ -31,19 +31,21 @@ class RoadmapPage(QWidget):
         header_layout.addStretch()
         
         search_bar = QLineEdit()
-        search_bar.setPlaceholderText("Search roadmap... (Ctrl+K)")
+        search_bar.setPlaceholderText("Search roadmap...")
         search_bar.setFixedWidth(240)
         search_bar.setStyleSheet("""
             QLineEdit {
-                background-color: #F1F5F9;
+                background-color: #FFFFFF;
                 border: 1px solid #E2E8F0;
-                border-radius: 8px;
+                border-radius: 12px;
                 padding: 8px 12px;
                 color: #0F172A;
             }
+            QLineEdit:focus {
+                border: 1px solid #38BDF8;
+            }
         """)
-        header_layout.addWidget(search_bar)
-        
+        header_layout.addWidget(search_bar)        
         btn_add = QPushButton("+ Add Subject")
         btn_add.setCursor(Qt.CursorShape.PointingHandCursor)
         btn_add.setStyleSheet("""

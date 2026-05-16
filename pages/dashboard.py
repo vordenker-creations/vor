@@ -1,20 +1,24 @@
 import json
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, 
                              QLabel, QPushButton, QProgressBar, QFrame, QSizePolicy,
-                             QScrollArea, QLineEdit, QGraphicsDropShadowEffect)
+                             QScrollArea, QLineEdit, QGraphicsDropShadowEffect, QStackedWidget)
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QSize
-from PyQt6.QtGui import QColor, QCursor
+from PyQt6.QtGui import QColor, QCursor, QFont
 
 from config import COLOR_PRIMARY, COLOR_TEXT_MAIN, COLOR_TEXT_SUB
-from components import SaaSCard, StatusPulse
+from components import SaaSCard, StatusPulse, CollapsiblePanel
 from i18n import _
+
+# Import sub-modules
+from .dashboard_analytics.dashboard_analytics_overview import DashboardAnalyticsOverview
+from .dashboard_operations.workspace_activity_operations_center import WorkspaceActivityOperationsCenter
 
 def create_shadow():
     shadow = QGraphicsDropShadowEffect()
-    shadow.setBlurRadius(30)
+    shadow.setBlurRadius(20)
     shadow.setXOffset(0)
-    shadow.setYOffset(8)
-    shadow.setColor(QColor(18, 55, 105, 20))
+    shadow.setYOffset(4)
+    shadow.setColor(QColor(15, 23, 42, 16))
     return shadow
 
 class IconButton(QPushButton):
@@ -37,58 +41,24 @@ class IconButton(QPushButton):
             }
         """)
 
-class ActionButton(QPushButton):
-    def __init__(self, text, icon="", is_primary=False, parent=None):
-        super().__init__(f"{icon} {text}" if icon else text, parent)
-        self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.setFixedHeight(36)
-        
-        if is_primary:
-            self.setStyleSheet("""
-                QPushButton {
-                    background-color: #38BDF8;
-                    color: white;
-                    font-weight: 600;
-                    font-size: 13px;
-                    border-radius: 18px;
-                    padding: 0 16px;
-                    border: none;
-                }
-                QPushButton:hover {
-                    background-color: #0EA5E9;
-                }
-            """)
-        else:
-            self.setStyleSheet("""
-                QPushButton {
-                    background-color: white;
-                    color: #0F172A;
-                    font-weight: 600;
-                    font-size: 13px;
-                    border-radius: 18px;
-                    padding: 0 16px;
-                    border: 1px solid #E2E8F0;
-                }
-                QPushButton:hover {
-                    background-color: #F8FAFC;
-                    border: 1px solid #CBD5E1;
-                }
-            """)
-
 class SearchBar(QLineEdit):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setPlaceholderText("Search tasks, roadmap, or courses... (Ctrl+K)")
+        self.setPlaceholderText("Search tasks, roadmap, or courses...")
         self.setFixedHeight(40)
-        self.setMinimumWidth(350)
+        self.setMinimumWidth(260)
+        self.setMaximumWidth(400)
         self.setStyleSheet("""
             QLineEdit {
-                background-color: #F1F5F9;
-                border: 1px solid transparent;
-                border-radius: 22px;
+                background-color: #FFFFFF;
+                border: 1px solid #E2E8F0;
+                border-radius: 14px;
                 padding: 0 16px;
                 color: #0F172A;
                 font-size: 13px;
+            }
+            QLineEdit:hover {
+                border: 1px solid #CBD5E1;
             }
             QLineEdit:focus {
                 background-color: #FFFFFF;
@@ -103,32 +73,180 @@ class ModernCard(QFrame):
             ModernCard {
                 background-color: #FFFFFF;
                 border: 1px solid #E2E8F0;
-                border-radius: 22px;
+                border-radius: 16px;
             }
         """)
         self.setGraphicsEffect(create_shadow())
         
         self.internal_layout = QVBoxLayout(self)
-        self.internal_layout.setContentsMargins(20, 20, 20, 20)
-        self.internal_layout.setSpacing(12)
+        self.internal_layout.setContentsMargins(16, 16, 16, 16)
+        self.internal_layout.setSpacing(8)
 
 class KPICard(ModernCard):
     def __init__(self, title, value, change, color="#38BDF8", parent=None):
         super().__init__(parent)
-        self.setFixedHeight(120)
+        self.setFixedHeight(100)
         
         lbl_title = QLabel(title)
-        lbl_title.setStyleSheet("color: #64748B; font-size: 13px; font-weight: 600;")
+        lbl_title.setStyleSheet("color: #64748B; font-size: 12px; font-weight: 600;")
         self.internal_layout.addWidget(lbl_title)
         
         lbl_val = QLabel(value)
-        lbl_val.setStyleSheet("color: #0F172A; font-size: 28px; font-weight: 800; letter-spacing: -0.5px;")
+        lbl_val.setStyleSheet("color: #0F172A; font-size: 24px; font-weight: 800; letter-spacing: -0.5px;")
         self.internal_layout.addWidget(lbl_val)
         
         lbl_change = QLabel(change)
-        lbl_change.setStyleSheet(f"color: {color}; font-size: 12px; font-weight: 600;")
+        lbl_change.setStyleSheet(f"color: {color}; font-size: 11px; font-weight: 600;")
         self.internal_layout.addWidget(lbl_change)
         self.internal_layout.addStretch()
+
+class DashboardOverviewView(QWidget):
+    """The original dashboard content."""
+    def __init__(self, parent=None, controller=None):
+        super().__init__(parent)
+        self.controller = controller
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(20)
+        
+        # Central Workspace (Scrollable)
+        self.scroll_area = QScrollArea()
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setFrameShape(QFrame.Shape.NoFrame)
+        self.scroll_area.setStyleSheet("background-color: transparent;")
+        
+        self.central_workspace = QWidget()
+        self.central_workspace.setStyleSheet("background-color: transparent;")
+        self.central_layout = QVBoxLayout(self.central_workspace)
+        self.central_layout.setContentsMargins(0, 0, 0, 0)
+        self.central_layout.setSpacing(20)
+        
+        self._build_welcome_area()
+        self._build_analytics_row()
+        self._build_roadmap_panel()
+        self._build_upcoming_activities()
+        self._build_productivity_insights()
+        
+        self.central_layout.addStretch()
+        self.scroll_area.setWidget(self.central_workspace)
+        layout.addWidget(self.scroll_area, stretch=1)
+        
+        # Right Assistant Panel (Collapsible)
+        self.right_content = self._build_right_panel()
+        self.right_content.setFixedWidth(320)
+        self.right_panel = CollapsiblePanel(self.right_content, orientation="right")
+        layout.addWidget(self.right_panel)
+
+    def _build_welcome_area(self):
+        banner = QFrame()
+        banner.setObjectName("BannerFrame")
+        banner.setGraphicsEffect(create_shadow())
+        banner.setStyleSheet("""
+            #BannerFrame {
+                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #0F172A, stop:0.6 #1E293B, stop:1 #0284C7);
+                border: none;
+                border-radius: 16px;
+            }
+        """)
+        l = QHBoxLayout(banner); l.setContentsMargins(32, 24, 32, 24)
+        left = QVBoxLayout(); left.setSpacing(0)
+        greeting = QLabel("Good Morning, Khoa.")
+        greeting.setStyleSheet("color: white; font-size: 26px; font-weight: 800; letter-spacing: -1px; background: transparent;")
+        summary = QLabel("✨ You have 3 tasks due today, and you're 80% ready for your Cloud Developer milestone.")
+        summary.setStyleSheet("color: #94A3B8; font-size: 14px; margin-top: 6px; margin-bottom: 20px; background: transparent;")
+        summary.setWordWrap(True)
+        left.addWidget(greeting); left.addWidget(summary)
+        
+        actions = QHBoxLayout(); actions.setSpacing(10)
+        def create_btn(text, icon, is_primary=False):
+            btn = QPushButton(f"{icon} {text}")
+            btn.setCursor(Qt.CursorShape.PointingHandCursor); btn.setFixedHeight(36)
+            if is_primary:
+                btn.setStyleSheet("background: #38BDF8; color: #0F172A; font-weight: 700; font-size: 13px; border-radius: 18px; padding: 0 16px; border: none;")
+            else:
+                btn.setStyleSheet("background: rgba(255,255,255,0.1); color: white; font-weight: 600; font-size: 13px; border-radius: 18px; padding: 0 16px; border: 1px solid rgba(255,255,255,0.2);")
+            return btn
+        
+        btn_connect = create_btn("Connect Mentor", "💬")
+        btn_connect.clicked.connect(lambda: self.controller.show_page("ChatPage") if self.controller else None)
+        actions.addWidget(create_btn("Add Task", "+", True))
+        actions.addWidget(create_btn("View Roadmap", "🗺️"))
+        actions.addWidget(create_btn("Generate AI Plan", "✨"))
+        actions.addWidget(btn_connect); actions.addStretch()
+        ac_w = QWidget(); ac_w.setLayout(actions); ac_w.setStyleSheet("background:transparent;"); left.addWidget(ac_w)
+        l.addLayout(left, 1)
+        
+        rocket = QLabel("🚀"); rocket.setStyleSheet("font-size: 56px; background: transparent;")
+        glow = QGraphicsDropShadowEffect(); glow.setBlurRadius(30); glow.setColor(QColor(56, 189, 248, 80)); rocket.setGraphicsEffect(glow)
+        l.addWidget(rocket, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.central_layout.addWidget(banner)
+
+    def _build_analytics_row(self):
+        row = QWidget(); layout = QHBoxLayout(row); layout.setContentsMargins(0, 0, 0, 0); layout.setSpacing(16)
+        layout.addWidget(KPICard("Academic Progress", "75%", "+5% this week", "#10B981"))
+        layout.addWidget(KPICard("Tasks Completed", "12", "4 pending today", "#F59E0B"))
+        layout.addWidget(KPICard("Career Readiness", "80%", "Cloud Dev Role", "#38BDF8"))
+        layout.addWidget(KPICard("Community Activity", "350 pts", "Top 10% Contributor", "#8B5CF6"))
+        self.central_layout.addWidget(row)
+
+    def _build_roadmap_panel(self):
+        container = QWidget(); layout = QVBoxLayout(container); layout.setContentsMargins(0, 0, 0, 0); layout.setSpacing(12)
+        header = QHBoxLayout(); title = QLabel("Academic Roadmap"); title.setStyleSheet("color: #0F172A; font-size: 16px; font-weight: 700;"); header.addWidget(title); header.addStretch()
+        view_all = QPushButton("View Full Timeline"); view_all.setStyleSheet("color: #38BDF8; font-weight: 600; border: none; background: transparent;"); view_all.setCursor(Qt.CursorShape.PointingHandCursor); header.addWidget(view_all); layout.addLayout(header)
+        cards = QHBoxLayout(); cards.setSpacing(16)
+        def create_card(course, status, color, progress):
+            card = ModernCard(); cl = card.internal_layout
+            badge = QLabel(status); badge.setStyleSheet(f"color: {color}; background: {color}15; font-size: 10px; font-weight: 700; padding: 3px 6px; border-radius: 4px;"); cl.addWidget(badge, alignment=Qt.AlignmentFlag.AlignLeft)
+            lbl = QLabel(course); lbl.setStyleSheet("color: #0F172A; font-size: 14px; font-weight: 600; margin-top: 6px;"); cl.addWidget(lbl)
+            bar = QProgressBar(); bar.setFixedHeight(4); bar.setValue(progress); bar.setTextVisible(False); bar.setStyleSheet(f"QProgressBar {{ background: #F1F5F9; border: none; border-radius: 2px; }} QProgressBar::chunk {{ background: {color}; border-radius: 2px; }}"); cl.addWidget(bar); return card
+        cards.addWidget(create_card("Web Dev Fundamentals", "Completed", "#10B981", 100))
+        cards.addWidget(create_card("Advanced React & PyQt", "In Progress", "#38BDF8", 65))
+        cards.addWidget(create_card("Cloud Deployment", "Upcoming", "#94A3B8", 0))
+        layout.addLayout(cards); self.central_layout.addWidget(container)
+
+    def _build_upcoming_activities(self):
+        container = QWidget(); layout = QHBoxLayout(container); layout.setContentsMargins(0, 0, 0, 0); layout.setSpacing(20)
+        tasks = ModernCard(); tl = tasks.internal_layout; t_header = QLabel("Upcoming Tasks"); t_header.setStyleSheet("color: #0F172A; font-size: 15px; font-weight: 700;"); tl.addWidget(t_header)
+        def add_task(title, tag, color):
+            w = QWidget(); l = QHBoxLayout(w); l.setContentsMargins(0, 0, 0, 0)
+            chk = QFrame(); chk.setFixedSize(14, 14); chk.setStyleSheet("border: 2px solid #CBD5E1; border-radius: 3px;"); l.addWidget(chk)
+            lbl = QLabel(title); lbl.setStyleSheet("color: #334155; font-size: 13px; font-weight: 500;"); l.addWidget(lbl); l.addStretch()
+            badge = QLabel(tag); badge.setStyleSheet(f"color: {color}; background: {color}15; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px;"); l.addWidget(badge); tl.addWidget(w)
+        add_task("Finish UI mockups for Module 2", "High", "#EF4444")
+        add_task("Review Peer PR #42", "Medium", "#F59E0B")
+        add_task("Read Chapter 5: System Design", "Low", "#3B82F6"); tl.addStretch(); layout.addWidget(tasks, stretch=1)
+        cal = ModernCard(); cl = cal.internal_layout; c_header = QLabel("Schedule"); c_header.setStyleSheet("color: #0F172A; font-size: 15px; font-weight: 700;"); cl.addWidget(c_header)
+        def add_event(time, title, active=False):
+            w = QWidget(); l = QHBoxLayout(w); l.setContentsMargins(0, 0, 0, 0); l.setSpacing(10)
+            tm = QLabel(time); tm.setStyleSheet(f"color: {'#38BDF8' if active else '#64748B'}; font-size: 12px; font-weight: 600; min-width: 40px;"); l.addWidget(tm)
+            line = QFrame(); line.setFixedWidth(2); line.setStyleSheet(f"background: {'#38BDF8' if active else '#E2E8F0'}; border-radius: 1px;"); l.addWidget(line)
+            desc = QLabel(title); desc.setStyleSheet(f"color: {'#0F172A' if active else '#475569'}; font-size: 13px; font-weight: {'600' if active else '500'};"); l.addWidget(desc); l.addStretch(); cl.addWidget(w)
+        add_event("10:00", "Algorithm Lab Sync"); add_event("14:00", "Mentoring: Career in Cloud", True); add_event("16:30", "Project Group Meet"); cl.addStretch(); layout.addWidget(cal, stretch=1); self.central_layout.addWidget(container)
+
+    def _build_productivity_insights(self):
+        container = QWidget(); layout = QHBoxLayout(container); layout.setContentsMargins(0, 0, 0, 0); layout.setSpacing(20)
+        graph = ModernCard(); gl = graph.internal_layout; t = QLabel("Productivity & Focus"); t.setStyleSheet("color: #0F172A; font-size: 15px; font-weight: 700;"); gl.addWidget(t)
+        mock = QLabel("[ Productivity Graph Visualization ]"); mock.setAlignment(Qt.AlignmentFlag.AlignCenter); mock.setStyleSheet("color: #94A3B8; font-size: 12px; background: #F8FAFC; border: 1px dashed #CBD5E1; border-radius: 10px; min-height: 100px;"); gl.addWidget(mock); layout.addWidget(graph, stretch=2)
+        ai = ModernCard(); al = ai.internal_layout; t2 = QLabel("✨ Learning Insights"); t2.setStyleSheet("color: #0F172A; font-size: 15px; font-weight: 700;"); al.addWidget(t2)
+        msg = QLabel("You've been studying System Design 30% more this week. Based on your roadmap, you might want to start working on your capstone architecture draft soon."); msg.setWordWrap(True); msg.setStyleSheet("color: #475569; font-size: 13px; line-height: 1.4;"); al.addWidget(msg); al.addStretch(); layout.addWidget(ai, stretch=1); self.central_layout.addWidget(container)
+
+    def _build_right_panel(self):
+        panel = QFrame(); panel.setStyleSheet("background-color: transparent; border: none;"); layout = QVBoxLayout(panel); layout.setContentsMargins(0, 0, 0, 0); layout.setSpacing(20)
+        ai = ModernCard(); al = ai.internal_layout; al.setSpacing(12); h = QHBoxLayout(); h.addWidget(StatusPulse(size=8, color="#8B5CF6")); t = QLabel("AI Assistant"); t.setStyleSheet("color: #0F172A; font-size: 15px; font-weight: 700;"); h.addWidget(t); h.addStretch(); al.addLayout(h)
+        msg = QLabel("I noticed you have a mentoring session at 2 PM. Would you like me to prepare a list of questions about Cloud Architecture based on your recent activity?"); msg.setWordWrap(True); msg.setStyleSheet("color: #475569; font-size: 13px; line-height: 1.4;"); al.addWidget(msg)
+        btn = QPushButton("✨ Prepare Questions"); btn.setFixedHeight(30); btn.setCursor(Qt.CursorShape.PointingHandCursor); btn.setStyleSheet("background: #38BDF8; color: white; font-weight: 700; border-radius: 15px; font-size: 11px;"); al.addWidget(btn); layout.addWidget(ai)
+        notif = ModernCard(); nl = notif.internal_layout; t2 = QLabel("Recent Notifications"); t2.setStyleSheet("color: #0F172A; font-size: 15px; font-weight: 700;"); nl.addWidget(t2)
+        def add_n(t, time, icon="📌"):
+            w = QWidget(); l = QHBoxLayout(w); l.setContentsMargins(0, 0, 0, 0); ic = QLabel(icon); ic.setStyleSheet("font-size: 14px;"); l.addWidget(ic)
+            v = QVBoxLayout(); v.setSpacing(2); t_l = QLabel(t); t_l.setStyleSheet("color: #334155; font-size: 12px; font-weight: 500;"); t_l.setWordWrap(True); v.addWidget(t_l)
+            tm = QLabel(time); tm.setStyleSheet("color: #94A3B8; font-size: 10px;"); v.addWidget(tm); l.addLayout(v); nl.addWidget(w)
+        add_n("Prof. Alan posted a new grade", "10 min ago", "🎓"); add_n("Your AWS Student creds expire soon", "1 hour ago", "⚠️"); layout.addWidget(notif)
+        act = ModernCard(); acl = act.internal_layout; t3 = QLabel("Recent Activity"); t3.setStyleSheet("color: #0F172A; font-size: 15px; font-weight: 700;"); acl.addWidget(t3)
+        def add_a(a, time):
+            w = QWidget(); l = QHBoxLayout(w); l.setContentsMargins(0, 0, 0, 0); l.setSpacing(10); dot = QFrame(); dot.setFixedSize(6, 6); dot.setStyleSheet("background: #CBD5E1; border-radius: 3px;"); l.addWidget(dot)
+            v = QVBoxLayout(); v.setSpacing(2); t_l = QLabel(a); t_l.setStyleSheet("color: #475569; font-size: 12px;"); t_l.setWordWrap(True); v.addWidget(t_l)
+            tm = QLabel(time); tm.setStyleSheet("color: #94A3B8; font-size: 10px;"); v.addWidget(tm); l.addLayout(v); acl.addWidget(w)
+        add_a("Completed 'React Hooks' Quiz", "Yesterday"); add_a("Joined 'Cloud Engineers' Group", "Yesterday"); add_a("Updated Resume PDF", "2 days ago"); layout.addWidget(act); layout.addStretch(); return panel
 
 class DashboardPage(QWidget):
     def __init__(self, parent=None, controller=None):
@@ -141,60 +259,101 @@ class DashboardPage(QWidget):
         root_layout.setSpacing(0)
         
         # 1. Top Toolbar (Header)
-        root_layout.addWidget(self._build_header())
+        self.header = self._build_header()
+        root_layout.addWidget(self.header)
         
         # Separator line
-        line = QFrame()
-        line.setFrameShape(QFrame.Shape.HLine)
-        line.setStyleSheet("background-color: #E2E8F0; max-height: 1px; border: none;")
-        root_layout.addWidget(line)
+        line = QFrame(); line.setFrameShape(QFrame.Shape.HLine); line.setStyleSheet("background-color: #E2E8F0; max-height: 1px; border: none;"); root_layout.addWidget(line)
         
-        # Body Layout
-        body_widget = QWidget()
-        body_layout = QHBoxLayout(body_widget)
-        body_layout.setContentsMargins(24, 24, 24, 24)
-        body_layout.setSpacing(24)
+        # 2. Main Stacked Workspace
+        self.view_stack = QStackedWidget()
         
-        # 2. Central Workspace (Scrollable)
-        self.scroll_area = QScrollArea()
-        self.scroll_area.setWidgetResizable(True)
-        self.scroll_area.setFrameShape(QFrame.Shape.NoFrame)
-        self.scroll_area.setStyleSheet("background-color: transparent;")
+        # View 0: Standard Overview
+        self.overview_view = DashboardOverviewView(controller=self.controller)
+        self.view_stack.addWidget(self.overview_view)
         
-        self.central_workspace = QWidget()
-        self.central_workspace.setStyleSheet("background-color: transparent;")
-        self.central_layout = QVBoxLayout(self.central_workspace)
-        self.central_layout.setContentsMargins(0, 0, 0, 0)
-        self.central_layout.setSpacing(24)
+        # View 1: Analytics Overview
+        self.analytics_view = DashboardAnalyticsOverview(controller=self.controller)
+        self.view_stack.addWidget(self.analytics_view)
         
-        self._build_welcome_area()
-        self._build_analytics_row()
-        self._build_roadmap_panel()
-        self._build_upcoming_activities()
-        self._build_productivity_insights()
+        # View 2: Workspace Activity & Live Ops
+        self.activity_view = WorkspaceActivityOperationsCenter(controller=self.controller)
+        self.view_stack.addWidget(self.activity_view)
         
-        self.central_layout.addStretch()
-        self.scroll_area.setWidget(self.central_workspace)
-        
-        body_layout.addWidget(self.scroll_area, stretch=1)
-        
-        # 3. Right Assistant Panel
-        body_layout.addWidget(self._build_right_panel())
-        
-        root_layout.addWidget(body_widget)
+        root_layout.addWidget(self.view_stack)
 
     def _build_header(self):
         header = QWidget()
-        header.setFixedHeight(72)
-        header.setStyleSheet("background-color: #FFFFFF;")
+        header.setFixedHeight(64)
+        header.setStyleSheet("background-color: #FFFFFF; border-bottom: 1px solid #E2E8F0;")
         layout = QHBoxLayout(header)
-        layout.setContentsMargins(24, 0, 24, 0)
+        layout.setContentsMargins(20, 0, 20, 0)
         layout.setSpacing(16)
         
-        # Breadcrumbs
-        breadcrumbs = QLabel("Dashboard  /  <b>Spring Semester</b>")
-        breadcrumbs.setStyleSheet("color: #64748B; font-size: 14px;")
-        layout.addWidget(breadcrumbs)
+        # Sidebar Toggle
+        self.btn_toggle = QPushButton("☰")
+        self.btn_toggle.setFixedSize(40, 40)
+        self.btn_toggle.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_toggle.setStyleSheet("""
+            QPushButton {
+                background-color: transparent;
+                color: #000000;
+                border-radius: 12px;
+                font-size: 19px;
+                border: none;
+            }
+            QPushButton:hover {
+                background-color: rgba(15, 23, 42, 0.08);
+            }
+            QPushButton:pressed {
+                background-color: rgba(15, 23, 42, 0.14);
+            }
+        """)
+        btn_shadow = QGraphicsDropShadowEffect()
+        btn_shadow.setBlurRadius(10)
+        btn_shadow.setColor(QColor(15, 23, 42, 15))
+        btn_shadow.setOffset(0, 2)
+        self.btn_toggle.setGraphicsEffect(btn_shadow)
+        
+        if self.controller and hasattr(self.controller, 'sidebar'):
+            self.btn_toggle.clicked.connect(self.controller.sidebar.toggle_collapse)
+        layout.addWidget(self.btn_toggle)
+
+        # Logo/Title
+        title_lbl = QLabel("Dashboard")
+        title_lbl.setStyleSheet("font-size: 16px; font-weight: 800; color: #0F172A;")
+        layout.addWidget(title_lbl)
+        
+        # Tab Switcher
+        tab_container = QFrame()
+        tab_container.setStyleSheet("background: #F1F5F9; border-radius: 12px; padding: 2px;")
+        tl = QHBoxLayout(tab_container)
+        tl.setContentsMargins(2, 2, 2, 2)
+        tl.setSpacing(4)
+        
+        self.btn_overview = QPushButton("Overview")
+        self.btn_analytics = QPushButton("Analytics")
+        self.btn_activity = QPushButton("Activity")
+        
+        tab_style = """
+            QPushButton {
+                border: none; border-radius: 10px; padding: 8px 16px;
+                font-size: 13px; font-weight: 700; color: #64748B;
+            }
+            QPushButton:checked {
+                background: white; color: #0F172A;
+            }
+        """
+        self.btn_overview.setStyleSheet(tab_style); self.btn_overview.setCheckable(True); self.btn_overview.setChecked(True)
+        self.btn_analytics.setStyleSheet(tab_style); self.btn_analytics.setCheckable(True)
+        self.btn_activity.setStyleSheet(tab_style); self.btn_activity.setCheckable(True)
+        
+        self.btn_overview.clicked.connect(lambda: self._set_view(0))
+        self.btn_analytics.clicked.connect(lambda: self._set_view(1))
+        self.btn_activity.clicked.connect(lambda: self._set_view(2))
+        
+        tl.addWidget(self.btn_overview); tl.addWidget(self.btn_analytics); tl.addWidget(self.btn_activity)
+        layout.addWidget(tab_container)
         
         layout.addStretch()
         
@@ -204,396 +363,18 @@ class DashboardPage(QWidget):
         # Icons
         layout.addWidget(IconButton("📅"))
         layout.addWidget(IconButton("🔔"))
-        layout.addWidget(IconButton("✨")) # AI assistant quick button
         
         avatar_btn = IconButton("KH")
-        avatar_btn.setStyleSheet(avatar_btn.styleSheet() + "QPushButton { background-color: #2DD4BF; color: white; border: none; }")
+        avatar_btn.setStyleSheet("QPushButton { background-color: #2DD4BF; color: white; border: none; border-radius: 18px; font-weight: 800; }")
         layout.addWidget(avatar_btn)
         
         return header
 
-    def _build_welcome_area(self):
-        banner = QFrame()
-        banner.setObjectName("BannerFrame")
-        banner.setGraphicsEffect(create_shadow())
-        banner.setStyleSheet("""
-            #BannerFrame {
-                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #0F172A, stop:0.6 #1E293B, stop:1 #0284C7);
-                border: none;
-                border-radius: 24px;
-            }
-        """)
-        
-        layout = QHBoxLayout(banner)
-        layout.setContentsMargins(40, 40, 40, 40)
-        
-        # Left side: Text and Buttons
-        left_layout = QVBoxLayout()
-        left_layout.setSpacing(0)
-        
-        greeting = QLabel("Good Morning, Khoa.")
-        greeting.setStyleSheet("color: #FFFFFF; font-size: 32px; font-weight: 800; letter-spacing: -1px; background: transparent;")
-        left_layout.addWidget(greeting)
-        
-        summary = QLabel("✨ You have 3 tasks due today, and you're 80% ready for your Cloud Developer milestone.")
-        summary.setStyleSheet("color: #94A3B8; font-size: 15px; margin-top: 8px; margin-bottom: 24px; background: transparent;")
-        left_layout.addWidget(summary)
-        
-        actions_layout = QHBoxLayout()
-        actions_layout.setSpacing(12)
-        
-        def create_banner_btn(text, icon, is_primary=False):
-            btn = QPushButton(f"{icon} {text}")
-            btn.setCursor(Qt.CursorShape.PointingHandCursor)
-            btn.setFixedHeight(40)
-            if is_primary:
-                btn.setStyleSheet("""
-                    QPushButton {
-                        background-color: #38BDF8;
-                        color: #0F172A;
-                        font-weight: 700;
-                        font-size: 14px;
-                        border-radius: 20px;
-                        padding: 0 20px;
-                        border: none;
-                    }
-                    QPushButton:hover {
-                        background-color: #7DD3FC;
-                    }
-                """)
-            else:
-                btn.setStyleSheet("""
-                    QPushButton {
-                        background-color: rgba(255, 255, 255, 0.1);
-                        color: #FFFFFF;
-                        font-weight: 600;
-                        font-size: 14px;
-                        border-radius: 20px;
-                        padding: 0 20px;
-                        border: 1px solid rgba(255, 255, 255, 0.2);
-                    }
-                    QPushButton:hover {
-                        background-color: rgba(255, 255, 255, 0.2);
-                        border: 1px solid rgba(255, 255, 255, 0.3);
-                    }
-                """)
-            return btn
-            
-        # Connect Mentor button goes to chat
-        btn_connect = create_banner_btn("Connect Mentor", "💬")
-        btn_connect.clicked.connect(lambda: self.controller.show_page("ChatPage") if self.controller else None)
-        
-        actions_layout.addWidget(create_banner_btn("Add Task", "+", is_primary=True))
-        actions_layout.addWidget(create_banner_btn("View Roadmap", "🗺️"))
-        actions_layout.addWidget(create_banner_btn("Generate AI Plan", "✨"))
-        actions_layout.addWidget(btn_connect)
-        actions_layout.addStretch()
-        
-        # Inner widget for actions layout
-        actions_container = QWidget()
-        actions_container.setStyleSheet("background: transparent;")
-        actions_container.setLayout(actions_layout)
-        left_layout.addWidget(actions_container)
-        
-        layout.addLayout(left_layout)
-        layout.addStretch()
-        
-        # Right side: Decorative Graphic
-        icon_label = QLabel("🚀")
-        icon_label.setStyleSheet("font-size: 72px; background: transparent;")
-        
-        # Drop shadow for the emoji
-        glow = QGraphicsDropShadowEffect()
-        glow.setBlurRadius(40)
-        glow.setColor(QColor(56, 189, 248, 100)) # Cyan glow
-        glow.setOffset(0, 0)
-        icon_label.setGraphicsEffect(glow)
-        
-        layout.addWidget(icon_label)
-        layout.addSpacing(20)
-        
-        self.central_layout.addWidget(banner)
-
-    def _build_analytics_row(self):
-        row = QWidget()
-        layout = QHBoxLayout(row)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(16)
-        
-        layout.addWidget(KPICard("Academic Progress", "75%", "+5% this week", "#10B981"))
-        layout.addWidget(KPICard("Tasks Completed", "12", "4 pending today", "#F59E0B"))
-        layout.addWidget(KPICard("Career Readiness", "80%", "Cloud Dev Role", "#38BDF8"))
-        layout.addWidget(KPICard("Community Activity", "350 pts", "Top 10% Contributor", "#8B5CF6"))
-        
-        self.central_layout.addWidget(row)
-
-    def _build_roadmap_panel(self):
-        container = QWidget()
-        layout = QVBoxLayout(container)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(16)
-        
-        header = QHBoxLayout()
-        title = QLabel("Academic Roadmap")
-        title.setStyleSheet("color: #0F172A; font-size: 18px; font-weight: 700;")
-        header.addWidget(title)
-        header.addStretch()
-        view_all = QPushButton("View Full Timeline")
-        view_all.setStyleSheet("color: #38BDF8; font-weight: 600; border: none; background: transparent;")
-        view_all.setCursor(Qt.CursorShape.PointingHandCursor)
-        header.addWidget(view_all)
-        layout.addLayout(header)
-        
-        cards_layout = QHBoxLayout()
-        cards_layout.setSpacing(16)
-        
-        def create_roadmap_card(course, status, color, progress):
-            card = ModernCard()
-            cl = card.internal_layout
-            
-            badge = QLabel(status)
-            badge.setStyleSheet(f"color: {color}; background-color: {color}20; font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 6px;")
-            badge.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
-            cl.addWidget(badge)
-            
-            lbl = QLabel(course)
-            lbl.setStyleSheet("color: #0F172A; font-size: 15px; font-weight: 600; margin-top: 8px;")
-            cl.addWidget(lbl)
-            
-            bar = QProgressBar()
-            bar.setFixedHeight(6)
-            bar.setValue(progress)
-            bar.setTextVisible(False)
-            bar.setStyleSheet(f"""
-                QProgressBar {{ background-color: #F1F5F9; border: none; border-radius: 3px; }}
-                QProgressBar::chunk {{ background-color: {color}; border-radius: 3px; }}
-            """)
-            cl.addWidget(bar)
-            
-            return card
-
-        cards_layout.addWidget(create_roadmap_card("Web Dev Fundamentals", "Completed", "#10B981", 100))
-        cards_layout.addWidget(create_roadmap_card("Advanced React & PyQt", "In Progress", "#38BDF8", 65))
-        cards_layout.addWidget(create_roadmap_card("Cloud Deployment", "Upcoming", "#94A3B8", 0))
-        
-        layout.addLayout(cards_layout)
-        self.central_layout.addWidget(container)
-
-    def _build_upcoming_activities(self):
-        container = QWidget()
-        layout = QHBoxLayout(container)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(24)
-        
-        # Tasks Panel (left)
-        tasks_panel = ModernCard()
-        tl = tasks_panel.internal_layout
-        
-        t_header = QLabel("Upcoming Tasks")
-        t_header.setStyleSheet("color: #0F172A; font-size: 16px; font-weight: 700;")
-        tl.addWidget(t_header)
-        
-        def add_task(title, tag, color):
-            w = QWidget()
-            l = QHBoxLayout(w)
-            l.setContentsMargins(0, 0, 0, 0)
-            chk = QFrame()
-            chk.setFixedSize(16, 16)
-            chk.setStyleSheet("border: 2px solid #CBD5E1; border-radius: 4px;")
-            l.addWidget(chk)
-            lbl = QLabel(title)
-            lbl.setStyleSheet("color: #334155; font-size: 14px; font-weight: 500;")
-            l.addWidget(lbl)
-            l.addStretch()
-            badge = QLabel(tag)
-            badge.setStyleSheet(f"color: {color}; background-color: {color}20; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px;")
-            l.addWidget(badge)
-            tl.addWidget(w)
-        
-        add_task("Finish UI mockups for Module 2", "High", "#EF4444")
-        add_task("Review Peer PR #42", "Medium", "#F59E0B")
-        add_task("Read Chapter 5: System Design", "Low", "#3B82F6")
-        tl.addStretch()
-        
-        layout.addWidget(tasks_panel, stretch=1)
-        
-        # Calendar Panel (right)
-        cal_panel = ModernCard()
-        cl = cal_panel.internal_layout
-        
-        c_header = QLabel("Schedule")
-        c_header.setStyleSheet("color: #0F172A; font-size: 16px; font-weight: 700;")
-        cl.addWidget(c_header)
-        
-        def add_event(time_str, title, is_active=False):
-            w = QWidget()
-            l = QHBoxLayout(w)
-            l.setContentsMargins(0, 0, 0, 0)
-            l.setSpacing(12)
-            
-            tm = QLabel(time_str)
-            tm.setStyleSheet(f"color: {'#38BDF8' if is_active else '#64748B'}; font-size: 13px; font-weight: 600; min-width: 45px;")
-            l.addWidget(tm)
-            
-            line = QFrame()
-            line.setFixedWidth(2)
-            line.setStyleSheet(f"background-color: {'#38BDF8' if is_active else '#E2E8F0'};")
-            l.addWidget(line)
-            
-            desc = QLabel(title)
-            desc.setStyleSheet(f"color: {'#0F172A' if is_active else '#475569'}; font-size: 14px; font-weight: {'600' if is_active else '500'};")
-            l.addWidget(desc)
-            l.addStretch()
-            cl.addWidget(w)
-            
-        add_event("10:00", "Algorithm Lab Sync")
-        add_event("14:00", "Mentoring: Career in Cloud", is_active=True)
-        add_event("16:30", "Project Group Meet")
-        cl.addStretch()
-        
-        layout.addWidget(cal_panel, stretch=1)
-        
-        self.central_layout.addWidget(container)
-
-    def _build_productivity_insights(self):
-        container = QWidget()
-        layout = QHBoxLayout(container)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(24)
-        
-        # Graph Mockup
-        graph_card = ModernCard()
-        gl = graph_card.internal_layout
-        g_title = QLabel("Productivity & Focus")
-        g_title.setStyleSheet("color: #0F172A; font-size: 16px; font-weight: 700;")
-        gl.addWidget(g_title)
-        
-        mock_graph = QLabel("[ Productivity Graph Visualization ]")
-        mock_graph.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        mock_graph.setStyleSheet("color: #94A3B8; font-size: 13px; background-color: #F8FAFC; border: 1px dashed #CBD5E1; border-radius: 12px; min-height: 120px;")
-        gl.addWidget(mock_graph)
-        layout.addWidget(graph_card, stretch=2)
-        
-        # AI Insights
-        ai_card = ModernCard()
-        al = ai_card.internal_layout
-        a_title = QLabel("✨ Learning Insights")
-        a_title.setStyleSheet("color: #0F172A; font-size: 16px; font-weight: 700;")
-        al.addWidget(a_title)
-        
-        msg = QLabel("You've been studying System Design 30% more this week. Based on your roadmap, you might want to start working on your capstone architecture draft soon.")
-        msg.setWordWrap(True)
-        msg.setStyleSheet("color: #475569; font-size: 14px; line-height: 1.5;")
-        al.addWidget(msg)
-        al.addStretch()
-        layout.addWidget(ai_card, stretch=1)
-        
-        self.central_layout.addWidget(container)
-
-    def _build_right_panel(self):
-        panel = QWidget()
-        panel.setFixedWidth(320)
-        layout = QVBoxLayout(panel)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(24)
-        
-        # 1. AI Assistant Card
-        ai_card = ModernCard()
-        al = ai_card.internal_layout
-        al.setSpacing(16)
-        
-        header = QHBoxLayout()
-        pulse = StatusPulse(size=10, color="#8B5CF6")
-        header.addWidget(pulse)
-        title = QLabel("AI Assistant")
-        title.setStyleSheet("color: #0F172A; font-size: 16px; font-weight: 700;")
-        header.addWidget(title)
-        header.addStretch()
-        al.addLayout(header)
-        
-        ai_msg = QLabel("I noticed you have a mentoring session at 2 PM. Would you like me to prepare a list of questions about Cloud Architecture based on your recent activity?")
-        ai_msg.setWordWrap(True)
-        ai_msg.setStyleSheet("color: #475569; font-size: 14px; line-height: 1.5;")
-        al.addWidget(ai_msg)
-        
-        btn_prep = ActionButton("Prepare Questions", "✨", is_primary=True)
-        btn_prep.setFixedHeight(32)
-        al.addWidget(btn_prep)
-        layout.addWidget(ai_card)
-        
-        # 2. Recent Notifications
-        notif_card = ModernCard()
-        nl = notif_card.internal_layout
-        n_title = QLabel("Recent Notifications")
-        n_title.setStyleSheet("color: #0F172A; font-size: 16px; font-weight: 700;")
-        nl.addWidget(n_title)
-        
-        def add_notif(title, time_str, icon="📌"):
-            w = QWidget()
-            l = QHBoxLayout(w)
-            l.setContentsMargins(0, 0, 0, 0)
-            
-            ic = QLabel(icon)
-            ic.setStyleSheet("font-size: 16px;")
-            l.addWidget(ic)
-            
-            vl = QVBoxLayout()
-            vl.setSpacing(2)
-            t = QLabel(title)
-            t.setStyleSheet("color: #334155; font-size: 13px; font-weight: 500;")
-            t.setWordWrap(True)
-            vl.addWidget(t)
-            
-            tm = QLabel(time_str)
-            tm.setStyleSheet("color: #94A3B8; font-size: 11px;")
-            vl.addWidget(tm)
-            
-            l.addLayout(vl)
-            nl.addWidget(w)
-            
-        add_notif("Prof. Alan posted a new grade", "10 min ago", "🎓")
-        add_notif("Your AWS Student creds expire soon", "1 hour ago", "⚠️")
-        layout.addWidget(notif_card)
-        
-        # 3. Recent Activity
-        act_card = ModernCard()
-        acl = act_card.internal_layout
-        ac_title = QLabel("Recent Activity")
-        ac_title.setStyleSheet("color: #0F172A; font-size: 16px; font-weight: 700;")
-        acl.addWidget(ac_title)
-        
-        def add_activity(action, time_str):
-            w = QWidget()
-            l = QHBoxLayout(w)
-            l.setContentsMargins(0, 0, 0, 0)
-            l.setSpacing(12)
-            
-            dot = QFrame()
-            dot.setFixedSize(8, 8)
-            dot.setStyleSheet("background-color: #CBD5E1; border-radius: 4px;")
-            l.addWidget(dot)
-            
-            vl = QVBoxLayout()
-            vl.setSpacing(2)
-            t = QLabel(action)
-            t.setStyleSheet("color: #475569; font-size: 13px;")
-            t.setWordWrap(True)
-            vl.addWidget(t)
-            
-            tm = QLabel(time_str)
-            tm.setStyleSheet("color: #94A3B8; font-size: 11px;")
-            vl.addWidget(tm)
-            
-            l.addLayout(vl)
-            acl.addWidget(w)
-            
-        add_activity("Completed 'React Hooks' Quiz", "Yesterday")
-        add_activity("Joined 'Cloud Engineers' Group", "Yesterday")
-        add_activity("Updated Resume PDF", "2 days ago")
-        layout.addWidget(act_card)
-        
-        layout.addStretch()
-        return panel
+    def _set_view(self, idx):
+        self.view_stack.setCurrentIndex(idx)
+        self.btn_overview.setChecked(idx == 0)
+        self.btn_analytics.setChecked(idx == 1)
+        self.btn_activity.setChecked(idx == 2)
 
 if __name__ == "__main__":
     import sys

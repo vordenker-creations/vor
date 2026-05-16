@@ -412,20 +412,22 @@ class RecruitmentPage(QWidget):
         
         # Search Bar
         search = QLineEdit()
-        search.setPlaceholderText("Search insights... (Ctrl+K)")
-        search.setFixedWidth(300)
+        search.setPlaceholderText("Search insights...")
+        search.setFixedWidth(260)
         search.setStyleSheet(f"""
             QLineEdit {{
-                background-color: #F1F5F9;
+                background-color: #FFFFFF;
                 border: 1px solid {BORDER_COLOR};
-                border-radius: 10px;
+                border-radius: 12px;
                 padding: 8px 12px;
                 color: {TEXT_PRIMARY};
                 font-size: 13px;
             }}
+            QLineEdit:focus {{
+                border: 1px solid #38BDF8;
+            }}
         """)
-        hl.addWidget(search)
-        
+        hl.addWidget(search)        
         # Action Buttons
         btn_ai = QPushButton("Generate AI Analysis")
         btn_ai.setStyleSheet(f"""

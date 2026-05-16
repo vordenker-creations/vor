@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont, QCursor
+from pages.job_portal.job_portal_page import JobPortalPage as ModernJobPortalPage
 
 # ==========================================
 # PAGE 0: Dashboard
@@ -167,72 +168,6 @@ class StudyTasksPage(QWidget):
             kanban_layout.addWidget(col)
             
         layout.addLayout(kanban_layout)
-
-# ==========================================
-# PAGE 4: Job Portal
-# ==========================================
-class JobPortalPage(QWidget):
-    def __init__(self):
-        super().__init__()
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(20)
-
-        # Left: Filters
-        filters_panel = QFrame()
-        filters_panel.setFixedWidth(200)
-        filters_panel.setStyleSheet("background-color: white; border-radius: 8px; border: 1px solid #E2E8F0; padding: 15px;")
-        f_layout = QVBoxLayout(filters_panel)
-        lbl_filter = QLabel("<b>Filters</b>")
-        lbl_filter.setStyleSheet("border: none; font-size: 16px;")
-        f_layout.addWidget(lbl_filter)
-        
-        for f in ["Remote", "Full-time", "Internship"]:
-            cb = QCheckBox(f)
-            cb.setStyleSheet("border: none; margin-top: 5px;")
-            f_layout.addWidget(cb)
-        f_layout.addStretch()
-        layout.addWidget(filters_panel)
-
-        # Right: Job Cards Grid
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setStyleSheet("border: none; background-color: transparent;")
-        jobs_widget = QWidget()
-        grid = QGridLayout(jobs_widget)
-        grid.setSpacing(15)
-        
-        jobs = [
-            ("Google", "AI Engineer"), ("Microsoft", "Data Scientist"),
-            ("Meta", "Software Engineer"), ("OpenAI", "Research Scientist"),
-            ("Amazon", "ML Engineer"), ("Apple", "Backend Developer")
-        ]
-        
-        row, col = 0, 0
-        for company, title in jobs:
-            card = QFrame()
-            card.setStyleSheet("background-color: white; border-radius: 8px; border: 1px solid #E2E8F0; padding: 15px;")
-            c_layout = QVBoxLayout(card)
-            lbl_c = QLabel(company)
-            lbl_c.setStyleSheet("color: #64748B; font-weight: bold; border: none;")
-            lbl_t = QLabel(title)
-            lbl_t.setStyleSheet("font-size: 16px; font-weight: bold; color: #0F172A; border: none;")
-            btn_apply = QPushButton("Apply Now")
-            btn_apply.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-            btn_apply.setStyleSheet("background-color: #38BDF8; color: white; border: none; border-radius: 5px; padding: 8px; margin-top: 10px;")
-            
-            c_layout.addWidget(lbl_c)
-            c_layout.addWidget(lbl_t)
-            c_layout.addWidget(btn_apply)
-            
-            grid.addWidget(card, row, col)
-            col += 1
-            if col > 1:
-                col = 0
-                row += 1
-                
-        scroll.setWidget(jobs_widget)
-        layout.addWidget(scroll)
 
 # ==========================================
 # PAGE 5: AI Mentor & Chat
@@ -399,7 +334,7 @@ class SidebarButton(QPushButton):
         super().__init__(text)
         self.setCheckable(True)
         self.setFixedHeight(45)
-        self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
         
         self.setStyleSheet("""
             QPushButton {
@@ -498,7 +433,7 @@ class MainWindow(QMainWindow):
         self.stacked_widget.addWidget(ProfileBuilderPage())  # 1
         self.stacked_widget.addWidget(AcademicRoadmapPage()) # 2
         self.stacked_widget.addWidget(StudyTasksPage())      # 3
-        self.stacked_widget.addWidget(JobPortalPage())       # 4
+        self.stacked_widget.addWidget(ModernJobPortalPage()) # 4
         self.stacked_widget.addWidget(AIMentorPage())        # 5
         self.stacked_widget.addWidget(CertificationsPage())  # 6
         self.stacked_widget.addWidget(NotificationsPage())   # 7

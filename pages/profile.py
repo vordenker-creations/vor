@@ -7,7 +7,7 @@ from PyQt6.QtCore import Qt, QSize, QRectF, QPropertyAnimation, QEasingCurve
 from PyQt6.QtGui import QColor, QPainter, QPen, QBrush, QCursor, QFont, QLinearGradient, QIcon
 
 from config import *
-from components import SaaSCard, AnimatedCircularProgress, AnimatedProgressBar, AnimationEngine
+from components import SaaSCard, AnimatedCircularProgress, AnimatedProgressBar, AnimationEngine, CollapsiblePanel
 from i18n import _
 from database import crud
 
@@ -202,8 +202,11 @@ class ProfilePage(QWidget):
         self.workspace_scroll.setWidget(self.workspace_widget)
         self.content_layout.addWidget(self.workspace_scroll, 1)
         
-        # 2. Right Insights Panel
-        self.init_insights_panel()
+        # 2. Right Insights Panel (Collapsible)
+        self.insights_content = self._setup_insights_panel()
+        self.insights_content.setFixedWidth(320)
+        self.right_panel = CollapsiblePanel(self.insights_content, orientation="right")
+        self.content_layout.addWidget(self.right_panel)
         
         self.main_layout.addWidget(content_container, 1)
 
@@ -215,34 +218,28 @@ class ProfilePage(QWidget):
         layout.setContentsMargins(24, 0, 24, 0)
         layout.setSpacing(20)
         
-        # Breadcrumbs
         breadcrumbs = QLabel("My Profile / Portfolio")
         breadcrumbs.setStyleSheet("color: #64748B; font-weight: 600; font-size: 14px;")
         layout.addWidget(breadcrumbs)
         
         layout.addStretch()
         
-        # Search Bar
         search_container = QFrame()
-        search_container.setFixedSize(320, 40)
-        search_container.setStyleSheet("background: #F1F5F9; border-radius: 10px; border: 1px solid #E2E8F0;")
+        search_container.setFixedSize(260, 40)
+        search_container.setStyleSheet("background: #FFFFFF; border-radius: 12px; border: 1px solid #E2E8F0;")
         search_layout = QHBoxLayout(search_container)
         search_layout.setContentsMargins(12, 0, 12, 0)
-        
+        search_layout.setSpacing(8)
+
         search_icon = QLabel("🔍")
+        search_icon.setStyleSheet("color: #94A3B8; font-size: 13px;")
         search_input = QLineEdit()
         search_input.setPlaceholderText("Search items...")
         search_input.setStyleSheet("background: transparent; border: none; color: #0F172A; font-size: 13px;")
-        
-        hint = QLabel("Ctrl+K")
-        hint.setStyleSheet("color: #94A3B8; font-size: 11px; font-weight: 700; background: white; border-radius: 4px; padding: 2px 6px;")
-        
+
         search_layout.addWidget(search_icon)
         search_layout.addWidget(search_input)
-        search_layout.addWidget(hint)
-        layout.addWidget(search_container)
-        
-        # Action Buttons
+        layout.addWidget(search_container)        
         edit_btn = QPushButton("Edit Profile")
         edit_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         edit_btn.setStyleSheet("""
@@ -266,7 +263,6 @@ class ProfilePage(QWidget):
         layout.addWidget(edit_btn)
         layout.addWidget(export_btn)
         
-        # Small Avatar
         mini_avatar = QLabel()
         mini_avatar.setFixedSize(40, 40)
         mini_avatar.setStyleSheet("background: #38BDF8; border-radius: 22px;")
@@ -300,7 +296,6 @@ class ProfilePage(QWidget):
         top_row = QHBoxLayout()
         top_row.setSpacing(24)
         
-        # Large Avatar
         avatar = QLabel()
         avatar.setFixedSize(120, 120)
         avatar.setStyleSheet("background: white; border: 6px solid white; border-radius: 60px; margin-top: -60px;")
@@ -309,7 +304,6 @@ class ProfilePage(QWidget):
         avatar.setGraphicsEffect(avatar_shadow)
         top_row.addWidget(avatar)
         
-        # Info
         info_v = QVBoxLayout()
         info_v.addSpacing(10)
         name_lbl = QLabel(name)
@@ -324,7 +318,6 @@ class ProfilePage(QWidget):
         
         top_row.addStretch()
         
-        # Stats
         stats_layout = QHBoxLayout()
         stats_layout.setSpacing(32)
         
@@ -355,7 +348,6 @@ class ProfilePage(QWidget):
         layout = QHBoxLayout()
         layout.setSpacing(24)
         
-        # Skills Panel
         skills_card = ShadowCard()
         skills_card.layout.setSpacing(20)
         
@@ -377,7 +369,6 @@ class ProfilePage(QWidget):
         skills_card.layout.addLayout(skills_flow)
         layout.addWidget(skills_card, 1)
         
-        # Achievements Panel
         ach_card = ShadowCard()
         ach_card.layout.setSpacing(20)
         ach_lbl = QLabel("Achievements")
@@ -430,14 +421,12 @@ class ProfilePage(QWidget):
         layout = QHBoxLayout()
         layout.setSpacing(24)
         
-        # Academic Timeline
         aca_card = ShadowCard()
         aca_card.layout.addWidget(QLabel("Academic Milestones", styleSheet="color: #0F172A; font-size: 18px; font-weight: 700;"))
         aca_card.layout.addWidget(TimelineItem("B.Sc in AI & Data Science", "VKU University", "2021 - Present"))
         aca_card.layout.addWidget(TimelineItem("High School Diploma", "Specialized Science School", "2018 - 2021", is_last=True))
         layout.addWidget(aca_card, 1)
         
-        # Career Timeline
         car_card = ShadowCard()
         car_card.layout.addWidget(QLabel("Career Journey", styleSheet="color: #0F172A; font-size: 18px; font-weight: 700;"))
         car_card.layout.addWidget(TimelineItem("AI Software Intern", "Google Tech Hub", "Jun 2023 - Aug 2023"))
@@ -467,15 +456,12 @@ class ProfilePage(QWidget):
             
         self.workspace_layout.addWidget(act_card)
 
-    def init_insights_panel(self):
+    def _setup_insights_panel(self):
         panel = QWidget()
-        panel.setFixedWidth(320)
-        panel.setStyleSheet("background: transparent;")
         layout = QVBoxLayout(panel)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(24)
         
-        # AI Recommendations
         ai_card = ShadowCard()
         ai_card.setStyleSheet(ai_card.styleSheet() + " #ShadowCard { background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #0F172A, stop:1 #1E293B); border: none; }")
         ai_card.layout.setSpacing(12)
@@ -484,7 +470,7 @@ class ProfilePage(QWidget):
         ai_title.setStyleSheet("color: #38BDF8; font-size: 14px; font-weight: 800; text-transform: uppercase;")
         ai_card.layout.addWidget(ai_title)
         
-        tip = QLabel("Your portfolio is 85% complete. Adding a 'Live Demo' to your AI Research project could increase recruiter views by 40%.")
+        tip = QLabel("Your portfolio is 85% complete. Adding a 'Live Demo' could increase views.")
         tip.setWordWrap(True)
         tip.setStyleSheet("color: #E2E8F0; font-size: 13px; line-height: 1.5;")
         ai_card.layout.addWidget(tip)
@@ -496,7 +482,6 @@ class ProfilePage(QWidget):
         
         layout.addWidget(ai_card)
         
-        # Upcoming Goals
         goals_card = ShadowCard()
         goals_card.layout.addWidget(QLabel("Upcoming Goals", styleSheet="color: #0F172A; font-size: 16px; font-weight: 700;"))
         
@@ -511,7 +496,6 @@ class ProfilePage(QWidget):
             
         layout.addWidget(goals_card)
         
-        # Analytics
         ana_card = ShadowCard()
         ana_card.layout.addWidget(QLabel("Profile Analytics", styleSheet="color: #0F172A; font-size: 16px; font-weight: 700;"))
         
@@ -532,4 +516,8 @@ class ProfilePage(QWidget):
         layout.addWidget(ana_card)
         layout.addStretch()
         
-        self.content_layout.addWidget(panel)
+        return panel
+
+    def init_insights_panel(self):
+        # This was replaced by _setup_insights_panel and CollapsiblePanel in __init__
+        pass

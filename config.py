@@ -29,19 +29,23 @@ def get_global_stylesheet():
     }}
     QLabel {{ color: {COLOR_TEXT_MAIN}; font-family: "{FONT_MAIN}", "Segoe UI", sans-serif; }}
     QLabel.SubText {{ color: {COLOR_TEXT_SUB}; }}
-    QLabel.Header {{ font-size: 24px; font-weight: 800; color: {COLOR_TEXT_MAIN}; letter-spacing: -0.5px; }}
+    QLabel.Header {{ font-size: 26px; font-weight: 800; color: {COLOR_TEXT_MAIN}; letter-spacing: -0.5px; }}
     
     QPushButton {{ 
         background-color: {COLOR_PRIMARY}; 
         color: #ffffff; 
-        border-radius: 8px; 
+        border-radius: 10px; 
         font-weight: 600; 
-        padding: 10px 16px; 
+        padding: 10px 18px; 
         font-family: "{FONT_MAIN}", "Segoe UI", sans-serif; 
-        border: 1px solid {COLOR_PRIMARY};
+        border: none;
     }}
-    QPushButton:hover {{ background-color: {COLOR_PRIMARY_LIGHT}; border: 1px solid {COLOR_PRIMARY_LIGHT}; }}
-    QPushButton:pressed {{ background-color: #000000; }}
+    QPushButton:hover {{ 
+        background-color: {COLOR_PRIMARY_LIGHT}; 
+    }}
+    QPushButton:pressed {{ 
+        background-color: #0284C7; 
+    }}
     
     QPushButton.Secondary {{
         background-color: #ffffff;
@@ -49,41 +53,64 @@ def get_global_stylesheet():
         border: 1px solid {COLOR_BORDER};
     }}
     QPushButton.Secondary:hover {{
-        background-color: #f5f5f5;
+        background-color: #F1F5F9;
     }}
     
     QLineEdit, QTextEdit, QComboBox {{ 
         background-color: #ffffff; 
         border: 1px solid {COLOR_BORDER}; 
-        border-radius: 8px; 
-        padding: 10px 14px; 
+        border-radius: 10px; 
+        padding: 10px 16px; 
         color: {COLOR_TEXT_MAIN}; 
         font-family: "{FONT_MAIN}", "Segoe UI", sans-serif; 
+        font-size: 14px;
     }}
-    QLineEdit:focus, QTextEdit:focus, QComboBox:focus {{ border: 1px solid #999999; outline: none; }}
+    QLineEdit:focus, QTextEdit:focus, QComboBox:focus {{ 
+        border: 1px solid {COLOR_PRIMARY}; 
+        outline: none; 
+        background-color: #FFFFFF;
+    }}
     
     QProgressBar {{ 
         border: none; 
-        background-color: #F3F3F3; 
+        background-color: #F1F5F9; 
         border-radius: 4px; 
-        height: 8px; 
+        height: 6px; 
         text-align: center; 
         color: transparent; 
     }}
-    QProgressBar::chunk {{ background-color: {COLOR_SUCCESS}; border-radius: 4px; }}
+    QProgressBar::chunk {{ 
+        background-color: {COLOR_PRIMARY}; 
+        border-radius: 4px; 
+    }}
     
     QScrollBar:vertical {{
         background: transparent;
-        width: 6px;
+        width: 8px;
         margin: 0px;
     }}
     QScrollBar::handle:vertical {{
-        background: #BAE6FD;
+        background: #CBD5E1;
         min-height: 30px;
-        border-radius: 3px;
+        border-radius: 4px;
     }}
     QScrollBar::handle:vertical:hover {{
-        background: #38BDF8;
+        background: #94A3B8;
     }}
     QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{ height: 0px; }}
+    
+    QScrollBar:horizontal {{
+        background: transparent;
+        height: 8px;
+        margin: 0px;
+    }}
+    QScrollBar::handle:horizontal {{
+        background: #CBD5E1;
+        min-width: 30px;
+        border-radius: 4px;
+    }}
+    QScrollBar::handle:horizontal:hover {{
+        background: #94A3B8;
+    }}
+    QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {{ width: 0px; }}
     """
