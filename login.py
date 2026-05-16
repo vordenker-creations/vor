@@ -215,15 +215,15 @@ class LoginPage(QWidget):
         left_layout.addSpacing(60)
         
         # Titles
-        title = QLabel("Build Your\nFuture With AI.")
-        title.setStyleSheet(f"color: {COLOR_TEXT_PRIMARY}; font-size: 42px; font-weight: 800; letter-spacing: -1.5px; line-height: 1.1;")
-        left_layout.addWidget(title)
+        self.title = QLabel("Build Your\nFuture With AI.")
+        self.title.setStyleSheet(f"color: {COLOR_TEXT_PRIMARY}; font-size: 42px; font-weight: 800; letter-spacing: -1.5px; line-height: 1.1;")
+        left_layout.addWidget(self.title)
         
         left_layout.addSpacing(15)
         
-        subtitle = QLabel("Smart academic roadmap and career\nnetworking platform.")
-        subtitle.setStyleSheet(f"color: {COLOR_TEXT_SECONDARY}; font-size: 18px; font-weight: 500; line-height: 1.4;")
-        left_layout.addWidget(subtitle)
+        self.subtitle = QLabel("Smart academic roadmap and career\nnetworking platform.")
+        self.subtitle.setStyleSheet(f"color: {COLOR_TEXT_SECONDARY}; font-size: 18px; font-weight: 500; line-height: 1.4;")
+        left_layout.addWidget(self.subtitle)
         
         left_layout.addSpacing(40)
         
@@ -257,53 +257,55 @@ class LoginPage(QWidget):
         status_layout.addStretch()
         left_layout.addLayout(status_layout)
         
-        main_layout.addWidget(left_widget, 4)
+        self.left_widget = left_widget
+        main_layout.addWidget(self.left_widget, 4)
         
         # ==========================================
         # RIGHT COLUMN (60%): Login Form
         # ==========================================
-        right_widget = QWidget()
-        right_widget.setStyleSheet(f"background-color: {COLOR_BG};")
-        right_layout = QVBoxLayout(right_widget)
-        right_layout.setContentsMargins(40, 60, 60, 60)
-        right_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.right_widget = QWidget()
+        self.right_widget.setStyleSheet(f"background-color: {COLOR_BG};")
+        self.right_layout = QVBoxLayout(self.right_widget)
+        self.right_layout.setContentsMargins(40, 60, 60, 60)
+        self.right_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
         # Top Right Controls
         top_controls = QHBoxLayout()
         top_controls.addStretch()
-        lang_btn = QPushButton("EN ▾")
-        lang_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        lang_btn.setStyleSheet(f"color: {COLOR_TEXT_SECONDARY}; font-size: 13px; font-weight: 600; border: none; background: transparent;")
-        theme_btn = QPushButton("🌙")
-        theme_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        theme_btn.setStyleSheet(f"color: {COLOR_TEXT_SECONDARY}; font-size: 16px; border: none; background: transparent;")
-        top_controls.addWidget(lang_btn)
-        top_controls.addWidget(theme_btn)
+        self.lang_btn = QPushButton("EN ▾")
+        self.lang_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.lang_btn.setStyleSheet(f"color: {COLOR_TEXT_SECONDARY}; font-size: 13px; font-weight: 600; border: none; background: transparent;")
+        self.lang_btn.clicked.connect(self._toggle_language)
         
-        # Wrap everything in a container to position top_controls absolutely or at the top
-        # For simplicity, we'll just put the card in a centered layout
+        self.theme_btn = QPushButton("🌙")
+        self.theme_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.theme_btn.setStyleSheet(f"color: {COLOR_TEXT_SECONDARY}; font-size: 16px; border: none; background: transparent;")
+        self.theme_btn.clicked.connect(self._toggle_theme)
+        
+        top_controls.addWidget(self.lang_btn)
+        top_controls.addWidget(self.theme_btn)
         
         # Login Card
-        card = QFrame()
-        card.setFixedWidth(460)
-        card.setStyleSheet(f"""
+        self.card = QFrame()
+        self.card.setFixedWidth(460)
+        self.card.setStyleSheet(f"""
             QFrame#LoginCard {{
                 background-color: {COLOR_CARD_BG};
                 border-radius: 28px;
                 border: 1px solid rgba(0, 0, 0, 0.04);
             }}
         """)
-        card.setObjectName("LoginCard")
+        self.card.setObjectName("LoginCard")
         
         # Add drop shadow
         from PyQt6.QtWidgets import QGraphicsDropShadowEffect
         shadow = QGraphicsDropShadowEffect()
-        shadow.setBlurRadius(40)
-        shadow.setColor(QColor(0, 0, 0, 15))
-        shadow.setOffset(0, 10)
-        card.setGraphicsEffect(shadow)
+        shadow.setBlurRadius(30)
+        shadow.setColor(QColor(18, 55, 105, 20))
+        shadow.setOffset(0, 8)
+        self.card.setGraphicsEffect(shadow)
         
-        card_layout = QVBoxLayout(card)
+        card_layout = QVBoxLayout(self.card)
         card_layout.setContentsMargins(48, 48, 48, 48)
         card_layout.setSpacing(24)
         
@@ -312,16 +314,16 @@ class LoginPage(QWidget):
         header_layout.setSpacing(8)
         header_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
-        welcome_title = QLabel("Welcome Back")
-        welcome_title.setStyleSheet(f"color: {COLOR_TEXT_PRIMARY}; font-size: 28px; font-weight: 800; letter-spacing: -0.5px;")
-        welcome_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.welcome_title = QLabel("Welcome Back")
+        self.welcome_title.setStyleSheet(f"color: {COLOR_TEXT_PRIMARY}; font-size: 28px; font-weight: 800; letter-spacing: -0.5px;")
+        self.welcome_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
-        welcome_sub = QLabel("Login to continue your journey.")
-        welcome_sub.setStyleSheet(f"color: {COLOR_TEXT_SECONDARY}; font-size: 15px; font-weight: 500;")
-        welcome_sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.welcome_sub = QLabel("Login to continue your journey.")
+        self.welcome_sub.setStyleSheet(f"color: {COLOR_TEXT_SECONDARY}; font-size: 15px; font-weight: 500;")
+        self.welcome_sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
-        header_layout.addWidget(welcome_title)
-        header_layout.addWidget(welcome_sub)
+        header_layout.addWidget(self.welcome_title)
+        header_layout.addWidget(self.welcome_sub)
         card_layout.addLayout(header_layout)
         
         card_layout.addSpacing(10)
@@ -340,19 +342,19 @@ class LoginPage(QWidget):
         self.remember_cb.setStyleSheet(f"""
             QCheckBox {{ color: {COLOR_TEXT_SECONDARY}; font-size: 13px; font-weight: 500; spacing: 8px; }}
             QCheckBox::indicator {{ width: 16px; height: 16px; border-radius: 4px; border: 1px solid {COLOR_BORDER}; background: #F8FAFC; }}
-            QCheckBox::indicator:checked {{ background: {COLOR_PRIMARY}; border: 1px solid {COLOR_PRIMARY}; image: url(); }} /* Need actual check icon for prod */
+            QCheckBox::indicator:checked {{ background: {COLOR_PRIMARY}; border: 1px solid {COLOR_PRIMARY}; }}
         """)
         
-        forgot_btn = QPushButton("Forgot password?")
-        forgot_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        forgot_btn.setStyleSheet(f"""
+        self.forgot_btn = QPushButton("Forgot password?")
+        self.forgot_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.forgot_btn.setStyleSheet(f"""
             QPushButton {{ color: {COLOR_PRIMARY}; font-size: 13px; font-weight: 600; border: none; background: transparent; }}
             QPushButton:hover {{ color: {COLOR_SECONDARY}; text-decoration: underline; }}
         """)
         
         options_layout.addWidget(self.remember_cb)
         options_layout.addStretch()
-        options_layout.addWidget(forgot_btn)
+        options_layout.addWidget(self.forgot_btn)
         card_layout.addLayout(options_layout)
         
         # Sign In Button
@@ -384,10 +386,10 @@ class LoginPage(QWidget):
         divider_layout = QHBoxLayout()
         line1 = QFrame(); line1.setFrameShape(QFrame.Shape.HLine); line1.setStyleSheet(f"color: {COLOR_BORDER};")
         line2 = QFrame(); line2.setFrameShape(QFrame.Shape.HLine); line2.setStyleSheet(f"color: {COLOR_BORDER};")
-        or_lbl = QLabel("or continue with")
-        or_lbl.setStyleSheet(f"color: {COLOR_TEXT_SECONDARY}; font-size: 12px; font-weight: 500;")
+        self.or_lbl = QLabel("or continue with")
+        self.or_lbl.setStyleSheet(f"color: {COLOR_TEXT_SECONDARY}; font-size: 12px; font-weight: 500;")
         divider_layout.addWidget(line1)
-        divider_layout.addWidget(or_lbl)
+        divider_layout.addWidget(self.or_lbl)
         divider_layout.addWidget(line2)
         card_layout.addLayout(divider_layout)
         
@@ -404,8 +406,8 @@ class LoginPage(QWidget):
         # Footer
         footer_layout = QHBoxLayout()
         footer_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        footer_text = QLabel("Don't have an account?")
-        footer_text.setStyleSheet(f"color: {COLOR_TEXT_SECONDARY}; font-size: 14px; font-weight: 500;")
+        self.footer_text = QLabel("Don't have an account?")
+        self.footer_text.setStyleSheet(f"color: {COLOR_TEXT_SECONDARY}; font-size: 14px; font-weight: 500;")
         
         self.register_btn = QPushButton("Create Account")
         self.register_btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -415,7 +417,7 @@ class LoginPage(QWidget):
         """)
         self.register_btn.clicked.connect(self._handle_register_click)
         
-        footer_layout.addWidget(footer_text)
+        footer_layout.addWidget(self.footer_text)
         footer_layout.addWidget(self.register_btn)
         card_layout.addLayout(footer_layout)
         
@@ -424,11 +426,15 @@ class LoginPage(QWidget):
         right_container.setContentsMargins(0, 0, 0, 0)
         right_container.addLayout(top_controls)
         right_container.addStretch()
-        right_container.addWidget(card, alignment=Qt.AlignmentFlag.AlignCenter)
+        right_container.addWidget(self.card, alignment=Qt.AlignmentFlag.AlignCenter)
         right_container.addStretch()
         
-        right_layout.addLayout(right_container)
-        main_layout.addWidget(right_widget, 6)
+        self.right_layout.addLayout(right_container)
+        main_layout.addWidget(self.right_widget, 6)
+        
+        # Initialize States
+        self.is_en = True
+        self.is_dark = False
 
     def _handle_login(self):
         email = self.email_entry.text()
@@ -439,6 +445,71 @@ class LoginPage(QWidget):
     def _handle_register_click(self):
         if self.on_register_click_callback:
             self.on_register_click_callback()
+
+    def _toggle_language(self):
+        self.is_en = not getattr(self, "is_en", True)
+        if self.is_en:
+            self.lang_btn.setText("EN ▾")
+            self.welcome_title.setText("Welcome Back")
+            self.welcome_sub.setText("Login to continue your journey.")
+            self.login_btn.setText("Sign In")
+            self.register_btn.setText("Create Account")
+            self.remember_cb.setText("Remember me")
+            self.forgot_btn.setText("Forgot password?")
+            self.title.setText("Build Your\nFuture With AI.")
+            self.subtitle.setText("Smart academic roadmap and career\nnetworking platform.")
+            self.or_lbl.setText("or continue with")
+            self.footer_text.setText("Don't have an account?")
+        else:
+            self.lang_btn.setText("VI ▾")
+            self.welcome_title.setText("Chào mừng trở lại")
+            self.welcome_sub.setText("Đăng nhập để tiếp tục hành trình của bạn.")
+            self.login_btn.setText("Đăng Nhập")
+            self.register_btn.setText("Tạo Tài Khoản")
+            self.remember_cb.setText("Ghi nhớ đăng nhập")
+            self.forgot_btn.setText("Quên mật khẩu?")
+            self.title.setText("Xây Dựng\nTương Lai Cùng AI.")
+            self.subtitle.setText("Lộ trình học tập thông minh và\nnền tảng kết nối nghề nghiệp.")
+            self.or_lbl.setText("hoặc tiếp tục với")
+            self.footer_text.setText("Chưa có tài khoản?")
+
+    def _toggle_theme(self):
+        self.is_dark = not getattr(self, "is_dark", False)
+        
+        bg_color = "#0F172A" if self.is_dark else "#F8FAFC"
+        card_bg = "#1E293B" if self.is_dark else "#FFFFFF"
+        text_pri = "#F8FAFC" if self.is_dark else "#0F172A"
+        text_sec = "#94A3B8" if self.is_dark else "#64748B"
+        border = "#334155" if self.is_dark else "#E2E8F0"
+        
+        self.theme_btn.setText("☀️" if self.is_dark else "🌙")
+        
+        self.setStyleSheet(f"background-color: {bg_color}; font-family: '{FONT_FAMILY}', sans-serif;")
+        self.left_widget.setStyleSheet(f"background-color: {bg_color};")
+        self.right_widget.setStyleSheet(f"background-color: {bg_color};")
+        
+        self.card.setStyleSheet(f"""
+            QFrame#LoginCard {{
+                background-color: {card_bg};
+                border-radius: 28px;
+                border: 1px solid {border};
+            }}
+        """)
+        
+        self.title.setStyleSheet(f"color: {text_pri}; font-size: 42px; font-weight: 800; letter-spacing: -1.5px; line-height: 1.1;")
+        self.subtitle.setStyleSheet(f"color: {text_sec}; font-size: 18px; font-weight: 500; line-height: 1.4;")
+        self.welcome_title.setStyleSheet(f"color: {text_pri}; font-size: 28px; font-weight: 800; letter-spacing: -0.5px;")
+        self.welcome_sub.setStyleSheet(f"color: {text_sec}; font-size: 15px; font-weight: 500;")
+        
+        self.or_lbl.setStyleSheet(f"color: {text_sec}; font-size: 12px; font-weight: 500;")
+        self.footer_text.setStyleSheet(f"color: {text_sec}; font-size: 14px; font-weight: 500;")
+        self.register_btn.setStyleSheet(f"QPushButton {{ color: {text_pri}; font-weight: 700; font-size: 14px; border: none; background: transparent; }} QPushButton:hover {{ color: {COLOR_PRIMARY}; }}")
+        
+        self.remember_cb.setStyleSheet(f"""
+            QCheckBox {{ color: {text_sec}; font-size: 13px; font-weight: 500; spacing: 8px; }}
+            QCheckBox::indicator {{ width: 16px; height: 16px; border-radius: 4px; border: 1px solid {border}; background: {card_bg}; }}
+            QCheckBox::indicator:checked {{ background: {COLOR_PRIMARY}; border: 1px solid {COLOR_PRIMARY}; }}
+        """)
 
 if __name__ == "__main__":
     from PyQt6.QtWidgets import QApplication

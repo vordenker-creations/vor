@@ -7,17 +7,17 @@ if sys.platform == "linux":
     FONT_MAIN = "Ubuntu"
 
 # Ultra-Modern Neumorphic Theme
-COLOR_BG_APP = "#F0F2F5"        # Standard Neumorphic Background
-COLOR_BG_CARD = "#F0F2F5"       # Match background for neumorphism
-COLOR_PRIMARY = "#1E5F74"       # Brand Blue-Teal
-COLOR_PRIMARY_LIGHT = "#25758f" # Hover teal
-COLOR_TEXT_MAIN = "#1e293b"     # Slate 800
-COLOR_TEXT_SUB = "#64748b"      # Slate 500
-COLOR_BORDER = "#d1d5db"        # Light gray border
+COLOR_BG_APP = "#F8FAFC"        # New Base App Background
+COLOR_BG_CARD = "#FFFFFF"       # Cards/Panels
+COLOR_PRIMARY = "#38BDF8"       # Brand Cyan
+COLOR_PRIMARY_LIGHT = "#7DD3FC" # Hover cyan
+COLOR_TEXT_MAIN = "#0F172A"     # Slate 900
+COLOR_TEXT_SUB = "#64748B"      # Slate 500
+COLOR_BORDER = "#E2E8F0"        # Light gray border
 
-COLOR_SUCCESS = "#0070F3"       # Vercel Blue (repurposed for success/accents)
-COLOR_WARNING = "#F5A623"      
-COLOR_DANGER = "#EE0000"
+COLOR_SUCCESS = "#10B981"       # Emerald 500
+COLOR_WARNING = "#F59E0B"      
+COLOR_DANGER = "#EF4444"
 
 def get_global_stylesheet():
     """Returns the master CSS for the PyQt6 application."""
@@ -74,16 +74,16 @@ def get_global_stylesheet():
     
     QScrollBar:vertical {{
         background: transparent;
-        width: 8px;
+        width: 6px;
         margin: 0px;
     }}
     QScrollBar::handle:vertical {{
-        background: #D4D4D4;
+        background: #BAE6FD;
         min-height: 30px;
-        border-radius: 4px;
+        border-radius: 3px;
     }}
     QScrollBar::handle:vertical:hover {{
-        background: #A3A3A3;
+        background: #38BDF8;
     }}
     QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{ height: 0px; }}
     """

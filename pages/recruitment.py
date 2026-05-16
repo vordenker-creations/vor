@@ -32,10 +32,10 @@ class ShadowCard(QFrame):
             }}
         """)
         shadow = QGraphicsDropShadowEffect(self)
-        shadow.setBlurRadius(20)
+        shadow.setBlurRadius(30)
         shadow.setXOffset(0)
-        shadow.setYOffset(4)
-        shadow.setColor(QColor(0, 0, 0, 20))
+        shadow.setYOffset(8)
+        shadow.setColor(QColor(18, 55, 105, 20))
         self.setGraphicsEffect(shadow)
         self.internal_layout = QVBoxLayout(self)
         self.internal_layout.setContentsMargins(20, 20, 20, 20)
@@ -464,7 +464,7 @@ class RecruitmentPage(QWidget):
         avatar.setStyleSheet(f"""
             background-color: {ACCENT_SECONDARY};
             color: white;
-            border-radius: 20px;
+            border-radius: 22px;
             font-weight: 700;
             font-size: 14px;
         """)

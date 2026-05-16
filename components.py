@@ -10,9 +10,9 @@ class SaaSCard(NeumorphicFrame):
         self.internal_layout = self.content_layout
         self.internal_layout.setContentsMargins(24, 24, 24, 24)
         
-        self.dark_shadow.setBlurRadius(25)
-        self.dark_shadow.setColor(QColor(0, 0, 0, 15))
-        self.dark_shadow.setOffset(0, 4)
+        self.dark_shadow.setBlurRadius(30)
+        self.dark_shadow.setColor(QColor(18, 55, 105, 20))
+        self.dark_shadow.setOffset(0, 8)
         
         self.anim_shadow_blur = QPropertyAnimation(self.dark_shadow, b"blurRadius")
         self.anim_shadow_offset = QPropertyAnimation(self.dark_shadow, b"yOffset")
@@ -32,8 +32,8 @@ class SaaSCard(NeumorphicFrame):
         super().enterEvent(event)
         
     def leaveEvent(self, event):
-        self.anim_shadow_blur.setEndValue(25)
-        self.anim_shadow_offset.setEndValue(4.0)
+        self.anim_shadow_blur.setEndValue(30)
+        self.anim_shadow_offset.setEndValue(8.0)
         self.anim_shadow_blur.start()
         self.anim_shadow_offset.start()
         super().leaveEvent(event)

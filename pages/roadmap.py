@@ -141,12 +141,12 @@ class RoadmapPage(QWidget):
             QFrame {
                 background-color: #FFFFFF; 
                 border: 1px solid #E2E8F0; 
-                border-radius: 20px;
+                border-radius: 22px;
             }
         """)
         shadow = QGraphicsDropShadowEffect()
-        shadow.setBlurRadius(15)
-        shadow.setColor(QColor(0, 0, 0, 15))
+        shadow.setBlurRadius(30)
+        shadow.setColor(QColor(18, 55, 105, 20))
         shadow.setOffset(0, 4)
         card.setGraphicsEffect(shadow)
         return card

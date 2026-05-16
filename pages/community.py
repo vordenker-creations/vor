@@ -34,10 +34,10 @@ class ModernCard(QFrame):
         
         # Soft Shadow
         self.shadow = QGraphicsDropShadowEffect(self)
-        self.shadow.setBlurRadius(20)
+        self.shadow.setBlurRadius(30)
         self.shadow.setXOffset(0)
-        self.shadow.setYOffset(4)
-        self.shadow.setColor(QColor(0, 0, 0, 15))
+        self.shadow.setYOffset(8)
+        self.shadow.setColor(QColor(18, 55, 105, 20))
         self.setGraphicsEffect(self.shadow)
         
         # Animations
@@ -342,7 +342,7 @@ class CommunityPage(QWidget):
         banner.setStyleSheet(f"""
             QFrame {{
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 {COLOR_PRIMARY}, stop:1 {COLOR_SECONDARY});
-                border-radius: 20px;
+                border-radius: 22px;
             }}
         """)
         b_layout = QVBoxLayout(banner)

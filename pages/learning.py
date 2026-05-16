@@ -23,8 +23,8 @@ class ModernCard(QFrame):
         self.shadow = QGraphicsDropShadowEffect(self)
         self.shadow.setBlurRadius(30)
         self.shadow.setXOffset(0)
-        self.shadow.setYOffset(4)
-        self.shadow.setColor(QColor(0, 0, 0, 15))
+        self.shadow.setYOffset(8)
+        self.shadow.setColor(QColor(18, 55, 105, 20))
         self.setGraphicsEffect(self.shadow)
         
         self.layout = QVBoxLayout(self)
@@ -308,7 +308,7 @@ class LearningPage(QWidget):
         
         avatar = QLabel()
         avatar.setFixedSize(40, 40)
-        avatar.setStyleSheet("background: #E2E8F0; border-radius: 20px; border: 2px solid #FFFFFF;")
+        avatar.setStyleSheet("background: #E2E8F0; border-radius: 22px; border: 2px solid #FFFFFF;")
         layout.addWidget(avatar)
         
         self.main_layout.addWidget(toolbar)

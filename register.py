@@ -366,9 +366,9 @@ class RegisterPage(QWidget):
         card.setObjectName("RegisterCard")
         
         shadow = QGraphicsDropShadowEffect()
-        shadow.setBlurRadius(40)
-        shadow.setColor(QColor(0, 0, 0, 15))
-        shadow.setOffset(0, 10)
+        shadow.setBlurRadius(30)
+        shadow.setColor(QColor(18, 55, 105, 20))
+        shadow.setOffset(0, 8)
         card.setGraphicsEffect(shadow)
         
         card_layout = QVBoxLayout(card)

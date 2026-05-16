@@ -125,6 +125,21 @@ class SettingsPage(QWidget):
             btn.clicked.connect(lambda checked, b=btn: self._on_category_clicked(b))
             
         layout.addStretch()
+        
+        # Logout Button
+        self.logout_btn = QPushButton("🚪 Logout")
+        self.logout_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.logout_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #FEF2F2; color: #EF4444; border: 1px solid #FECACA;
+                padding: 12px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; text-align: center;
+            }
+            QPushButton:hover { background-color: #FEE2E2; border-color: #FCA5A5; }
+        """)
+        # We can emit a signal or call controller method here
+        self.logout_btn.clicked.connect(self._handle_logout)
+        layout.addWidget(self.logout_btn)
+        
         self.main_layout.addWidget(sidebar)
 
     def _on_category_clicked(self, clicked_btn):
@@ -133,6 +148,12 @@ class SettingsPage(QWidget):
                 btn.setChecked(False)
             else:
                 btn.setChecked(True)
+                
+    def _handle_logout(self):
+        if self.controller and hasattr(self.controller, 'logout'):
+            self.controller.logout()
+        else:
+            print("Logout clicked")
 
     def _setup_main_workspace(self):
         workspace = QWidget()

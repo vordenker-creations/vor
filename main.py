@@ -89,70 +89,93 @@ class MainWindow(QMainWindow):
                     painter.drawLine(p1[0], p1[1], p2[0], p2[1])
 
     def _setup_sidebar(self):
-        self.sidebar_container = NeumorphicFrame(radius=30, offset=8, blur=20)
-        self.sidebar_container.setFixedWidth(100)
+        # Update main app layout to make sidebar flush with the left edge
+        self.main_app_layout.setContentsMargins(0, 0, 20, 0)
         
-        layout = QVBoxLayout()
+        self.sidebar_container = QFrame()
+        self.sidebar_container.setFixedWidth(80)
+        self.sidebar_container.setStyleSheet("""
+            QFrame {
+                background-color: #FFFFFF;
+                border-right: 1px solid #E2E8F0;
+            }
+        """)
+        
+        # Soft Drop Shadow for the Sidebar
+        shadow = QGraphicsDropShadowEffect(self)
+        shadow.setBlurRadius(20)
+        shadow.setXOffset(4)
+        shadow.setYOffset(0)
+        shadow.setColor(QColor(0, 0, 0, 20))
+        self.sidebar_container.setGraphicsEffect(shadow)
+        
+        layout = QVBoxLayout(self.sidebar_container)
         layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        layout.setSpacing(15)
+        layout.setContentsMargins(0, 20, 0, 20)
+        layout.setSpacing(10)
         
-        # App Logo
-        logo = QLabel("AI")
+        # 1. Clean Logo Icon (Text removed as per ICON-ONLY requirement)
+        logo = QLabel("✦")
+        logo.setStyleSheet("font-size: 28px; color: #38BDF8; font-weight: bold; margin-bottom: 24px; border: none; background: transparent;")
         logo.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        logo.setStyleSheet("font-size: 24px; font-weight: 900; color: #1E5F74; margin-bottom: 20px;")
         layout.addWidget(logo)
         
         self.nav_group = QButtonGroup(self)
         self.nav_group.setExclusive(True)
         
-        from i18n import _
-        nav = [
-            ("📊", 0, _("nav_dashboard")), 
-            ("👤", 1, _("nav_profile")), 
-            ("🎨", 2, _("nav_learning")), 
-            ("👥", 3, _("nav_community")), 
-            ("🧭", 4, _("nav_roadmap")), 
-            ("💼", 5, _("nav_recruitment")), 
-            ("🤖", 6, _("nav_ai_mentor")),
-            ("⚙️", 8, "Settings"),
-            ("💬", 9, "Chat")
+        # 2. ICON-ONLY BUTTONS IN PRECISE ORDER
+        # (Icon, Page Index)
+        nav_config = [
+            ("📊", 0), # Dashboard
+            ("🪪", 1), # Profile & CV
+            ("🗺️", 4), # Academic Roadmap
+            ("🗓️", 2), # Study Tasks & Calendar
+            ("💼", 5), # Job Portal
+            ("🪄", 6), # AI Mentor
+            ("🌐", 3), # Community
+            ("💬", 9), # Messages/Chat
+            ("⚙️", 8), # Settings
         ]
         
-        for icon, idx, tooltip in nav:
-            btn = QPushButton(icon)
-            btn.setCheckable(True)
-            btn.setFixedSize(60, 60)
-            btn.setToolTip(tooltip)
-            btn.setCursor(Qt.CursorShape.PointingHandCursor)
-            btn.setStyleSheet(self._nav_style())
-            btn.clicked.connect(lambda ch, i=idx: self.pages_container.setCurrentIndex(i))
-            layout.addWidget(btn, alignment=Qt.AlignmentFlag.AlignCenter)
+        for icon, idx in nav_config:
+            btn = self._create_nav_button(icon, idx)
+            layout.addWidget(btn)
             self.nav_group.addButton(btn, idx)
             if idx == 0: btn.setChecked(True)
         
-        self.sidebar_container.content_layout.addLayout(layout)
-        self.main_app_layout.addWidget(self.sidebar_container)
+        self.main_app_layout.insertWidget(0, self.sidebar_container)
 
-    def _nav_style(self):
-        return f"""
-            QPushButton {{ 
-                background: transparent; 
-                color: {COLOR_TEXT_SUB}; 
-                font-size: 22px; 
-                border-radius: 16px; 
-                border: 1px solid transparent;
-                padding: 10px;
-            }} 
-            QPushButton:hover {{ 
-                background: rgba(255, 255, 255, 0.4);
-                color: {COLOR_PRIMARY};
-            }} 
-            QPushButton:checked {{ 
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 rgba(30, 95, 116, 0.1), stop:1 rgba(30, 95, 116, 0.05));
-                color: {COLOR_PRIMARY}; 
-                border: 1px solid rgba(30, 95, 116, 0.3);
-            }}
-        """
+    def _create_nav_button(self, icon, idx):
+        btn = QPushButton(icon)
+        btn.setCheckable(True)
+        btn.setFixedSize(80, 64)
+        btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        
+        # UI/UX STYLING PER REQUIREMENTS
+        btn.setStyleSheet("""
+            QPushButton {
+                background-color: transparent;
+                color: #64748B;
+                font-size: 22px;
+                border: none;
+                border-left: 4px solid transparent;
+            }
+            QPushButton:hover {
+                background-color: #F1F5F9;
+                border-radius: 16px;
+                margin: 4px 10px;
+            }
+            QPushButton:checked {
+                background-color: #E0F2FE;
+                color: #0284C7;
+                border-left: 4px solid #38BDF8;
+                border-radius: 0px;
+                margin: 0px;
+            }
+        """)
+        
+        btn.clicked.connect(lambda ch, i=idx: self.pages_container.setCurrentIndex(i))
+        return btn
 
     def show_page(self, name):
         mapping = {"DashboardPage":0, "ProfilePage":1, "LearningPage":2, "CommunityPage":3, "RoadmapPage":4, "RecruitmentPage":5, "AIMentorPage":6, "CourseDetailPage":7, "SettingsPage":8, "ChatPage":9}

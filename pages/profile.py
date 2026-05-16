@@ -26,8 +26,8 @@ class ShadowCard(QFrame):
         shadow = QGraphicsDropShadowEffect(self)
         shadow.setBlurRadius(30)
         shadow.setXOffset(0)
-        shadow.setYOffset(4)
-        shadow.setColor(QColor(0, 0, 0, 20))
+        shadow.setYOffset(8)
+        shadow.setColor(QColor(18, 55, 105, 20))
         self.setGraphicsEffect(shadow)
         
         self.layout = QVBoxLayout(self)
@@ -269,7 +269,7 @@ class ProfilePage(QWidget):
         # Small Avatar
         mini_avatar = QLabel()
         mini_avatar.setFixedSize(40, 40)
-        mini_avatar.setStyleSheet("background: #38BDF8; border-radius: 20px;")
+        mini_avatar.setStyleSheet("background: #38BDF8; border-radius: 22px;")
         layout.addWidget(mini_avatar)
         
         self.main_layout.addWidget(toolbar)
@@ -305,7 +305,7 @@ class ProfilePage(QWidget):
         avatar.setFixedSize(120, 120)
         avatar.setStyleSheet("background: white; border: 6px solid white; border-radius: 60px; margin-top: -60px;")
         avatar_shadow = QGraphicsDropShadowEffect()
-        avatar_shadow.setBlurRadius(20); avatar_shadow.setColor(QColor(0,0,0,30)); avatar_shadow.setOffset(0,4)
+        avatar_shadow.setBlurRadius(30); avatar_shadow.setColor(QColor(18, 55, 105, 20)); avatar_shadow.setOffset(0,4)
         avatar.setGraphicsEffect(avatar_shadow)
         top_row.addWidget(avatar)
         

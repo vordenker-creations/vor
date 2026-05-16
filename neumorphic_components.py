@@ -8,7 +8,7 @@ class NeumorphicFrame(QFrame):
     """
     Highly optimized Neumorphism container.
     """
-    def __init__(self, radius=25, offset=8, blur=20, bg_color="#F0F2F5", parent=None):
+    def __init__(self, radius=25, offset=8, blur=20, bg_color="#FFFFFF", parent=None):
         super().__init__(parent)
         self.radius = radius
         self.offset = offset
@@ -18,9 +18,9 @@ class NeumorphicFrame(QFrame):
         
         # Dark shadow effect
         self.dark_shadow = QGraphicsDropShadowEffect(self)
-        self.dark_shadow.setBlurRadius(blur)
-        self.dark_shadow.setColor(QColor(163, 177, 198, 150))
-        self.dark_shadow.setOffset(offset, offset)
+        self.dark_shadow.setBlurRadius(30)
+        self.dark_shadow.setColor(QColor(18, 55, 105, 20))
+        self.dark_shadow.setOffset(0, 8)
         self.setGraphicsEffect(self.dark_shadow)
         
         self.setStyleSheet(f"background-color: {bg_color}; border-radius: {radius}px;")
@@ -74,7 +74,7 @@ class NeumorphicInput(QLineEdit):
         padding_left = 45 if icon_text else 20
         self.setStyleSheet(f"""
             QLineEdit {{
-                background-color: #F0F2F5;
+                background-color: #F8FAFC;
                 border-radius: {self.radius}px;
                 padding-left: {padding_left}px;
                 padding-right: 20px;
@@ -102,7 +102,7 @@ class NeumorphicInput(QLineEdit):
         painter.drawRoundedRect(rect.adjusted(1, 1, 0, 0), self.radius, self.radius)
 
         if self.icon_text:
-            painter.setPen(QColor("#1E5F74"))
+            painter.setPen(QColor("#38BDF8"))
             font = painter.font()
             font.setBold(True)
             font.setPointSize(12)
@@ -122,9 +122,9 @@ class NeumorphicButton(QPushButton):
         self.is_pressed = False
         
         self.dark_shadow = QGraphicsDropShadowEffect(self)
-        self.dark_shadow.setBlurRadius(15)
-        self.dark_shadow.setColor(QColor(163, 177, 198, 180))
-        self.dark_shadow.setOffset(4, 4)
+        self.dark_shadow.setBlurRadius(30)
+        self.dark_shadow.setColor(QColor(18, 55, 105, 20))
+        self.dark_shadow.setOffset(0, 8)
         self.setGraphicsEffect(self.dark_shadow)
         
         self.update_style()
@@ -134,9 +134,9 @@ class NeumorphicButton(QPushButton):
             self.setGraphicsEffect(None)
             self.setStyleSheet(f"""
                 QPushButton {{
-                    background-color: #F0F2F5;
+                    background-color: #F8FAFC;
                     border-radius: {self.radius}px;
-                    color: #1E5F74;
+                    color: #38BDF8;
                     font-weight: bold;
                     border-top: 2px solid #d1d5db;
                     border-left: 2px solid #d1d5db;
@@ -148,13 +148,13 @@ class NeumorphicButton(QPushButton):
             self.setGraphicsEffect(self.dark_shadow)
             self.setStyleSheet(f"""
                 QPushButton {{
-                    background-color: #F0F2F5;
+                    background-color: #FFFFFF;
                     border-radius: {self.radius}px;
                     color: #334155;
                     font-weight: bold;
                     border: none;
                 }}
-                QPushButton:hover {{ color: #1E5F74; }}
+                QPushButton:hover {{ color: #38BDF8; }}
             """)
 
     def mousePressEvent(self, event):
@@ -183,7 +183,7 @@ class GlowingButton(QPushButton):
         
         self.setStyleSheet(f"""
             QPushButton {{
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2b84a3, stop:1 #1E5F74);
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #7DD3FC, stop:1 #38BDF8);
                 color: white;
                 border-radius: {height//2}px;
                 font-weight: 600;
@@ -192,9 +192,9 @@ class GlowingButton(QPushButton):
                 border: 1px solid rgba(255,255,255,0.1);
             }}
             QPushButton:hover {{ 
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #329bbd, stop:1 #247189); 
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #BAE6FD, stop:1 #7DD3FC); 
             }}
             QPushButton:pressed {{ 
-                background: #174a5a; 
+                background: #0284C7; 
             }}
         """)

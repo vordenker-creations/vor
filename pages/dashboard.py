@@ -11,10 +11,10 @@ from i18n import _
 
 def create_shadow():
     shadow = QGraphicsDropShadowEffect()
-    shadow.setBlurRadius(20)
+    shadow.setBlurRadius(30)
     shadow.setXOffset(0)
-    shadow.setYOffset(4)
-    shadow.setColor(QColor(0, 0, 0, 10))
+    shadow.setYOffset(8)
+    shadow.setColor(QColor(18, 55, 105, 20))
     return shadow
 
 class IconButton(QPushButton):
@@ -85,7 +85,7 @@ class SearchBar(QLineEdit):
             QLineEdit {
                 background-color: #F1F5F9;
                 border: 1px solid transparent;
-                border-radius: 20px;
+                border-radius: 22px;
                 padding: 0 16px;
                 color: #0F172A;
                 font-size: 13px;
@@ -103,7 +103,7 @@ class ModernCard(QFrame):
             ModernCard {
                 background-color: #FFFFFF;
                 border: 1px solid #E2E8F0;
-                border-radius: 20px;
+                border-radius: 22px;
             }
         """)
         self.setGraphicsEffect(create_shadow())
@@ -213,39 +213,104 @@ class DashboardPage(QWidget):
         return header
 
     def _build_welcome_area(self):
-        banner = ModernCard()
+        banner = QFrame()
+        banner.setObjectName("BannerFrame")
+        banner.setGraphicsEffect(create_shadow())
         banner.setStyleSheet("""
-            ModernCard {
-                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #E0F2FE, stop:1 #CCFBF1);
-                border: 1px solid #BAE6FD;
-                border-radius: 20px;
+            #BannerFrame {
+                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #0F172A, stop:0.6 #1E293B, stop:1 #0284C7);
+                border: none;
+                border-radius: 24px;
             }
         """)
         
-        layout = banner.internal_layout
-        layout.setContentsMargins(32, 32, 32, 32)
+        layout = QHBoxLayout(banner)
+        layout.setContentsMargins(40, 40, 40, 40)
+        
+        # Left side: Text and Buttons
+        left_layout = QVBoxLayout()
+        left_layout.setSpacing(0)
         
         greeting = QLabel("Good Morning, Khoa.")
-        greeting.setStyleSheet("color: #0F172A; font-size: 28px; font-weight: 800; letter-spacing: -0.5px; background: transparent;")
-        layout.addWidget(greeting)
+        greeting.setStyleSheet("color: #FFFFFF; font-size: 32px; font-weight: 800; letter-spacing: -1px; background: transparent;")
+        left_layout.addWidget(greeting)
         
         summary = QLabel("✨ You have 3 tasks due today, and you're 80% ready for your Cloud Developer milestone.")
-        summary.setStyleSheet("color: #334155; font-size: 15px; margin-top: 4px; margin-bottom: 12px; background: transparent;")
-        layout.addWidget(summary)
+        summary.setStyleSheet("color: #94A3B8; font-size: 15px; margin-top: 8px; margin-bottom: 24px; background: transparent;")
+        left_layout.addWidget(summary)
         
         actions_layout = QHBoxLayout()
         actions_layout.setSpacing(12)
-        actions_layout.addWidget(ActionButton("Add Task", "+", is_primary=True))
-        actions_layout.addWidget(ActionButton("View Roadmap", "🗺️"))
-        actions_layout.addWidget(ActionButton("Generate AI Plan", "✨"))
-        actions_layout.addWidget(ActionButton("Connect Mentor", "💬"))
+        
+        def create_banner_btn(text, icon, is_primary=False):
+            btn = QPushButton(f"{icon} {text}")
+            btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            btn.setFixedHeight(40)
+            if is_primary:
+                btn.setStyleSheet("""
+                    QPushButton {
+                        background-color: #38BDF8;
+                        color: #0F172A;
+                        font-weight: 700;
+                        font-size: 14px;
+                        border-radius: 20px;
+                        padding: 0 20px;
+                        border: none;
+                    }
+                    QPushButton:hover {
+                        background-color: #7DD3FC;
+                    }
+                """)
+            else:
+                btn.setStyleSheet("""
+                    QPushButton {
+                        background-color: rgba(255, 255, 255, 0.1);
+                        color: #FFFFFF;
+                        font-weight: 600;
+                        font-size: 14px;
+                        border-radius: 20px;
+                        padding: 0 20px;
+                        border: 1px solid rgba(255, 255, 255, 0.2);
+                    }
+                    QPushButton:hover {
+                        background-color: rgba(255, 255, 255, 0.2);
+                        border: 1px solid rgba(255, 255, 255, 0.3);
+                    }
+                """)
+            return btn
+            
+        # Connect Mentor button goes to chat
+        btn_connect = create_banner_btn("Connect Mentor", "💬")
+        btn_connect.clicked.connect(lambda: self.controller.show_page("ChatPage") if self.controller else None)
+        
+        actions_layout.addWidget(create_banner_btn("Add Task", "+", is_primary=True))
+        actions_layout.addWidget(create_banner_btn("View Roadmap", "🗺️"))
+        actions_layout.addWidget(create_banner_btn("Generate AI Plan", "✨"))
+        actions_layout.addWidget(btn_connect)
         actions_layout.addStretch()
         
-        # Use an inner widget for background transparency trick
+        # Inner widget for actions layout
         actions_container = QWidget()
         actions_container.setStyleSheet("background: transparent;")
         actions_container.setLayout(actions_layout)
-        layout.addWidget(actions_container)
+        left_layout.addWidget(actions_container)
+        
+        layout.addLayout(left_layout)
+        layout.addStretch()
+        
+        # Right side: Decorative Graphic
+        icon_label = QLabel("🚀")
+        icon_label.setStyleSheet("font-size: 72px; background: transparent;")
+        
+        # Drop shadow for the emoji
+        glow = QGraphicsDropShadowEffect()
+        glow.setBlurRadius(40)
+        glow.setColor(QColor(56, 189, 248, 100)) # Cyan glow
+        glow.setOffset(0, 0)
+        icon_label.setGraphicsEffect(glow)
+        
+        layout.addWidget(icon_label)
+        layout.addSpacing(20)
         
         self.central_layout.addWidget(banner)
 
