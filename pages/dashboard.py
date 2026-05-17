@@ -7,6 +7,7 @@ from PyQt6.QtGui import QColor, QCursor, QFont
 
 from config import COLOR_PRIMARY, COLOR_TEXT_MAIN, COLOR_TEXT_SUB
 from components import SaaSCard, StatusPulse, CollapsiblePanel
+from database import crud
 from i18n import _
 
 # Import sub-modules
@@ -150,7 +151,11 @@ class DashboardOverviewView(QWidget):
         """)
         l = QHBoxLayout(banner); l.setContentsMargins(32, 24, 32, 24)
         left = QVBoxLayout(); left.setSpacing(0)
-        greeting = QLabel("Good Morning, Khoa.")
+        
+        student = crud.get_current_student()
+        first_name = student["full_name"].split(" ")[-1] if student and student.get("full_name") else "Khoa"
+        
+        greeting = QLabel(f"Good Morning, {first_name}.")
         greeting.setStyleSheet("color: white; font-size: 26px; font-weight: 800; letter-spacing: -1px; background: transparent;")
         summary = QLabel("✨ You have 3 tasks due today, and you're 80% ready for your Cloud Developer milestone.")
         summary.setStyleSheet("color: #94A3B8; font-size: 14px; margin-top: 6px; margin-bottom: 20px; background: transparent;")
@@ -194,14 +199,36 @@ class DashboardOverviewView(QWidget):
         header = QHBoxLayout(); title = QLabel("Academic Roadmap"); title.setStyleSheet("color: #0F172A; font-size: 16px; font-weight: 700;"); header.addWidget(title); header.addStretch()
         view_all = QPushButton("View Full Timeline"); view_all.setStyleSheet("color: #38BDF8; font-weight: 600; border: none; background: transparent;"); view_all.setCursor(Qt.CursorShape.PointingHandCursor); header.addWidget(view_all); layout.addLayout(header)
         cards = QHBoxLayout(); cards.setSpacing(16)
+        
         def create_card(course, status, color, progress):
             card = ModernCard(); cl = card.internal_layout
             badge = QLabel(status); badge.setStyleSheet(f"color: {color}; background: {color}15; font-size: 10px; font-weight: 700; padding: 3px 6px; border-radius: 4px;"); cl.addWidget(badge, alignment=Qt.AlignmentFlag.AlignLeft)
             lbl = QLabel(course); lbl.setStyleSheet("color: #0F172A; font-size: 14px; font-weight: 600; margin-top: 6px;"); cl.addWidget(lbl)
             bar = QProgressBar(); bar.setFixedHeight(4); bar.setValue(progress); bar.setTextVisible(False); bar.setStyleSheet(f"QProgressBar {{ background: #F1F5F9; border: none; border-radius: 2px; }} QProgressBar::chunk {{ background: {color}; border-radius: 2px; }}"); cl.addWidget(bar); return card
-        cards.addWidget(create_card("Web Dev Fundamentals", "Completed", "#10B981", 100))
-        cards.addWidget(create_card("Advanced React & PyQt", "In Progress", "#38BDF8", 65))
-        cards.addWidget(create_card("Cloud Deployment", "Upcoming", "#94A3B8", 0))
+
+        # Deep Integration: Read from local SQLite
+        student = crud.get_current_student()
+        courses = student.get("context", {}).get("roadmap", []) if student else []
+
+        if not courses:
+            # Fallback to mock data if the DB is empty
+            courses = [
+                {"title": "Web Dev Fundamentals", "status": "Completed", "progress": 100},
+                {"title": "Advanced React & PyQt", "status": "In Progress", "progress": 65},
+                {"title": "Cloud Deployment", "status": "Upcoming", "progress": 0}
+            ]
+
+        for course in courses:
+            status = course["status"]
+            if status == "Completed":
+                color = "#10B981"
+            elif status == "In Progress":
+                color = "#38BDF8"
+            else:
+                color = "#94A3B8"
+                
+            cards.addWidget(create_card(course["title"], status, color, course["progress"]))
+
         layout.addLayout(cards); self.central_layout.addWidget(container)
 
     def _build_upcoming_activities(self):

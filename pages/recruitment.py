@@ -396,15 +396,22 @@ class RecruitmentPage(QWidget):
         scroll.setWidget(container)
         self.main_layout.addWidget(scroll)
 
-    def _setup_header(self):
+from database import crud
+
+def _setup_header(self):
         header = QFrame()
         header.setFixedHeight(80)
         header.setStyleSheet(f"background-color: {CARD_BG}; border-bottom: 1px solid {BORDER_COLOR};")
         hl = QHBoxLayout(header)
         hl.setContentsMargins(24, 0, 24, 0)
         
+        student = crud.get_current_student()
+        major = student["major"] if student and student.get("major") else "AI Engineer"
+        first_name = student["full_name"].split(" ")[-1] if student and student.get("full_name") else "JD"
+        initials = first_name[:2].upper()
+        
         # Breadcrumbs
-        bc = QLabel("Career Analytics / <font color='#38BDF8'>AI Engineer</font>")
+        bc = QLabel(f"Career Analytics / <font color='#38BDF8'>{major}</font>")
         bc.setStyleSheet(f"color: {TEXT_SECONDARY}; font-size: 14px; font-weight: 500;")
         hl.addWidget(bc)
         
@@ -460,7 +467,7 @@ class RecruitmentPage(QWidget):
         hl.addWidget(btn_exp)
         
         # Avatar Mock
-        avatar = QLabel("JD")
+        avatar = QLabel(initials)
         avatar.setFixedSize(40, 40)
         avatar.setAlignment(Qt.AlignmentFlag.AlignCenter)
         avatar.setStyleSheet(f"""

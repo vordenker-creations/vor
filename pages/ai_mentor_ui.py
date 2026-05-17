@@ -2,8 +2,28 @@ import sys
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
                              QPushButton, QTextBrowser, QLineEdit, QFrame,
                              QScrollArea, QGridLayout, QSizePolicy, QGraphicsDropShadowEffect)
-from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtCore import Qt, QTimer, QThread, pyqtSignal
 from PyQt6.QtGui import QCursor, QFont, QColor
+import requests
+
+class VectorWorker(QThread):
+    finished = pyqtSignal(list, str)
+
+    def __init__(self, text):
+        super().__init__()
+        self.text = text
+
+    def run(self):
+        try:
+            url = "http://100.95.50.104:8000/api/v1/ai/generate_skill_vector"
+            resp = requests.post(url, json={"text": self.text}, timeout=10)
+            if resp.status_code == 200:
+                vector = resp.json().get("vector", [])
+                self.finished.emit(vector, "")
+            else:
+                self.finished.emit([], f"Server error: {resp.status_code}")
+        except Exception as e:
+            self.finished.emit([], str(e))
 
 from components import CollapsiblePanel
 
@@ -359,4 +379,14 @@ class AIMentorPage(QWidget):
         if not msg.strip(): return
         if not isinstance(text, str): self.entry.clear()
         self.append_message("You", msg)
-        QTimer.singleShot(600, lambda: self.append_message("AI Mentor", f"Analyzing your request about <b>{msg}</b>..."))
+        
+        self.append_message("AI Mentor", "Analyzing your request and generating vector representation...")
+        self.worker = VectorWorker(msg)
+        self.worker.finished.connect(self._on_vector_result)
+        self.worker.start()
+
+    def _on_vector_result(self, vector, error):
+        if error:
+            self.append_message("AI Mentor", f"Failed to generate vector: {error}")
+        else:
+            self.append_message("AI Mentor", f"Successfully generated a {len(vector)}-dimensional skill vector.")

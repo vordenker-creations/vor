@@ -4,6 +4,7 @@ from PyQt6.QtWidgets import *
 from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 from config import *
+from modules.sync_worker import worker
 
 # Authentication Pages
 from login import LoginPage
@@ -31,6 +32,7 @@ from pages.ai_workspace import AIWorkspacePage
 class MainWindow(QMainWindow):
     def __init__(self, on_logout=None):
         super().__init__()
+        worker.start_worker()
         self.on_logout_callback = on_logout
         self.setWindowTitle("AI-Career Bridge")
         self.resize(1350, 850)
@@ -173,6 +175,11 @@ class MainWindow(QMainWindow):
         if event.modifiers() == Qt.KeyboardModifier.ControlModifier and event.key() == Qt.Key.Key_K:
             self.command_palette.show_centered()
         super().keyPressEvent(event)
+
+    def closeEvent(self, event):
+        print("Shutting down Application...")
+        worker.stop_worker()
+        event.accept()
 
 class AppController(QStackedWidget):
     def __init__(self):
