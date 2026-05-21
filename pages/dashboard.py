@@ -114,6 +114,12 @@ class DashboardOverviewView(QWidget):
         self.completed_widget = QWidget()
         self.failed_widget = QWidget()
         
+        # Pre-create layouts once to prevent layout recreation warning
+        QVBoxLayout(self.empty_widget)
+        QVBoxLayout(self.pending_widget)
+        QVBoxLayout(self.completed_widget)
+        QVBoxLayout(self.failed_widget)
+        
         self.central_stack.addWidget(self.empty_widget)      # Index 0
         self.central_stack.addWidget(self.pending_widget)    # Index 1
         self.central_stack.addWidget(self.completed_widget)  # Index 2
@@ -169,14 +175,23 @@ class DashboardOverviewView(QWidget):
                 if widget is not None:
                     widget.deleteLater()
                 else:
-                    self._clear_layout(item.layout())
+                    sub_layout = item.layout()
+                    if sub_layout is not None:
+                        self._clear_layout(sub_layout)
+                        sub_layout.deleteLater()
+
+    def _get_clean_layout(self, widget):
+        layout = widget.layout()
+        if layout is None:
+            layout = QVBoxLayout(widget)
+        else:
+            self._clear_layout(layout)
+        return layout
 
     # --- STATE POPULATION METHODS ---
 
     def _populate_empty_view(self, student):
-        self._clear_layout(self.empty_widget.layout())
-        
-        layout = QVBoxLayout(self.empty_widget)
+        layout = self._get_clean_layout(self.empty_widget)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(20)
         
@@ -252,9 +267,7 @@ class DashboardOverviewView(QWidget):
         layout.addStretch()
 
     def _populate_pending_view(self):
-        self._clear_layout(self.pending_widget.layout())
-        
-        layout = QVBoxLayout(self.pending_widget)
+        layout = self._get_clean_layout(self.pending_widget)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(20)
         
@@ -299,9 +312,7 @@ class DashboardOverviewView(QWidget):
         layout.addStretch()
 
     def _populate_completed_view(self, student):
-        self._clear_layout(self.completed_widget.layout())
-        
-        layout = QVBoxLayout(self.completed_widget)
+        layout = self._get_clean_layout(self.completed_widget)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(20)
         
@@ -514,9 +525,7 @@ class DashboardOverviewView(QWidget):
         layout.addWidget(content_row)
 
     def _populate_failed_view(self, student):
-        self._clear_layout(self.failed_widget.layout())
-        
-        layout = QVBoxLayout(self.failed_widget)
+        layout = self._get_clean_layout(self.failed_widget)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(20)
         
