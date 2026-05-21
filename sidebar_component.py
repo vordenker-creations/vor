@@ -63,14 +63,9 @@ class SidebarComponent(QFrame):
         
         nav_items = [
             ("⌂", "Dashboard", 0),
-            ("📝", "Resume Builder", 1),
             ("🗺", "Academic Roadmap", 4),
             ("🗓", "Study Tasks", 2),
-            ("🎙️", "Interview Prep", 5),
-            ("💼", "Job Portal", 10),
             ("✦", "AI Mentor", 6),
-            ("👥", "Community", 3),
-            ("✉", "Messages", 9),
             ("⚙", "Settings", 8),
         ]
         
@@ -98,11 +93,14 @@ class SidebarComponent(QFrame):
                 border-radius: 12px;
             }
         """)
+        self.footer_container.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.footer_container.mousePressEvent = lambda event: self.navigation_requested.emit(11)
+        
         self.footer_layout = QHBoxLayout(self.footer_container)
         self.footer_layout.setContentsMargins(8, 8, 8, 8)
         self.footer_layout.setSpacing(12)
         
-        self.avatar_label = QLabel("JD")
+        self.avatar_label = QLabel("ST")
         self.avatar_label.setFixedSize(40, 40)
         self.avatar_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.avatar_label.setStyleSheet("""
@@ -118,10 +116,10 @@ class SidebarComponent(QFrame):
         self.user_info_layout.setContentsMargins(0, 0, 0, 0)
         self.user_info_layout.setSpacing(2)
         
-        self.user_name_label = QLabel("John Doe")
+        self.user_name_label = QLabel("Student")
         self.user_name_label.setStyleSheet("font-size: 14px; font-weight: 700; color: #0F172A; border: none; background: transparent;")
         
-        self.user_role_label = QLabel("Software Engineer")
+        self.user_role_label = QLabel("Undeclared Major")
         self.user_role_label.setStyleSheet("font-size: 12px; color: #64748B; border: none; background: transparent; font-weight: 500;")
         
         self.user_info_layout.addWidget(self.user_name_label)
@@ -180,3 +178,20 @@ class SidebarComponent(QFrame):
             self.avatar_label.setFixedSize(40, 40)
             
         self.anim_group.start()
+
+    def update_user_info(self, display_name, major):
+        # Update user name
+        self.user_name_label.setText(display_name or "Student")
+        # Update major/role
+        self.user_role_label.setText(major or "Undeclared Major")
+        # Update avatar initials
+        initials = ""
+        if display_name:
+            parts = display_name.split()
+            if len(parts) > 1:
+                initials = parts[0][0].upper() + parts[-1][0].upper()
+            elif len(parts) == 1:
+                initials = parts[0][:2].upper()
+        if not initials:
+            initials = "ST"
+        self.avatar_label.setText(initials)

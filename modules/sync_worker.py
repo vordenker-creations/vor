@@ -7,12 +7,13 @@ from PyQt6.QtCore import QThread, pyqtSignal
 # Ensure the parent directory is in the path to import database
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database import crud
+from config import SERVER_URL
 
 class SyncWorker(QThread):
     sync_success = pyqtSignal(int) # Emits number of records synced
     sync_error = pyqtSignal(str)   # Emits error messages
 
-    def __init__(self, server_url="http://100.95.50.104:8000"):
+    def __init__(self, server_url=SERVER_URL):
         super().__init__()
         self.server_url = server_url
         self.running = False
@@ -31,23 +32,37 @@ class SyncWorker(QThread):
     def run(self):
         while self.running:
             try:
+                # 0. Check if student session is active
+                session = crud.get_session()
+                if not session:
+                    # No active session, wait and retry
+                    time.sleep(2)
+                    continue
+
+                access_token = session["access_token"]
+
                 # 1. Fetch data that needs syncing from local SQLite
                 dirty_data = crud.get_dirty_records()
                 
-                has_students = len(dirty_data["students"]) > 0
-                has_contexts = len(dirty_data["student_context"]) > 0
+                has_students = len(dirty_data.get("students", [])) > 0
+                has_contexts = len(dirty_data.get("student_context", [])) > 0
 
                 if has_students or has_contexts:
-                    print(f"Sync Worker: Found {len(dirty_data['students'])} students and {len(dirty_data['student_context'])} contexts to sync.")
+                    print(f"Sync Worker: Found {len(dirty_data.get('students', []))} students, {len(dirty_data.get('student_context', []))} contexts to sync.")
                     
                     # 2. Send to server
                     print(f"Pushing to {self.server_url}/api/v1/sync")
-                    response = requests.post(f"{self.server_url}/api/v1/sync", json=dirty_data, timeout=5)
+                    headers = {
+                        "Content-Type": "application/json",
+                        "Authorization": f"Bearer {access_token}"
+                    }
+                    response = requests.post(f"{self.server_url}/api/v1/sync", json=dirty_data, headers=headers, timeout=10)
                     
                     if response.status_code == 200:
                         # 3. Mark as clean locally
                         student_ids = [s["id"] for s in dirty_data["students"]]
                         context_ids = [c["id"] for c in dirty_data["student_context"]]
+                        
                         crud.mark_records_synced(student_ids, context_ids)
                         
                         total_synced = len(student_ids) + len(context_ids)
@@ -70,3 +85,4 @@ class SyncWorker(QThread):
 
 # Singleton instance
 worker = SyncWorker()
+

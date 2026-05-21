@@ -114,3 +114,7 @@ def get_global_stylesheet():
     }}
     QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {{ width: 0px; }}
     """
+
+# --- BACKEND SERVER URL ---
+SERVER_URL = "http://100.95.50.104:8000"
+
