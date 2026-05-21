@@ -763,6 +763,9 @@ class DashboardPage(QWidget):
         
         root_layout.addWidget(self.view_stack)
 
+    def start_generation(self):
+        self.overview_view.start_generation()
+
     def refresh(self):
         """Called automatically on page switch."""
         if hasattr(self, "overview_view") and hasattr(self.overview_view, "refresh"):
