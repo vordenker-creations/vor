@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import QPushButton, QHBoxLayout, QLabel, QWidget, QGraphicsOpacityEffect
-from PyQt6.QtCore import Qt, QPropertyAnimation, QEasingCurve, QSize, pyqtProperty, QPoint, QParallelAnimationGroup
+from PyQt6.QtCore import Qt, QPropertyAnimation, QEasingCurve, QSize, QPoint, QParallelAnimationGroup
 from PyQt6.QtGui import QColor, QIcon, QFont
 from tooltip_widget import ModernTooltip
 
