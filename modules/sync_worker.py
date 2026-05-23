@@ -7,7 +7,7 @@ from PyQt6.QtCore import QThread, pyqtSignal
 # Ensure the parent directory is in the path to import database
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database import crud
-from config import SERVER_URL
+from core.config import SERVER_URL
 
 class SyncWorker(QThread):
     sync_success = pyqtSignal(int) # Emits number of records synced

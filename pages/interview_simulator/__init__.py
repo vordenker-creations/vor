@@ -1,1 +1,0 @@
-from .interview_simulator_page import InterviewSimulatorPage

@@ -2,23 +2,13 @@ import json
 import sys
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, 
                              QLabel, QPushButton, QProgressBar, QFrame, QScrollArea, 
-                             QGraphicsDropShadowEffect, QStackedWidget, QMessageBox)
+                             QGraphicsDropShadowEffect, QStackedWidget, QMessageBox, QCheckBox, QLineEdit)
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QSize
 from PyQt6.QtGui import QColor, QCursor, QFont
-from config import COLOR_PRIMARY, COLOR_TEXT_MAIN, COLOR_TEXT_SUB, COLOR_BORDER
-from components import SaaSCard, StatusPulse, CollapsiblePanel
+from core.config import COLOR_PRIMARY, COLOR_TEXT_MAIN, COLOR_TEXT_SUB, COLOR_BORDER
+from ui_core.components import SaaSCard, StatusPulse, CollapsiblePanel
 from database import crud
-from i18n import _
-from .dashboard_analytics.dashboard_analytics_overview import DashboardAnalyticsOverview
-from .dashboard_operations.workspace_activity_operations_center import WorkspaceActivityOperationsCenter
-
-def create_shadow():
-    shadow = QGraphicsDropShadowEffect()
-    shadow.setBlurRadius(20)
-    shadow.setXOffset(0)
-    shadow.setYOffset(6)
-    shadow.setColor(QColor(15, 23, 42, 12))
-    return shadow
+from core.i18n import _
 
 class ModernCard(QFrame):
     def __init__(self, parent=None):
@@ -27,12 +17,30 @@ class ModernCard(QFrame):
             QFrame {
                 background-color: #FFFFFF;
                 border: 1px solid #E2E8F0;
-                border-radius: 16px;
+                border-radius: 12px;
             }
         """)
-        self.setGraphicsEffect(create_shadow())
         self.internal_layout = QVBoxLayout(self)
         self.internal_layout.setContentsMargins(20, 20, 20, 20)
+
+class ClickableCard(ModernCard):
+    clicked = pyqtSignal()
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setStyleSheet("""
+            QFrame {
+                background-color: #FFFFFF;
+                border: 1px solid #E2E8F0;
+                border-radius: 12px;
+            }
+            QFrame:hover {
+                background-color: #F8FAFC;
+                border: 1px solid #CBD5E1;
+            }
+        """)
+    def mousePressEvent(self, event):
+        self.clicked.emit()
 
 class IconButton(QPushButton):
     def __init__(self, text="", parent=None):
@@ -64,27 +72,28 @@ class SearchBar(QFrame):
         icon.setStyleSheet("color: #64748B; font-size: 12px;")
         layout.addWidget(icon)
         
-        self.input = QLabel("Search workspace...")
-        self.input.setStyleSheet("color: #94A3B8; font-size: 12px; font-weight: 500;")
+        self.input = QLineEdit()
+        self.input.setPlaceholderText("Search workspace...")
+        self.input.setStyleSheet("background: transparent; color: #0F172A; font-size: 13px; font-weight: 500; border: none;")
         layout.addWidget(self.input)
         layout.addStretch()
 
 class KPICard(ModernCard):
     def __init__(self, title, value, change, color="#38BDF8", parent=None):
         super().__init__(parent)
-        self.setFixedHeight(120)
+        self.setFixedHeight(110)
         self.internal_layout.setSpacing(4)
         
         lbl_title = QLabel(title)
-        lbl_title.setStyleSheet("color: #64748B; font-size: 11px; font-weight: 700; text-transform: uppercase;")
+        lbl_title.setStyleSheet("color: #64748B; font-size: 13px; font-weight: 600;")
         self.internal_layout.addWidget(lbl_title)
         
         lbl_val = QLabel(value)
-        lbl_val.setStyleSheet("color: #0F172A; font-size: 24px; font-weight: 800;")
+        lbl_val.setStyleSheet("color: #0F172A; font-size: 26px; font-weight: 800; letter-spacing: -0.5px;")
         self.internal_layout.addWidget(lbl_val)
         
         lbl_change = QLabel(change)
-        lbl_change.setStyleSheet(f"color: {color}; font-size: 11px; font-weight: 600;")
+        lbl_change.setStyleSheet(f"color: {color}; font-size: 12px; font-weight: 500;")
         self.internal_layout.addWidget(lbl_change)
         self.internal_layout.addStretch()
 
@@ -350,8 +359,24 @@ class DashboardOverviewView(QWidget):
         
         btn_regen = QPushButton("✨ Regenerate AI Plan")
         btn_regen.setCursor(Qt.CursorShape.PointingHandCursor)
-        btn_regen.setFixedHeight(36)
-        btn_regen.setStyleSheet("background: #38BDF8; color: #0F172A; font-weight: 700; font-size: 13px; border-radius: 18px; padding: 0 16px; border: none;")
+        btn_regen.setFixedHeight(40)
+        btn_regen.setStyleSheet("""
+            QPushButton {
+                background: #0284C7;
+                color: white;
+                font-weight: 700;
+                font-size: 14px;
+                border-radius: 20px;
+                padding: 0 20px;
+                border: none;
+            }
+            QPushButton:hover {
+                background: #0369A1;
+            }
+            QPushButton:pressed {
+                background: #075985;
+            }
+        """)
         btn_regen.clicked.connect(self.start_generation)
         
         btn_profile = QPushButton("🗺️ Update Profile Context")
@@ -383,13 +408,44 @@ class DashboardOverviewView(QWidget):
         kpi_layout.setSpacing(16)
         
         metrics = ai_plan.get("metrics") or {}
-        ac_prog = metrics.get("academic_progress", 75)
-        career_readiness = metrics.get("career_readiness", 80)
-        task_load = metrics.get("task_load", 12)
+        
+        roadmap_list = ai_plan.get("academic_roadmap") or []
+        weekly_plan = ai_plan.get("weekly_study_plan") or []
+        
+        raw_input = context.get("raw_input", {})
+        manual_timetable = []
+        if isinstance(raw_input, dict):
+            manual_timetable = raw_input.get("academic_context", {}).get("timetable_manual", [])
+            if not isinstance(manual_timetable, list): manual_timetable = []
+            
+        all_tasks = []
+        if isinstance(weekly_plan, list):
+            for day_plan in weekly_plan:
+                if not isinstance(day_plan, dict): continue
+                day = day_plan.get("day", "Monday")
+                tasks = day_plan.get("tasks", [])
+                if not isinstance(tasks, list): continue
+                for t in tasks:
+                    if isinstance(t, dict) and not t.get("completed", False):
+                        all_tasks.append((t, day, True))
+                    
+        for t in manual_timetable:
+            if isinstance(t, dict) and t.get("type") in ["self_study", "study_task", "other"] and not t.get("completed", False):
+                all_tasks.append((t, t.get("day", "Monday"), False))
+        
+        # 1. Auto-Recalculate KPIs
+        total_pct = 0
+        if roadmap_list:
+            total_pct = sum(int(r.get("progress_pct", 0)) for r in roadmap_list if isinstance(r, dict)) // len(roadmap_list)
+        ac_prog = str(total_pct)
+        
+        task_load = str(len(all_tasks))
+        
+        career_readiness = metrics.get("career_readiness", "--")
         
         kpi_layout.addWidget(KPICard("Academic Progress", f"{ac_prog}%", "Based on roadmap", "#10B981"))
-        kpi_layout.addWidget(KPICard("Weekly Task Load", f"{task_load} tasks", "Weekly study plan", "#F59E0B"))
-        kpi_layout.addWidget(KPICard("Career Readiness", f"{career_readiness}%", "Skill matches", "#38BDF8"))
+        kpi_layout.addWidget(KPICard("Weekly Workload", f"{task_load} tasks", "Weekly study plan", "#F59E0B"))
+        kpi_layout.addWidget(KPICard("Career Readiness", f"{career_readiness}%" if career_readiness != "--" else "--", "Skill matches", "#38BDF8"))
         
         layout.addWidget(kpi_row)
         
@@ -408,44 +464,50 @@ class DashboardOverviewView(QWidget):
         r_title.setStyleSheet("color: #0F172A; font-size: 16px; font-weight: 700;")
         rl.addWidget(r_title)
         
-        roadmap_list = ai_plan.get("academic_roadmap") or []
-        for course in roadmap_list:
-            card = ModernCard()
-            card.internal_layout.setContentsMargins(12, 12, 12, 12)
-            card.internal_layout.setSpacing(6)
-            
-            title = course.get("title", "Milestone")
-            status = course.get("status", "not_started").replace("_", " ").title()
-            progress = course.get("progress_pct", 0)
-            ai_insight = course.get("ai_insight", "")
-            
-            color = "#10B981" if "completed" in status.lower() else ("#38BDF8" if "progress" in status.lower() else "#94A3B8")
-            
-            h_row = QHBoxLayout()
-            badge = QLabel(status)
-            badge.setStyleSheet(f"color: {color}; background: {color}15; font-size: 10px; font-weight: 700; padding: 3px 6px; border-radius: 4px;")
-            h_row.addWidget(badge)
-            h_row.addStretch()
-            card.internal_layout.addLayout(h_row)
-            
-            lbl = QLabel(title)
-            lbl.setStyleSheet("color: #0F172A; font-size: 14px; font-weight: 600;")
-            card.internal_layout.addWidget(lbl)
-            
-            bar = QProgressBar()
-            bar.setFixedHeight(4)
-            bar.setValue(progress)
-            bar.setTextVisible(False)
-            bar.setStyleSheet(f"QProgressBar {{ background: #F1F5F9; border: none; border-radius: 2px; }} QProgressBar::chunk {{ background: {color}; border-radius: 2px; }}")
-            card.internal_layout.addWidget(bar)
-            
-            if ai_insight:
-                ins = QLabel(ai_insight)
-                ins.setWordWrap(True)
-                ins.setStyleSheet("color: #64748B; font-size: 11px;")
-                card.internal_layout.addWidget(ins)
+        if not roadmap_list:
+            empty_lbl = QLabel("No roadmap generated yet. Pending AI insights.")
+            empty_lbl.setStyleSheet("color: #94A3B8; font-size: 13px; font-style: italic;")
+            rl.addWidget(empty_lbl)
+        else:
+            for course in roadmap_list:
+                card = ClickableCard()
+                card.clicked.connect(self._goto_roadmap)
+                card.internal_layout.setContentsMargins(12, 12, 12, 12)
+                card.internal_layout.setSpacing(6)
                 
-            rl.addWidget(card)
+                title = course.get("title", "Milestone")
+                status = course.get("status", "not_started").replace("_", " ").title()
+                progress = course.get("progress_pct", 0)
+                ai_insight = course.get("ai_insight", "")
+                
+                color = "#10B981" if "completed" in status.lower() else ("#38BDF8" if "progress" in status.lower() else "#94A3B8")
+                
+                h_row = QHBoxLayout()
+                badge = QLabel(status)
+                badge.setStyleSheet(f"color: {color}; background: {color}15; font-size: 10px; font-weight: 700; padding: 3px 6px; border-radius: 4px;")
+                h_row.addWidget(badge)
+                h_row.addStretch()
+                card.internal_layout.addLayout(h_row)
+                
+                lbl = QLabel(title)
+                lbl.setStyleSheet("color: #0F172A; font-size: 14px; font-weight: 600;")
+                lbl.setWordWrap(True)
+                card.internal_layout.addWidget(lbl)
+                
+                bar = QProgressBar()
+                bar.setFixedHeight(4)
+                bar.setValue(progress)
+                bar.setTextVisible(False)
+                bar.setStyleSheet(f"QProgressBar {{ background: #F1F5F9; border: none; border-radius: 2px; }} QProgressBar::chunk {{ background: {color}; border-radius: 2px; }}")
+                card.internal_layout.addWidget(bar)
+                
+                if ai_insight:
+                    ins = QLabel(ai_insight)
+                    ins.setWordWrap(True)
+                    ins.setStyleSheet("color: #64748B; font-size: 11px;")
+                    card.internal_layout.addWidget(ins)
+                    
+                rl.addWidget(card)
             
         cr_layout.addWidget(roadmap_panel, stretch=1)
         
@@ -457,41 +519,59 @@ class DashboardOverviewView(QWidget):
         
         # Tasks Card
         tasks_card = ModernCard()
+        tasks_card.internal_layout.setContentsMargins(24, 24, 24, 24)
         tl = tasks_card.internal_layout
-        tl.setSpacing(10)
+        tl.setSpacing(16)
         
         t_header = QLabel("AI Recommended Tasks This Week")
-        t_header.setStyleSheet("color: #0F172A; font-size: 15px; font-weight: 700;")
+        t_header.setStyleSheet("color: #0F172A; font-size: 16px; font-weight: 800;")
         tl.addWidget(t_header)
         
-        weekly_plan = ai_plan.get("weekly_study_plan") or []
-        task_count = 0
-        for day_plan in weekly_plan:
-            day = day_plan.get("day", "Monday")
-            tasks = day_plan.get("tasks", [])
-            for t in tasks:
+        if not all_tasks:
+            empty_tasks = QLabel("No tasks assigned yet. Enjoy your free time!")
+            empty_tasks.setStyleSheet("color: #94A3B8; font-size: 14px; font-style: italic;")
+            empty_tasks.setWordWrap(True)
+            tl.addWidget(empty_tasks)
+        else:
+            task_count = 0
+            for t_orig, day, is_ai in all_tasks:
                 if task_count >= 5:  # Cap display at 5 tasks for clean UI
                     break
-                w = QWidget()
-                l = QHBoxLayout(w)
-                l.setContentsMargins(0, 0, 0, 0)
-                l.setSpacing(8)
                 
-                chk = QFrame()
-                chk.setFixedSize(14, 14)
-                chk.setStyleSheet("border: 2px solid #CBD5E1; border-radius: 3px;")
+                w = QFrame()
+                w.setStyleSheet("background-color: #F8FAFC; border-radius: 8px; border: 1px solid #E2E8F0;")
+                l = QHBoxLayout(w)
+                l.setContentsMargins(12, 12, 12, 12)
+                l.setSpacing(12)
+                
+                chk = QCheckBox()
+                chk.setStyleSheet("QCheckBox::indicator { width: 18px; height: 18px; }")
+                chk.setCursor(Qt.CursorShape.PointingHandCursor)
+                chk.clicked.connect(lambda checked, td=t_orig, is_ai_flag=is_ai: self._complete_task(td, is_ai_flag))
                 l.addWidget(chk)
                 
-                lbl = QLabel(f"{day}: {t.get('title')}")
-                lbl.setStyleSheet("color: #334155; font-size: 12px; font-weight: 500;")
+                v_text = QVBoxLayout()
+                v_text.setSpacing(2)
+                
+                task_title = t_orig.get('title', 'Untitled Task')
+                lbl = QLabel(task_title)
+                lbl.setStyleSheet("color: #1E293B; font-size: 13px; font-weight: 600; border: none; background: transparent;")
                 lbl.setWordWrap(True)
-                l.addWidget(lbl)
+                lbl.setCursor(Qt.CursorShape.PointingHandCursor)
+                lbl.mousePressEvent = lambda e, td=t_orig: self._goto_tasks()
+                v_text.addWidget(lbl)
+                
+                lbl_sub = QLabel(f"Scheduled: {day}")
+                lbl_sub.setStyleSheet("color: #64748B; font-size: 11px; border: none; background: transparent;")
+                v_text.addWidget(lbl_sub)
+                
+                l.addLayout(v_text)
                 l.addStretch()
                 
-                badge_type = t.get("type", "study").title()
-                badge = QLabel(badge_type)
-                badge.setStyleSheet("color: #38BDF8; background: #38BDF815; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px;")
-                l.addWidget(badge)
+                badge_type = t_orig.get("type", "study_task" if is_ai else "self_study").title()
+                badge = QLabel(badge_type.replace("_", " "))
+                badge.setStyleSheet("color: #0284C7; background: #E0F2FE; font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 6px; border: none;")
+                l.addWidget(badge, alignment=Qt.AlignmentFlag.AlignTop)
                 
                 tl.addWidget(w)
                 task_count += 1
@@ -500,23 +580,47 @@ class DashboardOverviewView(QWidget):
         
         # Focus/Skills Card
         insights_card = ModernCard()
+        insights_card.internal_layout.setContentsMargins(24, 24, 24, 24)
         il = insights_card.internal_layout
+        il.setSpacing(16)
         
         i_title = QLabel("✨ Skills Analysis & Focus Areas")
-        i_title.setStyleSheet("color: #0F172A; font-size: 15px; font-weight: 700;")
+        i_title.setStyleSheet("color: #0F172A; font-size: 16px; font-weight: 800;")
         il.addWidget(i_title)
         
-        skill_analysis = ai_plan.get("skill_analysis") or {}
-        focus_areas = skill_analysis.get("recommended_focus", [])
-        if focus_areas:
-            ins_text = "To achieve your goals, focus on prioritizing these skills:\n" + "\n".join([f"• {f}" for f in focus_areas])
-        else:
-            ins_text = "Keep studying courses on your roadmap. AI advises maintaining high study hours."
+        skill_analysis = ai_plan.get("skill_analysis")
+        if not isinstance(skill_analysis, dict): skill_analysis = {}
+        focus_areas = skill_analysis.get("recommended_focus")
+        
+        if isinstance(focus_areas, list) and focus_areas:
+            intro_msg = QLabel("To achieve your goals, prioritize these key skills:")
+            intro_msg.setStyleSheet("color: #334155; font-size: 13px; font-weight: 600;")
+            intro_msg.setWordWrap(True)
+            il.addWidget(intro_msg)
             
-        msg = QLabel(ins_text)
-        msg.setWordWrap(True)
-        msg.setStyleSheet("color: #475569; font-size: 13px; line-height: 1.4;")
-        il.addWidget(msg)
+            for f in focus_areas:
+                if not isinstance(f, str): continue
+                row = QWidget()
+                row_l = QHBoxLayout(row)
+                row_l.setContentsMargins(0, 0, 0, 0)
+                row_l.setSpacing(8)
+                
+                bullet = QLabel("🎯")
+                bullet.setStyleSheet("font-size: 14px; background: transparent;")
+                row_l.addWidget(bullet, alignment=Qt.AlignmentFlag.AlignTop)
+                
+                txt = QLabel(f)
+                txt.setStyleSheet("color: #334155; font-size: 13px; line-height: 1.5; background: transparent;")
+                txt.setWordWrap(True)
+                row_l.addWidget(txt, stretch=1)
+                
+                il.addWidget(row)
+        else:
+            msg = QLabel("Keep studying courses on your roadmap. AI advises maintaining high study hours.")
+            msg.setWordWrap(True)
+            msg.setStyleSheet("color: #475569; font-size: 14px; line-height: 1.5;")
+            il.addWidget(msg)
+            
         il.addStretch()
         
         rs_layout.addWidget(insights_card)
@@ -541,23 +645,69 @@ class DashboardOverviewView(QWidget):
         
         title = QLabel("❌ AI Plan Generation Failed")
         title.setStyleSheet("color: #991B1B; font-size: 16px; font-weight: 700;")
-        desc = QLabel(f"The backend server encountered an error while generating your plan: {err_msg}")
+        
+        desc = QLabel(f"The backend server encountered an error while generating your plan:")
         desc.setWordWrap(True)
         desc.setStyleSheet("color: #7F1D1D; font-size: 13px;")
         
-        btn_retry = QPushButton("🔄 Regenerate / Retry Generation")
-        btn_retry.setFixedHeight(36)
+        err = QLabel(err_msg)
+        err.setStyleSheet("color: #B91C1C; font-size: 14px;")
+        err.setWordWrap(True)
+        
+        btn_retry = QPushButton("Retry Generation")
         btn_retry.setCursor(Qt.CursorShape.PointingHandCursor)
-        btn_retry.setStyleSheet("background: #EF4444; color: white; font-weight: 700; font-size: 13px; border-radius: 8px; border: none;")
+        btn_retry.setStyleSheet("background: #EF4444; color: white; border-radius: 6px; padding: 8px 16px; font-weight: 600; margin-top: 10px;")
         btn_retry.clicked.connect(self.start_generation)
         
         el.addWidget(title)
         el.addWidget(desc)
-        el.addWidget(btn_retry)
-        layout.addWidget(error_card)
+        el.addWidget(err)
+        el.addWidget(btn_retry, alignment=Qt.AlignmentFlag.AlignLeft)
         
-        # Render a static fallback dashboard layout beneath it to let user see *something*
-        fallback_title = QLabel("Preview (Static Fallback Dashboard)")
+        layout.addWidget(error_card)
+        layout.addStretch()
+
+    def _complete_task(self, task_data, is_ai=True):
+        student = crud.get_current_student()
+        if not student: return
+        context = student.get("context", {})
+        
+        if is_ai:
+            ai_plan = context.get("ai_plan", {})
+            weekly_plan = ai_plan.get("weekly_study_plan", [])
+            for dp in weekly_plan:
+                tasks = dp.get("tasks", [])
+                for t in tasks:
+                    if t.get("title") == task_data.get("title"):
+                        t["completed"] = not t.get("completed", False)
+            ai_plan["weekly_study_plan"] = weekly_plan
+        else:
+            raw_input = context.get("raw_input", {})
+            timetable = raw_input.get("academic_context", {}).get("timetable_manual", [])
+            if isinstance(timetable, list):
+                for t in timetable:
+                    if t.get("title") == task_data.get("title") and t.get("day") == task_data.get("day") and t.get("period_start") == task_data.get("period_start"):
+                        t["completed"] = not t.get("completed", False)
+            raw_input["academic_context"]["timetable_manual"] = timetable
+            
+        crud.save_student_context(
+            student_id=student["id"],
+            raw_input_dict=context.get("raw_input", {}),
+            ai_plan_dict=context.get("ai_plan", {}),
+            ai_status=context.get("ai_status", "COMPLETED"),
+            ai_last_error=context.get("ai_last_error"),
+            is_dirty=1
+        )
+        self.refresh()
+
+    def _goto_roadmap(self):
+        if self.controller:
+            self.controller.show_page("LearningRoadmapPage")
+
+    def _goto_tasks(self):
+        if self.controller:
+            self.controller.show_page("SmartTaskPlanner")
+        fallback_title = QLabel("Dashboard (Unavailable)")
         fallback_title.setStyleSheet("color: #64748B; font-size: 14px; font-weight: 700; margin-top: 10px;")
         layout.addWidget(fallback_title)
         
@@ -566,9 +716,9 @@ class DashboardOverviewView(QWidget):
         kpi_layout = QHBoxLayout(kpi_row)
         kpi_layout.setContentsMargins(0, 0, 0, 0)
         kpi_layout.setSpacing(16)
-        kpi_layout.addWidget(KPICard("Academic Progress", "75%", "Mock data", "#10B981"))
-        kpi_layout.addWidget(KPICard("Tasks Completed", "12", "Mock data", "#F59E0B"))
-        kpi_layout.addWidget(KPICard("Career Readiness", "80%", "Mock data", "#38BDF8"))
+        kpi_layout.addWidget(KPICard("Academic Progress", "--", "Missing data", "#94A3B8"))
+        kpi_layout.addWidget(KPICard("Weekly Workload", "--", "Missing data", "#94A3B8"))
+        kpi_layout.addWidget(KPICard("Career Readiness", "--", "Missing data", "#94A3B8"))
         layout.addWidget(kpi_row)
         
         prompt_card = ModernCard()
@@ -713,10 +863,14 @@ class DashboardOverviewView(QWidget):
             w = QWidget()
             l = QHBoxLayout(w)
             l.setContentsMargins(0, 4, 0, 4)
-            l.setSpacing(8)
+            l.setSpacing(10)
+            
             i = QLabel(icon)
-            i.setStyleSheet("font-size: 14px; background: transparent;")
-            l.addWidget(i)
+            i.setFixedSize(28, 28)
+            i.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            i.setStyleSheet("font-size: 14px; background: #F1F5F9; border-radius: 6px; font-family: 'Segoe UI Emoji', 'Apple Color Emoji';")
+            l.addWidget(i, alignment=Qt.AlignmentFlag.AlignTop)
+            
             v = QVBoxLayout()
             v.setSpacing(1)
             txt = QLabel(t)
@@ -761,14 +915,6 @@ class DashboardPage(QWidget):
         # View 0: Standard Overview
         self.overview_view = DashboardOverviewView(controller=self.controller)
         self.view_stack.addWidget(self.overview_view)
-        
-        # View 1: Analytics Overview
-        self.analytics_view = DashboardAnalyticsOverview(controller=self.controller)
-        self.view_stack.addWidget(self.analytics_view)
-        
-        # View 2: Workspace Activity & Live Ops
-        self.activity_view = WorkspaceActivityOperationsCenter(controller=self.controller)
-        self.view_stack.addWidget(self.activity_view)
         
         root_layout.addWidget(self.view_stack)
 
@@ -822,60 +968,14 @@ class DashboardPage(QWidget):
         title_lbl.setStyleSheet("font-size: 16px; font-weight: 800; color: #0F172A;")
         layout.addWidget(title_lbl)
         
-        # Tab Switcher
-        tab_container = QFrame()
-        tab_container.setStyleSheet("background: #F1F5F9; border-radius: 12px; padding: 2px;")
-        tl = QHBoxLayout(tab_container)
-        tl.setContentsMargins(2, 2, 2, 2)
-        tl.setSpacing(4)
-        
-        self.btn_overview = QPushButton("Overview")
-        self.btn_analytics = QPushButton("Analytics")
-        self.btn_activity = QPushButton("Activity")
-        
-        tab_style = """
-            QPushButton {
-                border: none; border-radius: 10px; padding: 8px 16px;
-                font-size: 13px; font-weight: 700; color: #64748B;
-            }
-            QPushButton:checked {
-                background: white; color: #0F172A;
-            }
-        """
-        self.btn_overview.setStyleSheet(tab_style)
-        self.btn_overview.setCheckable(True)
-        self.btn_overview.setChecked(True)
-        self.btn_analytics.setStyleSheet(tab_style)
-        self.btn_analytics.setCheckable(True)
-        self.btn_activity.setStyleSheet(tab_style)
-        self.btn_activity.setCheckable(True)
-        
-        self.btn_overview.clicked.connect(lambda: self._set_view(0))
-        self.btn_analytics.clicked.connect(lambda: self._set_view(1))
-        self.btn_activity.clicked.connect(lambda: self._set_view(2))
-        
-        tl.addWidget(self.btn_overview)
-        tl.addWidget(self.btn_analytics)
-        tl.addWidget(self.btn_activity)
-        layout.addWidget(tab_container)
+        # Removed Tab Switcher since we only have the Overview now
         
         layout.addStretch()
         
         # Search
         layout.addWidget(SearchBar())
         
-        # Icons
-        layout.addWidget(IconButton("📅"))
-        layout.addWidget(IconButton("🔔"))
-        
-        avatar_btn = IconButton("KH")
-        avatar_btn.setStyleSheet("QPushButton { background-color: #2DD4BF; color: white; border: none; border-radius: 18px; font-weight: 800; }")
-        layout.addWidget(avatar_btn)
-        
         return header
 
     def _set_view(self, idx):
         self.view_stack.setCurrentIndex(idx)
-        self.btn_overview.setChecked(idx == 0)
-        self.btn_analytics.setChecked(idx == 1)
-        self.btn_activity.setChecked(idx == 2)

@@ -1,5 +1,5 @@
 import requests
-from config import SERVER_URL
+from core.config import SERVER_URL
 
 class APIClientError(Exception):
     def __init__(self, message, status_code=None):

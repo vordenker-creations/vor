@@ -8,9 +8,9 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
 from PyQt6.QtCore import Qt, QSize, QRectF, QPropertyAnimation, QEasingCurve
 from PyQt6.QtGui import QColor, QPainter, QPen, QBrush, QCursor, QFont, QLinearGradient, QIcon
 
-from config import *
-from components import SaaSCard, AnimatedCircularProgress, AnimatedProgressBar, AnimationEngine, CollapsiblePanel
-from i18n import _
+from core.config import *
+from ui_core.components import SaaSCard, AnimatedCircularProgress, AnimatedProgressBar, AnimationEngine, CollapsiblePanel
+from core.i18n import _
 from database import crud
 
 class ShadowCard(QFrame):
@@ -165,6 +165,111 @@ class TimelineItem(QWidget):
         
         layout.addLayout(right_col, 1)
 
+class TimetableEditor(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.layout = QVBoxLayout(self)
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.setSpacing(8)
+        
+        self.rows_layout = QVBoxLayout()
+        self.layout.addLayout(self.rows_layout)
+        
+        add_btn = QPushButton("+ Add Class")
+        add_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        add_btn.setStyleSheet("background: #38BDF8; color: white; border-radius: 4px; padding: 6px 12px; font-weight: bold;")
+        add_btn.clicked.connect(lambda: self.add_row())
+        self.layout.addWidget(add_btn, alignment=Qt.AlignmentFlag.AlignLeft)
+        
+        self.rows = []
+
+    def add_row(self, data=None):
+        row_widget = QWidget()
+        row_layout = QHBoxLayout(row_widget)
+        row_layout.setContentsMargins(0, 0, 0, 0)
+        row_layout.setSpacing(4)
+        
+        day_cb = QComboBox()
+        day_cb.addItems(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
+        
+        start_cb = QComboBox()
+        start_cb.addItems([str(i) for i in range(1, 11)])
+        end_cb = QComboBox()
+        end_cb.addItems([str(i) for i in range(1, 11)])
+        
+        title_le = QLineEdit()
+        title_le.setPlaceholderText("Title")
+        group_le = QLineEdit()
+        group_le.setPlaceholderText("Group")
+        group_le.setFixedWidth(60)
+        room_le = QLineEdit()
+        room_le.setPlaceholderText("Room")
+        room_le.setFixedWidth(60)
+        
+        type_cb = QComboBox()
+        type_cb.addItems(["class", "makeup", "self_study", "exam", "other"])
+        
+        del_btn = QPushButton("X")
+        del_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        del_btn.setStyleSheet("background: #EF4444; color: white; border-radius: 4px; padding: 4px 8px; font-weight: bold;")
+        del_btn.clicked.connect(lambda: self.remove_row(row_widget))
+        
+        row_layout.addWidget(day_cb)
+        row_layout.addWidget(QLabel("Tiết:"))
+        row_layout.addWidget(start_cb)
+        row_layout.addWidget(QLabel("-"))
+        row_layout.addWidget(end_cb)
+        row_layout.addWidget(title_le)
+        row_layout.addWidget(group_le)
+        row_layout.addWidget(room_le)
+        row_layout.addWidget(type_cb)
+        row_layout.addWidget(del_btn)
+        
+        if data:
+            day_cb.setCurrentText(data.get("day", "Monday"))
+            start_cb.setCurrentText(str(data.get("period_start", 1)))
+            end_cb.setCurrentText(str(data.get("period_end", 4)))
+            title_le.setText(data.get("title", ""))
+            group_le.setText(data.get("group", ""))
+            room_le.setText(data.get("room", ""))
+            type_cb.setCurrentText(data.get("type", "class"))
+            
+        self.rows_layout.addWidget(row_widget)
+        self.rows.append({
+            "widget": row_widget,
+            "day": day_cb, "start": start_cb, "end": end_cb,
+            "title": title_le, "group": group_le, "room": room_le, "type": type_cb
+        })
+
+    def remove_row(self, widget):
+        for row in self.rows:
+            if row["widget"] == widget:
+                self.rows.remove(row)
+                widget.deleteLater()
+                break
+
+    def get_data(self):
+        data = []
+        for row in self.rows:
+            title = row["title"].text().strip()
+            if not title:
+                continue
+            data.append({
+                "day": row["day"].currentText(),
+                "period_start": int(row["start"].currentText()),
+                "period_end": int(row["end"].currentText()),
+                "title": title,
+                "group": row["group"].text().strip(),
+                "room": row["room"].text().strip(),
+                "type": row["type"].currentText()
+            })
+        return data
+
+    def clear(self):
+        for row in self.rows:
+            row["widget"].deleteLater()
+        self.rows.clear()
+
 class ProfilePage(QWidget):
     def __init__(self, parent=None, controller=None):
         super().__init__(parent)
@@ -306,12 +411,31 @@ class ProfilePage(QWidget):
         form_title.setStyleSheet("font-size: 20px; font-weight: 800; color: #0F172A;")
         fc_layout.addWidget(form_title)
         
-        grid = QGridLayout()
-        grid.setSpacing(16)
-        
-        def add_field(row, label_text, widget):
+        def create_group(title):
+            group = QFrame()
+            group.setStyleSheet("""
+                QFrame {
+                    background: #FFFFFF;
+                    border: 1px solid #E2E8F0;
+                    border-radius: 12px;
+                }
+            """)
+            layout = QVBoxLayout(group)
+            layout.setContentsMargins(20, 20, 20, 20)
+            layout.setSpacing(16)
+            
+            lbl = QLabel(title)
+            lbl.setStyleSheet("color: #0F172A; font-size: 16px; font-weight: 700; border: none;")
+            layout.addWidget(lbl)
+            
+            grid = QGridLayout()
+            grid.setSpacing(12)
+            layout.addLayout(grid)
+            return group, grid
+            
+        def add_field(grid, row, label_text, widget):
             lbl = QLabel(label_text)
-            lbl.setStyleSheet("font-size: 13px; font-weight: 700; color: #334155;")
+            lbl.setStyleSheet("font-size: 13px; font-weight: 600; color: #475569; border: none;")
             grid.addWidget(lbl, row, 0)
             grid.addWidget(widget, row, 1)
             widget.setStyleSheet("""
@@ -328,42 +452,52 @@ class ProfilePage(QWidget):
                     background-color: #FFFFFF;
                 }
             """)
-            
+
+        # Personal Information
+        g_personal, grid_personal = create_group("Personal Information")
         self.edit_display_name = QLineEdit()
         self.edit_display_name.setPlaceholderText("e.g. John Doe")
-        add_field(0, "Display Name:", self.edit_display_name)
+        add_field(grid_personal, 0, "Display Name:", self.edit_display_name)
+        
+        self.combo_student_year = QComboBox()
+        self.combo_student_year.addItems(["1st Year", "2nd Year", "3rd Year", "4th Year"])
+        add_field(grid_personal, 1, "Student Year:", self.combo_student_year)
         
         self.edit_major = QLineEdit()
         self.edit_major.setPlaceholderText("e.g. Computer Science")
-        add_field(1, "Major / Field of Study:", self.edit_major)
-        
-        self.combo_student_year = QComboBox()
-        self.combo_student_year.addItem("1st Year", 1)
-        self.combo_student_year.addItem("2nd Year", 2)
-        self.combo_student_year.addItem("3rd Year", 3)
-        self.combo_student_year.addItem("4th Year", 4)
-        add_field(2, "Student Year:", self.combo_student_year)
-        
+        add_field(grid_personal, 2, "Major / Field:", self.edit_major)
+        fc_layout.addWidget(g_personal)
+
+        # Academic Background
+        g_academic, grid_academic = create_group("Academic Background")
         self.edit_gpa = QLineEdit()
         self.edit_gpa.setPlaceholderText("e.g. 3.8")
-        add_field(3, "Current GPA:", self.edit_gpa)
+        add_field(grid_academic, 0, "Current GPA:", self.edit_gpa)
         
         self.edit_courses = QTextEdit()
-        self.edit_courses.setPlaceholderText("e.g. Data Structures, Introduction to AI, Linear Algebra")
-        self.edit_courses.setFixedHeight(80)
-        add_field(4, "Current Courses (comma-separated):", self.edit_courses)
+        self.edit_courses.setPlaceholderText("e.g. Data Structures, Intro to AI")
+        self.edit_courses.setFixedHeight(60)
+        add_field(grid_academic, 1, "Current Courses:", self.edit_courses)
         
         self.edit_skills = QTextEdit()
-        self.edit_skills.setPlaceholderText("e.g. Python, PyQt6, Git, Machine Learning")
-        self.edit_skills.setFixedHeight(80)
-        add_field(5, "Professional Skills (comma-separated):", self.edit_skills)
-        
+        self.edit_skills.setPlaceholderText("e.g. Python, PyQt6, Machine Learning")
+        self.edit_skills.setFixedHeight(60)
+        add_field(grid_academic, 2, "Professional Skills:", self.edit_skills)
+        fc_layout.addWidget(g_academic)
+
+        # Career Goals
+        g_career, grid_career = create_group("Career Goals")
         self.edit_interests = QTextEdit()
-        self.edit_interests.setPlaceholderText("e.g. Web Development, Robotics, Deep Learning")
-        self.edit_interests.setFixedHeight(80)
-        add_field(6, "Interests / Career Goals (comma-separated):", self.edit_interests)
-        
-        fc_layout.addLayout(grid)
+        self.edit_interests.setPlaceholderText("e.g. Web Development, Robotics")
+        self.edit_interests.setFixedHeight(60)
+        add_field(grid_career, 0, "Interests & Goals:", self.edit_interests)
+        fc_layout.addWidget(g_career)
+
+        # Class Schedule
+        g_schedule, grid_schedule = create_group("Class Schedule")
+        self.timetable_editor = TimetableEditor()
+        add_field(grid_schedule, 0, "Manual Timetable:", self.timetable_editor)
+        fc_layout.addWidget(g_schedule)
         
         # Save & Sync Button
         self.btn_save_sync = QPushButton("Save & Sync Profile")
@@ -856,7 +990,7 @@ class ProfilePage(QWidget):
             "academic_context": {
                 "current_courses": courses,
                 "completed_courses": [],
-                "timetable_manual": []
+                "timetable_manual": self.timetable_editor.get_data()
             },
             "career_goals": {
                 "target_role": "",
@@ -936,6 +1070,11 @@ class ProfilePage(QWidget):
         self.edit_courses.setText(", ".join(courses))
         self.edit_skills.setText(", ".join(skills))
         self.edit_interests.setText(", ".join(interests))
+        
+        self.timetable_editor.clear()
+        timetable_manual = academic_context.get("timetable_manual", [])
+        for row_data in timetable_manual:
+            self.timetable_editor.add_row(row_data)
         
         # Update mini avatar initials
         parts = display_name.strip().split()

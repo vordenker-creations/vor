@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QPushButton, QHBoxLayout, QLabel, QWidget, QGraphicsOpacityEffect
 from PyQt6.QtCore import Qt, QPropertyAnimation, QEasingCurve, QSize, QPoint, QParallelAnimationGroup
 from PyQt6.QtGui import QColor, QIcon, QFont
-from tooltip_widget import ModernTooltip
+from ui_core.tooltip_widget import ModernTooltip
 
 class AnimatedNavButton(QPushButton):
     def __init__(self, icon_text, label_text, parent=None):

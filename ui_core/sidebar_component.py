@@ -1,8 +1,7 @@
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QFrame, QButtonGroup, QSpacerItem, QSizePolicy, QGraphicsDropShadowEffect, QGraphicsOpacityEffect
 from PyQt6.QtCore import Qt, QPropertyAnimation, QEasingCurve, pyqtSignal, QSize, QRect, QParallelAnimationGroup
 from PyQt6.QtGui import QColor, QFont
-from animated_nav_button import AnimatedNavButton
-from search_widget import PremiumSearchWidget
+from ui_core.animated_nav_button import AnimatedNavButton
 
 class SidebarComponent(QFrame):
     navigation_requested = pyqtSignal(int)
@@ -24,7 +23,6 @@ class SidebarComponent(QFrame):
         self.main_layout.setSpacing(8)
         
         self._setup_header()
-        self._setup_search()
         self._setup_nav()
         self.main_layout.addStretch()
         self._setup_footer()
@@ -47,10 +45,7 @@ class SidebarComponent(QFrame):
         
         self.main_layout.addWidget(self.header_container)
         
-    def _setup_search(self):
-        self.search_widget = PremiumSearchWidget()
-        self.main_layout.addWidget(self.search_widget)
-        self.main_layout.addSpacing(12)
+
         
     def _setup_nav(self):
         self.nav_container = QWidget()
@@ -65,7 +60,6 @@ class SidebarComponent(QFrame):
             ("⌂", "Dashboard", 0),
             ("🗺", "Academic Roadmap", 4),
             ("🗓", "Study Tasks", 2),
-            ("✦", "AI Mentor", 6),
             ("⚙", "Settings", 8),
         ]
         
@@ -157,7 +151,6 @@ class SidebarComponent(QFrame):
         # Skip complex opacity for now, just toggle visibility
         self.title_label.setVisible(not self.is_collapsed)
         self.user_info_container.setVisible(not self.is_collapsed)
-        self.search_widget.setCollapsed(self.is_collapsed)
         
         for btn in self.nav_buttons:
             btn.setCollapsed(self.is_collapsed)

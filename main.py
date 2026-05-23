@@ -3,31 +3,21 @@ import os
 from PyQt6.QtWidgets import *
 from PyQt6.QtCore import *
 from PyQt6.QtGui import *
-from config import *
+from core.config import *
 from database import crud
 from modules.sync_worker import worker
 
 # Authentication Pages
-from login import LoginPage
-from register import RegisterPage
+from pages.auth.login import LoginPage
+from pages.auth.register import RegisterPage
 
-# Main Application Pages
 from pages.dashboard import DashboardPage
 from pages.profile import ProfilePage
-from pages.learning import LearningPage
-from pages.community import CommunityPage
+from pages.study_tasks.smart_task_planner import SmartTaskPlanner
 from pages.settings import SettingsPage
-from pages.chat_ui import ChatPage
-from pages.course_detail import CourseDetailPage
-from pages.ai_mentor_ui import AIMentorPage
-from pages.recruitment import RecruitmentPage
-from pages.resume_builder import ResumeBuilderPage
-from pages.interview_simulator import InterviewSimulatorPage
 from pages.learning_roadmap import LearningRoadmapPage
-from pages.job_portal.job_portal_page import JobPortalPage as ModernJobPortalPage
-from command_palette import CommandPaletteOverlay
-from sidebar_component import SidebarComponent
-from neumorphic_components import NeumorphicFrame
+from ui_core.sidebar_component import SidebarComponent
+from ui_core.neumorphic_components import NeumorphicFrame
 
 
 class MainWindow(QMainWindow):
@@ -143,10 +133,6 @@ class MainWindow(QMainWindow):
         # Force layout system evaluation on tab switch
         self.pages_container.currentChanged.connect(self._force_layout_recalc)
 
-        # Command Palette
-        self.command_palette = CommandPaletteOverlay(self)
-        self.command_palette.hide()
-
         # Global Styles
         self.setStyleSheet(get_global_stylesheet())
 
@@ -157,16 +143,16 @@ class MainWindow(QMainWindow):
 
     def _init_pages(self):
         self.pages_container.addWidget(DashboardPage(controller=self))  # 0
-        self.pages_container.addWidget(ResumeBuilderPage(controller=self))  # 1
-        self.pages_container.addWidget(LearningPage(controller=self))  # 2
-        self.pages_container.addWidget(CommunityPage(controller=self))  # 3
+        self.pages_container.addWidget(QWidget())  # 1 placeholder for index keeping
+        self.pages_container.addWidget(SmartTaskPlanner(controller=self))  # 2
+        self.pages_container.addWidget(QWidget())  # 3 placeholder
         self.pages_container.addWidget(LearningRoadmapPage(controller=self))  # 4
-        self.pages_container.addWidget(InterviewSimulatorPage(controller=self))  # 5
-        self.pages_container.addWidget(AIMentorPage(controller=self))  # 6
-        self.pages_container.addWidget(CourseDetailPage(controller=self))  # 7
+        self.pages_container.addWidget(QWidget())  # 5 placeholder
+        self.pages_container.addWidget(QWidget())  # 6 placeholder
+        self.pages_container.addWidget(QWidget())  # 7 placeholder
         self.pages_container.addWidget(SettingsPage(controller=self))  # 8
-        self.pages_container.addWidget(ChatPage(controller=self))  # 9
-        self.pages_container.addWidget(ModernJobPortalPage(controller=self))  # 10
+        self.pages_container.addWidget(QWidget())  # 9 placeholder
+        self.pages_container.addWidget(QWidget())  # 10 placeholder
         self.pages_container.addWidget(ProfilePage(controller=self))  # 11
 
     def show_page(self, idx_or_name):
@@ -175,16 +161,9 @@ class MainWindow(QMainWindow):
         else:
             mapping = {
                 "DashboardPage": 0,
-                "ResumeBuilderPage": 1,
-                "LearningPage": 2,
-                "CommunityPage": 3,
+                "SmartTaskPlanner": 2,
                 "LearningRoadmapPage": 4,
-                "InterviewSimulatorPage": 5,
-                "AIMentorPage": 6,
-                "CourseDetailPage": 7,
                 "SettingsPage": 8,
-                "ChatPage": 9,
-                "JobPortalPage": 10,
                 "ProfilePage": 11
             }
             idx = mapping.get(idx_or_name, 0)
@@ -206,11 +185,6 @@ class MainWindow(QMainWindow):
             active_widget.updateGeometry()
         self.pages_wrapper.content_layout.invalidate()
         self.pages_wrapper.content_layout.activate()
-
-    def keyPressEvent(self, event):
-        if event.modifiers() == Qt.KeyboardModifier.ControlModifier and event.key() == Qt.Key.Key_K:
-            self.command_palette.show_centered()
-        super().keyPressEvent(event)
 
     def closeEvent(self, event):
         print("Shutting down Application...")
