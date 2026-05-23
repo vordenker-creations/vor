@@ -21,6 +21,10 @@ class AIGenerateWorker(QThread):
             has_contexts = len(dirty_data.get("student_context", [])) > 0
             
             if has_students or has_contexts:
+                # Sanitize local context status to avoid syncing PENDING state
+                for c in dirty_data.get("student_context", []):
+                    if c.get("ai_status") == "PENDING":
+                        c["ai_status"] = "EMPTY"
                 # Sync dirty data to backend first
                 client.sync(self.token, dirty_data)
                 
