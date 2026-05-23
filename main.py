@@ -305,6 +305,15 @@ class AppController(QStackedWidget):
         self.setCurrentIndex(0)
 
 
+import traceback
+
+def global_exception_handler(exc_type, exc_value, exc_traceback):
+    """Handle unhandled exceptions to prevent PyQt6 from crashing with SIGABRT"""
+    error_msg = "".join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+    print(f"Unhandled Exception:\n{error_msg}", file=sys.stderr)
+
+sys.excepthook = global_exception_handler
+
 if __name__ == "__main__":
     os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
     app = QApplication(sys.argv)

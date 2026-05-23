@@ -460,7 +460,10 @@ class ProfilePage(QWidget):
         add_field(grid_personal, 0, "Display Name:", self.edit_display_name)
         
         self.combo_student_year = QComboBox()
-        self.combo_student_year.addItems(["1st Year", "2nd Year", "3rd Year", "4th Year"])
+        self.combo_student_year.addItem("1st Year", 1)
+        self.combo_student_year.addItem("2nd Year", 2)
+        self.combo_student_year.addItem("3rd Year", 3)
+        self.combo_student_year.addItem("4th Year", 4)
         add_field(grid_personal, 1, "Student Year:", self.combo_student_year)
         
         self.edit_major = QLineEdit()
@@ -960,7 +963,7 @@ class ProfilePage(QWidget):
         
         display_name = self.edit_display_name.text().strip()
         major = self.edit_major.text().strip()
-        student_year = self.combo_student_year.currentData()
+        student_year = self.combo_student_year.currentData() or 1
         
         # Validate GPA
         try:
