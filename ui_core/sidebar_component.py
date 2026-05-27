@@ -60,6 +60,7 @@ class SidebarComponent(QFrame):
             ("⌂", "Dashboard", 0),
             ("🗺", "Academic Roadmap", 4),
             ("🗓", "Study Tasks", 2),
+            ("💼", "Recruitment", 6),
             ("⚙", "Settings", 8),
         ]
         

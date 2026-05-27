@@ -16,6 +16,7 @@ from pages.profile import ProfilePage
 from pages.study_tasks.smart_task_planner import SmartTaskPlanner
 from pages.settings import SettingsPage
 from pages.learning_roadmap import LearningRoadmapPage
+from pages.recruitment import RecruitmentPage
 from ui_core.sidebar_component import SidebarComponent
 from ui_core.neumorphic_components import NeumorphicFrame
 
@@ -148,7 +149,7 @@ class MainWindow(QMainWindow):
         self.pages_container.addWidget(QWidget())  # 3 placeholder
         self.pages_container.addWidget(LearningRoadmapPage(controller=self))  # 4
         self.pages_container.addWidget(QWidget())  # 5 placeholder
-        self.pages_container.addWidget(QWidget())  # 6 placeholder
+        self.pages_container.addWidget(RecruitmentPage(controller=self))  # 6
         self.pages_container.addWidget(QWidget())  # 7 placeholder
         self.pages_container.addWidget(SettingsPage(controller=self))  # 8
         self.pages_container.addWidget(QWidget())  # 9 placeholder
@@ -163,6 +164,7 @@ class MainWindow(QMainWindow):
                 "DashboardPage": 0,
                 "SmartTaskPlanner": 2,
                 "LearningRoadmapPage": 4,
+                "RecruitmentPage": 6,
                 "SettingsPage": 8,
                 "ProfilePage": 11
             }
@@ -189,6 +191,13 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event):
         print("Shutting down Application...")
         worker.stop_worker()
+        # Clean up recruitment page background threads
+        try:
+            recruitment_page = self.pages_container.widget(6)
+            if recruitment_page and hasattr(recruitment_page, "cleanup"):
+                recruitment_page.cleanup()
+        except Exception as e:
+            print(f"Error during recruitment cleanup: {e}")
         event.accept()
 
 

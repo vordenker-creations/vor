@@ -5,3 +5,5 @@ tkinter_backup
 database/client_store.db
 phase4_deploy/
 phase5_deploy/
+news_bridge/data.db
+*.log
