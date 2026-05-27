@@ -2,12 +2,11 @@ import os
 import sys
 from PyQt6.QtCore import QThread, pyqtSignal
 
-# Ensure workspace root is in sys.path so weblink is importable from anywhere
+# Ensure vor directory is in sys.path so weblink is importable from anywhere inside vor
 current_dir = os.path.dirname(os.path.abspath(__file__)) # .../vor/modules
 parent_dir = os.path.dirname(current_dir)                # .../vor
-workspace_root = os.path.dirname(parent_dir)             # ... (workspace root)
-if workspace_root not in sys.path:
-    sys.path.insert(0, workspace_root)
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
 
 from weblink import web_client
 
