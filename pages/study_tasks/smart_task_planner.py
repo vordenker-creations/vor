@@ -26,8 +26,8 @@ class PlannerToolbar(QFrame):
         
         title_h = QHBoxLayout()
         title_h.setSpacing(12)
-        title = QLabel("Weekly Timetable & Study Plan")
-        title.setStyleSheet("font-size: 18px; font-weight: 800; color: #0F172A; border: none;")
+        title = QLabel("Study Tasks")
+        title.setStyleSheet("font-size: 20px; font-weight: 800; color: #0F172A; border: none;")
         
         badge = QLabel("Academic mode")
         badge.setStyleSheet("font-size: 10px; font-weight: 800; color: #10B981; background: #F0FDF4; padding: 2px 8px; border-radius: 6px; border: 1px solid #BBF7D0;")
@@ -195,7 +195,7 @@ class ClassBlock(QFrame):
         h_header.setContentsMargins(0, 0, 0, 0)
         
         badge = QLabel(block_type.replace("_", " ").title())
-        badge.setStyleSheet(f"color: {text}; font-size: 9px; font-weight: 800; text-transform: uppercase; border: 1px solid {border}; border-radius: 4px; padding: 2px 4px; background: rgba(255,255,255,0.5);")
+        badge.setStyleSheet(f"color: {text}; font-size: 9px; font-weight: 800; text-transform: uppercase; border: 1px solid {border}; border-radius: 6px; padding: 4px 6px; background: rgba(255,255,255,0.7);")
         h_header.addWidget(badge, alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
         
         h_header.addStretch()
@@ -403,7 +403,7 @@ class SmartTaskPlanner(QWidget):
             self.grid_layout.setColumnStretch(col + 1, 1)
             
         for period in range(1, 11):
-            p_lbl = QLabel(f"Tiết {period}")
+            p_lbl = QLabel(f"Period {period}")
             p_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
             p_lbl.setStyleSheet("color: #64748B; font-weight: 600; font-size: 11px; padding: 4px;")
             self.grid_layout.addWidget(p_lbl, period, 0)

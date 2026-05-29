@@ -13,13 +13,19 @@ from core.i18n import _
 class ModernCard(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setObjectName("ModernCard")
         self.setStyleSheet("""
-            QFrame {
+            #ModernCard {
                 background-color: #FFFFFF;
                 border: 1px solid #E2E8F0;
                 border-radius: 12px;
             }
         """)
+        shadow = QGraphicsDropShadowEffect()
+        shadow.setBlurRadius(15)
+        shadow.setColor(QColor(15, 23, 42, 10))
+        shadow.setOffset(0, 4)
+        self.setGraphicsEffect(shadow)
         self.internal_layout = QVBoxLayout(self)
         self.internal_layout.setContentsMargins(20, 20, 20, 20)
 
@@ -28,13 +34,14 @@ class ClickableCard(ModernCard):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setObjectName("ClickableCard")
         self.setStyleSheet("""
-            QFrame {
+            #ClickableCard {
                 background-color: #FFFFFF;
                 border: 1px solid #E2E8F0;
                 border-radius: 12px;
             }
-            QFrame:hover {
+            #ClickableCard:hover {
                 background-color: #F8FAFC;
                 border: 1px solid #CBD5E1;
             }
@@ -81,7 +88,7 @@ class SearchBar(QFrame):
 class KPICard(ModernCard):
     def __init__(self, title, value, change, color="#38BDF8", parent=None):
         super().__init__(parent)
-        self.setFixedHeight(110)
+        self.setFixedHeight(130)
         self.internal_layout.setSpacing(4)
         
         lbl_title = QLabel(title)
@@ -449,6 +456,41 @@ class DashboardOverviewView(QWidget):
         
         layout.addWidget(kpi_row)
         
+        # NEW Skill Proficiency Radar
+        skill_card = ModernCard()
+        sl = skill_card.internal_layout
+        sl.setSpacing(12)
+        sl.setContentsMargins(24, 20, 24, 20)
+        
+        s_title = QLabel("Skill Proficiency Radar")
+        s_title.setStyleSheet("color: #0F172A; font-size: 16px; font-weight: 800;")
+        sl.addWidget(s_title)
+        
+        skills = [("Python", 85, "#38BDF8"), ("Java", 65, "#10B981"), ("C++", 50, "#F59E0B"), ("SQL Server", 75, "#8B5CF6")]
+        
+        for name, val, color in skills:
+            row = QWidget()
+            rl = QHBoxLayout(row)
+            rl.setContentsMargins(0, 0, 0, 0)
+            rl.setSpacing(16)
+            
+            lbl = QLabel(name)
+            lbl.setFixedWidth(80)
+            lbl.setStyleSheet("color: #475569; font-size: 13px; font-weight: 600;")
+            
+            bar = QProgressBar()
+            bar.setFixedHeight(6)
+            bar.setRange(0, 100)
+            bar.setValue(val)
+            bar.setTextVisible(False)
+            bar.setStyleSheet(f"QProgressBar {{ background: #F1F5F9; border-radius: 3px; border: none; }} QProgressBar::chunk {{ background: {color}; border-radius: 3px; }}")
+            
+            rl.addWidget(lbl)
+            rl.addWidget(bar)
+            sl.addWidget(row)
+            
+        layout.addWidget(skill_card)
+        
         # 3. Main content row (Roadmap timeline + Weekly Schedule)
         content_row = QWidget()
         cr_layout = QHBoxLayout(content_row)
@@ -539,38 +581,48 @@ class DashboardOverviewView(QWidget):
                     break
                 
                 w = QFrame()
-                w.setStyleSheet("background-color: #F8FAFC; border-radius: 8px; border: 1px solid #E2E8F0;")
+                w.setStyleSheet("""
+                    QFrame {
+                        background-color: #FFFFFF; 
+                        border-radius: 8px; 
+                        border: 1px solid #E2E8F0;
+                    }
+                    QFrame:hover {
+                        background-color: #F8FAFC;
+                        border-color: #CBD5E1;
+                    }
+                """)
                 l = QHBoxLayout(w)
                 l.setContentsMargins(12, 12, 12, 12)
                 l.setSpacing(12)
                 
-                chk = QCheckBox()
-                chk.setStyleSheet("QCheckBox::indicator { width: 18px; height: 18px; }")
-                chk.setCursor(Qt.CursorShape.PointingHandCursor)
-                chk.clicked.connect(lambda checked, td=t_orig, is_ai_flag=is_ai: self._complete_task(td, is_ai_flag))
-                l.addWidget(chk)
+                chk_lbl = QLabel("⭕")
+                chk_lbl.setStyleSheet("font-size: 18px; color: #94A3B8; background: transparent; border: none;")
+                chk_lbl.setCursor(Qt.CursorShape.PointingHandCursor)
+                chk_lbl.mousePressEvent = lambda e, td=t_orig, is_ai_flag=is_ai: self._complete_task(td, is_ai_flag)
+                l.addWidget(chk_lbl)
                 
                 v_text = QVBoxLayout()
                 v_text.setSpacing(2)
                 
                 task_title = t_orig.get('title', 'Untitled Task')
                 lbl = QLabel(task_title)
-                lbl.setStyleSheet("color: #1E293B; font-size: 13px; font-weight: 600; border: none; background: transparent;")
+                lbl.setStyleSheet("color: #0F172A; font-size: 14px; font-weight: 700; border: none; background: transparent;")
                 lbl.setWordWrap(True)
                 lbl.setCursor(Qt.CursorShape.PointingHandCursor)
                 lbl.mousePressEvent = lambda e, td=t_orig: self._goto_tasks()
                 v_text.addWidget(lbl)
                 
                 lbl_sub = QLabel(f"Scheduled: {day}")
-                lbl_sub.setStyleSheet("color: #64748B; font-size: 11px; border: none; background: transparent;")
+                lbl_sub.setStyleSheet("color: #64748B; font-size: 12px; border: none; background: transparent;")
                 v_text.addWidget(lbl_sub)
                 
                 l.addLayout(v_text)
                 l.addStretch()
                 
-                badge_type = t_orig.get("type", "study_task" if is_ai else "self_study").title()
-                badge = QLabel(badge_type.replace("_", " "))
-                badge.setStyleSheet("color: #0284C7; background: #E0F2FE; font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 6px; border: none;")
+                badge_type = "[🔥 High]"
+                badge = QLabel(badge_type)
+                badge.setStyleSheet("color: #EF4444; background: #FEF2F2; font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 6px; border: none;")
                 l.addWidget(badge, alignment=Qt.AlignmentFlag.AlignTop)
                 
                 tl.addWidget(w)
@@ -853,33 +905,44 @@ class DashboardOverviewView(QWidget):
         layout.addWidget(ai)
         
         # Notifications
-        notif = ModernCard()
-        nl = notif.internal_layout
+        notif = QFrame()
+        notif.setStyleSheet("background: transparent; border: none;")
+        nl = QVBoxLayout(notif)
+        nl.setContentsMargins(0, 0, 0, 0)
+        nl.setSpacing(16)
+        
         t2 = QLabel("Notifications")
-        t2.setStyleSheet("color: #0F172A; font-size: 15px; font-weight: 700;")
+        t2.setStyleSheet("color: #0F172A; font-size: 16px; font-weight: 800;")
         nl.addWidget(t2)
         
         def add_n(t, time, icon="📌"):
-            w = QWidget()
+            w = QFrame()
+            w.setStyleSheet("background: #FFFFFF; border-radius: 12px; padding: 12px;")
             l = QHBoxLayout(w)
-            l.setContentsMargins(0, 4, 0, 4)
-            l.setSpacing(10)
+            l.setContentsMargins(0, 0, 0, 0)
+            l.setSpacing(12)
             
             i = QLabel(icon)
-            i.setFixedSize(28, 28)
+            i.setFixedSize(36, 36)
             i.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            i.setStyleSheet("font-size: 14px; background: #F1F5F9; border-radius: 6px; font-family: 'Segoe UI Emoji', 'Apple Color Emoji';")
+            i.setStyleSheet("font-size: 16px; background: #F1F5F9; border-radius: 18px; font-family: 'Segoe UI Emoji', 'Apple Color Emoji';")
             l.addWidget(i, alignment=Qt.AlignmentFlag.AlignTop)
             
             v = QVBoxLayout()
-            v.setSpacing(1)
+            v.setSpacing(4)
             txt = QLabel(t)
-            txt.setStyleSheet("color: #334155; font-size: 12px; font-weight: 500;")
+            txt.setStyleSheet("color: #1E293B; font-size: 13px; font-weight: 600; border: none; background: transparent;")
             txt.setWordWrap(True)
             v.addWidget(txt)
+            
             tm = QLabel(time)
-            tm.setStyleSheet("color: #94A3B8; font-size: 10px;")
-            v.addWidget(tm)
+            tm.setStyleSheet("color: #64748B; background: #F1F5F9; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 8px;")
+            
+            h_tm = QHBoxLayout()
+            h_tm.addWidget(tm)
+            h_tm.addStretch()
+            v.addLayout(h_tm)
+            
             l.addLayout(v)
             nl.addWidget(w)
             

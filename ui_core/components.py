@@ -4,36 +4,46 @@ from PyQt6.QtGui import QColor, QPainter, QPen, QBrush, QCursor
 from core.config import COLOR_BG_CARD, COLOR_BORDER, COLOR_PRIMARY, COLOR_BG_APP, COLOR_TEXT_MAIN, COLOR_TEXT_SUB, COLOR_PRIMARY_LIGHT
 from ui_core.neumorphic_components import NeumorphicFrame
 
-class SaaSCard(NeumorphicFrame):
-    def __init__(self, parent=None, radius=20, offset=4, blur=20, border_color=None):
-        super().__init__(radius=radius, offset=offset, blur=blur, parent=parent)
-        self.internal_layout = self.content_layout
-        self.internal_layout.setContentsMargins(24, 24, 24, 24)
+class SaaSCard(QFrame):
+    def __init__(self, parent=None, radius=12, offset=4, blur=15, border_color=None):
+        super().__init__(parent)
+        self.setObjectName("SaaSCard")
+        self.setStyleSheet(f"""
+            #SaaSCard {{
+                background-color: #FFFFFF;
+                border: 1px solid #E2E8F0;
+                border-radius: {radius}px;
+            }}
+        """)
+        shadow = QGraphicsDropShadowEffect(self)
+        shadow.setBlurRadius(blur)
+        shadow.setColor(QColor(15, 23, 42, 10))
+        shadow.setOffset(0, offset)
+        self.setGraphicsEffect(shadow)
         
-        self.dark_shadow.setBlurRadius(30)
-        self.dark_shadow.setColor(QColor(18, 55, 105, 20))
-        self.dark_shadow.setOffset(0, 8)
+        self.internal_layout = QVBoxLayout(self)
+        self.internal_layout.setContentsMargins(20, 20, 20, 20)
+        self.internal_layout.setSpacing(16)
         
+        self.dark_shadow = shadow
         self.anim_shadow_blur = QPropertyAnimation(self.dark_shadow, b"blurRadius")
         self.anim_shadow_offset = QPropertyAnimation(self.dark_shadow, b"yOffset")
         self.anim_shadow_blur.setDuration(250)
         self.anim_shadow_offset.setDuration(250)
-        self.anim_shadow_blur.setEasingCurve(QEasingCurve.Type.OutCubic)
-        self.anim_shadow_offset.setEasingCurve(QEasingCurve.Type.OutCubic)
         
     def _update_style(self, b_color):
         pass
         
     def enterEvent(self, event):
-        self.anim_shadow_blur.setEndValue(35)
-        self.anim_shadow_offset.setEndValue(8.0)
+        self.anim_shadow_blur.setEndValue(25)
+        self.anim_shadow_offset.setEndValue(6.0)
         self.anim_shadow_blur.start()
         self.anim_shadow_offset.start()
         super().enterEvent(event)
         
     def leaveEvent(self, event):
-        self.anim_shadow_blur.setEndValue(30)
-        self.anim_shadow_offset.setEndValue(8.0)
+        self.anim_shadow_blur.setEndValue(15)
+        self.anim_shadow_offset.setEndValue(4.0)
         self.anim_shadow_blur.start()
         self.anim_shadow_offset.start()
         super().leaveEvent(event)

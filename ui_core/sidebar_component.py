@@ -60,12 +60,19 @@ class SidebarComponent(QFrame):
             ("⌂", "Dashboard", 0),
             ("🗺", "Academic Roadmap", 4),
             ("🗓", "Study Tasks", 2),
-            ("💼", "Recruitment", 6),
+            ("💻", "Code & Algorithm Lab", 3),
+            ("🎙", "Mock Interviews", 5),
+            ("💼", "Project Portfolio", 7),
             ("⚙", "Settings", 8),
         ]
         
         self.nav_buttons = []
         for icon, label, idx in nav_items:
+            if idx == 8:
+                divider = QFrame()
+                divider.setFrameShape(QFrame.Shape.HLine)
+                divider.setStyleSheet("background-color: #E2E8F0; max-height: 1px; margin: 4px 10px; border: none;")
+                self.nav_layout.addWidget(divider)
             btn = AnimatedNavButton(icon, label)
             btn.clicked.connect(lambda ch, i=idx: self.navigation_requested.emit(i))
             self.button_group.addButton(btn, idx)

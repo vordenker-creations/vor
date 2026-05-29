@@ -56,9 +56,9 @@ class AnimatedNavButton(QPushButton):
         # Tooltip for collapsed state
         self.tooltip = None
 
-    def update_style(self):
-        active_bg = "#F0F9FF" if self.isChecked() else "transparent"
-        active_color = "#0284C7" if self.isChecked() else "#64748B"
+    def update_style(self, hovered=False):
+        active_bg = "#F0F9FF" if self.isChecked() else ("#F1F5F9" if hovered else "transparent")
+        active_color = "#0284C7" if self.isChecked() else ("#334155" if hovered else "#64748B")
         font_weight = "600" if self.isChecked() else "500"
         
         self.setStyleSheet(f"""
@@ -66,9 +66,6 @@ class AnimatedNavButton(QPushButton):
                 background-color: {active_bg};
                 border-radius: 14px;
                 border: none;
-            }}
-            AnimatedNavButton:hover {{
-                background-color: #F1F5F9;
             }}
         """)
         self.text_label.setStyleSheet(f"font-size: 14px; font-weight: {font_weight}; color: {active_color}; border: none; background: transparent;")
@@ -141,6 +138,7 @@ class AnimatedNavButton(QPushButton):
         self.anim_group.start()
 
     def enterEvent(self, event):
+        self.update_style(hovered=True)
         if self.is_collapsed:
             if not self.tooltip:
                 self.tooltip = ModernTooltip(self.label_text, self.window())
@@ -150,6 +148,7 @@ class AnimatedNavButton(QPushButton):
         super().enterEvent(event)
 
     def leaveEvent(self, event):
+        self.update_style(hovered=False)
         if self.tooltip:
             self.tooltip.hide_tooltip()
         super().leaveEvent(event)

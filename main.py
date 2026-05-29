@@ -17,6 +17,9 @@ from pages.study_tasks.smart_task_planner import SmartTaskPlanner
 from pages.settings import SettingsPage
 from pages.learning_roadmap import LearningRoadmapPage
 from pages.recruitment import RecruitmentPage
+from pages.code_lab import CodeLabPage
+from pages.mock_interviews import MockInterviewsPage
+from pages.project_portfolio import ProjectPortfolioPage
 from ui_core.sidebar_component import SidebarComponent
 from ui_core.neumorphic_components import NeumorphicFrame
 
@@ -146,11 +149,11 @@ class MainWindow(QMainWindow):
         self.pages_container.addWidget(DashboardPage(controller=self))  # 0
         self.pages_container.addWidget(QWidget())  # 1 placeholder for index keeping
         self.pages_container.addWidget(SmartTaskPlanner(controller=self))  # 2
-        self.pages_container.addWidget(QWidget())  # 3 placeholder
+        self.pages_container.addWidget(CodeLabPage(controller=self))  # 3
         self.pages_container.addWidget(LearningRoadmapPage(controller=self))  # 4
-        self.pages_container.addWidget(QWidget())  # 5 placeholder
+        self.pages_container.addWidget(MockInterviewsPage(controller=self))  # 5
         self.pages_container.addWidget(RecruitmentPage(controller=self))  # 6
-        self.pages_container.addWidget(QWidget())  # 7 placeholder
+        self.pages_container.addWidget(ProjectPortfolioPage(controller=self))  # 7
         self.pages_container.addWidget(SettingsPage(controller=self))  # 8
         self.pages_container.addWidget(QWidget())  # 9 placeholder
         self.pages_container.addWidget(QWidget())  # 10 placeholder
@@ -163,8 +166,11 @@ class MainWindow(QMainWindow):
             mapping = {
                 "DashboardPage": 0,
                 "SmartTaskPlanner": 2,
+                "CodeAlgorithmLab": 3,
                 "LearningRoadmapPage": 4,
+                "MockInterviews": 5,
                 "RecruitmentPage": 6,
+                "ProjectPortfolio": 7,
                 "SettingsPage": 8,
                 "ProfilePage": 11
             }
@@ -200,6 +206,16 @@ class MainWindow(QMainWindow):
             print(f"Error during recruitment cleanup: {e}")
         event.accept()
 
+
+class ComingSoonPage(QWidget):
+    def __init__(self, title_text="Coming Soon", parent=None):
+        super().__init__(parent)
+        self.setStyleSheet("background-color: #F8FAFC;")
+        layout = QVBoxLayout(self)
+        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        lbl = QLabel(title_text)
+        lbl.setStyleSheet("color: #64748B; font-size: 24px; font-weight: 700; background: transparent; border: none;")
+        layout.addWidget(lbl)
 
 class LoadingPage(QWidget):
     def __init__(self, parent=None):

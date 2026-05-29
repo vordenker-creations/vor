@@ -107,11 +107,11 @@ class ProjectCard(ShadowCard):
         btns_layout = QHBoxLayout()
         btns_layout.setSpacing(12)
         
-        gh_btn = QPushButton("GitHub")
+        gh_btn = QPushButton("View Material")
         gh_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         gh_btn.setStyleSheet("background: #0F172A; color: white; border-radius: 8px; height: 32px; font-weight: 600; font-size: 12px; padding: 0 12px;")
         
-        demo_btn = QPushButton("Live Demo")
+        demo_btn = QPushButton("Syllabus")
         demo_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         demo_btn.setStyleSheet("background: white; color: #0F172A; border: 1px solid #E2E8F0; border-radius: 8px; height: 32px; font-weight: 600; font-size: 12px; padding: 0 12px;")
         
@@ -321,7 +321,7 @@ class ProfilePage(QWidget):
         # 2. Tab 2: Portfolio View (Scrollable workspace)
         self.portfolio_tab = QWidget()
         self.init_portfolio_tab()
-        self.tabs.addTab(self.portfolio_tab, "Portfolio View")
+        self.tabs.addTab(self.portfolio_tab, "AI Academic Plan")
         
         self.content_layout.addWidget(self.tabs, 1)
         
@@ -343,7 +343,7 @@ class ProfilePage(QWidget):
         layout.setContentsMargins(24, 0, 24, 0)
         layout.setSpacing(20)
         
-        breadcrumbs = QLabel("My Profile / Portfolio")
+        breadcrumbs = QLabel("AI Academic Plan")
         breadcrumbs.setStyleSheet("color: #64748B; font-weight: 600; font-size: 14px;")
         layout.addWidget(breadcrumbs)
         
@@ -360,7 +360,7 @@ class ProfilePage(QWidget):
         """)
         edit_btn.clicked.connect(lambda: self.tabs.setCurrentIndex(0))
         
-        export_btn = QPushButton("View Portfolio")
+        export_btn = QPushButton("View Plan")
         export_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         export_btn.setStyleSheet("""
             QPushButton {
@@ -571,7 +571,7 @@ class ProfilePage(QWidget):
         if ai_plan and isinstance(ai_plan, dict):
             bio = ai_plan.get("student_summary", "Passionate about creating elegant solutions through code.")
         else:
-            bio = "Save your profile context and click Generate Plan to build your dynamic AI Portfolio timeline."
+            bio = "Save your profile context and click Generate Plan to build your dynamic AI Academic Plan."
             
         content = QWidget()
         c_layout = QVBoxLayout(content)
@@ -857,7 +857,7 @@ class ProfilePage(QWidget):
 
     def _populate_insights(self, layout):
         student = crud.get_current_student()
-        recommendation_text = "Your portfolio is ready. Update your profile info to recalculate insights."
+        recommendation_text = "Your plan is ready. Update your profile info to recalculate insights."
         
         ai_plan = None
         if student:
@@ -904,7 +904,7 @@ class ProfilePage(QWidget):
                     goals.append((item.get("title", ""), "Target"))
             
         if not goals:
-            goals = [("AWS Certification", "Oct 24"), ("Portfolio V2 Launch", "Nov 12")]
+            goals = [("AWS Certification", "Oct 24"), ("Academic Plan V2", "Nov 12")]
             
         for goal, date in goals:
             g_row = QHBoxLayout()
