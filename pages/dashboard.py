@@ -351,7 +351,7 @@ class DashboardOverviewView(QWidget):
         left_layout.setSpacing(0)
         
         first_name = student.get("display_name") or student.get("username") or "Student"
-        greeting = QLabel(f"Good Morning, {first_name}.")
+        greeting = QLabel(f"Hello there, {first_name}.")
         greeting.setStyleSheet("color: white; font-size: 26px; font-weight: 800; letter-spacing: -1px; background: transparent;")
         
         summary_text = ai_plan.get("student_summary") or "Your academic plan is ready."
