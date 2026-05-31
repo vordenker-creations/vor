@@ -62,6 +62,7 @@ class SidebarComponent(QFrame):
             ("🗓", "Study Tasks", 2),
             ("💻", "Code & Algorithm Lab", 3),
             ("🎙", "Mock Interviews", 5),
+            ("🏢", "Recruitment", 6),
             ("💼", "Project Portfolio", 7),
             ("⚙", "Settings", 8),
         ]
