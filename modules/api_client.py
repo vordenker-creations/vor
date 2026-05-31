@@ -100,6 +100,26 @@ class APIClient:
         except requests.exceptions.RequestException as e:
             raise APIClientError(f"Network error: {str(e)}")
 
+    def get_sync_context(self, token):
+        """Fetches the authenticated student's full profile and context from the server.
+        
+        GET /api/v1/sync/context
+        """
+        headers = {"Authorization": f"Bearer {token}"}
+        try:
+            url = f"{self.base_url}/api/v1/sync/context"
+            response = requests.get(url, headers=headers, timeout=10)
+            if response.status_code == 200:
+                return response.json()
+            else:
+                try:
+                    err_detail = response.json().get("detail", "Failed to retrieve sync context")
+                except:
+                    err_detail = f"Server returned {response.status_code}"
+                raise APIClientError(err_detail, response.status_code)
+        except requests.exceptions.RequestException as e:
+            raise APIClientError(f"Network error: {str(e)}")
+
     def generate_plan(self, token):
         """Triggers AI plan generation for the authenticated student.
         

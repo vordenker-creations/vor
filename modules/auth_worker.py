@@ -33,8 +33,18 @@ class LoginWorker(QThread):
                 me_info = client.get_me(access_token)
                 major = me_info.get("major")
                 student_year = me_info.get("student_year", 1)
+                email = me_info.get("email", email)
+                username = me_info.get("username", username)
+                display_name = me_info.get("display_name", display_name)
             except Exception as e:
                 print(f"Auth worker: Optional fetch of profile failed: {e}")
+
+            # Pull sync context (includes raw_input, ai_status, ai_plan)
+            context_info = None
+            try:
+                context_info = client.get_sync_context(access_token)
+            except Exception as e:
+                print(f"Auth worker: Optional fetch of sync context failed: {e}")
 
             crud.save_session(
                 access_token=access_token,
@@ -46,6 +56,19 @@ class LoginWorker(QThread):
                 major=major,
                 student_year=student_year
             )
+
+            # Hydrate student context locally with is_dirty=0
+            if context_info and "context" in context_info:
+                ctx = context_info["context"]
+                crud.save_student_context(
+                    student_id=student_id,
+                    raw_input_dict=ctx.get("raw_input", {}),
+                    ai_plan_dict=ctx.get("ai_plan"),
+                    ai_status=ctx.get("ai_status", "EMPTY"),
+                    ai_last_error=ctx.get("ai_last_error"),
+                    is_dirty=0,
+                    updated_at=ctx.get("updated_at")
+                )
             
             # Retrieve consolidated student info
             student_info = crud.get_current_student()
@@ -91,6 +114,13 @@ class RegisterWorker(QThread):
             username = res["username"]
             display_name = res.get("display_name")
             
+            # Fetch sync context after registration to initialize state
+            context_info = None
+            try:
+                context_info = client.get_sync_context(access_token)
+            except Exception as e:
+                print(f"Auth worker register: Fetch of /sync/context failed: {e}")
+
             crud.save_session(
                 access_token=access_token,
                 token_type=token_type,
@@ -101,6 +131,19 @@ class RegisterWorker(QThread):
                 major=self.major,
                 student_year=self.student_year
             )
+
+            # Hydrate student context locally with is_dirty=0
+            if context_info and "context" in context_info:
+                ctx = context_info["context"]
+                crud.save_student_context(
+                    student_id=student_id,
+                    raw_input_dict=ctx.get("raw_input", {}),
+                    ai_plan_dict=ctx.get("ai_plan"),
+                    ai_status=ctx.get("ai_status", "EMPTY"),
+                    ai_last_error=ctx.get("ai_last_error"),
+                    is_dirty=0,
+                    updated_at=ctx.get("updated_at")
+                )
             
             self.success.emit(res)
         except APIClientError as e:
@@ -131,6 +174,13 @@ class SessionRestoreWorker(QThread):
             display_name = me_info.get("display_name")
             major = me_info.get("major")
             student_year = me_info.get("student_year", 1)
+
+            # Pull sync context (includes raw_input, ai_status, ai_plan)
+            context_info = None
+            try:
+                context_info = client.get_sync_context(self.token)
+            except Exception as e:
+                print(f"Auth worker session restore: Fetch of /sync/context failed: {e}")
             
             # Save back to SQLite to make sure they are aligned
             crud.save_student_profile(
@@ -142,6 +192,19 @@ class SessionRestoreWorker(QThread):
                 student_year=student_year,
                 is_dirty=0
             )
+
+            # Hydrate student context locally with is_dirty=0
+            if context_info and "context" in context_info:
+                ctx = context_info["context"]
+                crud.save_student_context(
+                    student_id=student_id,
+                    raw_input_dict=ctx.get("raw_input", {}),
+                    ai_plan_dict=ctx.get("ai_plan"),
+                    ai_status=ctx.get("ai_status", "EMPTY"),
+                    ai_last_error=ctx.get("ai_last_error"),
+                    is_dirty=0,
+                    updated_at=ctx.get("updated_at")
+                )
             
             student_info = crud.get_current_student()
             self.success.emit(student_info)
