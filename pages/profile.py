@@ -323,13 +323,17 @@ class ProfilePage(QWidget):
         self.init_portfolio_tab()
         self.tabs.addTab(self.portfolio_tab, "AI Academic Plan")
         
+        self.tabs.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.content_layout.addWidget(self.tabs, 1)
         
         # 3. Right Insights Panel (Collapsible)
         self.insights_content = self._setup_insights_panel()
-        self.insights_content.setFixedWidth(320)
+        self.insights_content.setMinimumWidth(350)
+        self.insights_content.setMaximumWidth(400)
         self.right_panel = CollapsiblePanel(self.insights_content, orientation="right")
-        self.content_layout.addWidget(self.right_panel)
+        self.right_panel.max_w = 400
+        self.right_panel.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding)
+        self.content_layout.addWidget(self.right_panel, 0)
         
         self.main_layout.addWidget(content_container, 1)
         
@@ -397,6 +401,8 @@ class ProfilePage(QWidget):
         form_scroll.setWidgetResizable(True)
         form_scroll.setFrameShape(QFrame.Shape.NoFrame)
         form_scroll.setStyleSheet("background: transparent;")
+        form_scroll.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        form_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         
         form_widget = QWidget()
         form_widget.setStyleSheet("background: transparent;")
@@ -430,13 +436,20 @@ class ProfilePage(QWidget):
             
             grid = QGridLayout()
             grid.setSpacing(12)
+            grid.setColumnStretch(0, 0)
+            grid.setColumnStretch(1, 1)
+            grid.setColumnMinimumWidth(0, 140)
             layout.addLayout(grid)
             return group, grid
             
         def add_field(grid, row, label_text, widget):
             lbl = QLabel(label_text)
             lbl.setStyleSheet("font-size: 13px; font-weight: 600; color: #475569; border: none;")
-            grid.addWidget(lbl, row, 0)
+            lbl.setWordWrap(True)
+            lbl.setMinimumWidth(100)
+            lbl.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
+            widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+            grid.addWidget(lbl, row, 0, Qt.AlignmentFlag.AlignTop)
             grid.addWidget(widget, row, 1)
             widget.setStyleSheet("""
                 QLineEdit, QTextEdit, QComboBox {
@@ -503,9 +516,10 @@ class ProfilePage(QWidget):
         fc_layout.addWidget(g_schedule)
         
         # Save & Sync Button
-        self.btn_save_sync = QPushButton("Save & Sync Profile")
+        self.btn_save_sync = QPushButton("Save Profile")
         self.btn_save_sync.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_save_sync.setFixedHeight(48)
+        self.btn_save_sync.setMinimumHeight(45)
+        self.btn_save_sync.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.btn_save_sync.setStyleSheet("""
             QPushButton {
                 background: #0F172A;
@@ -513,6 +527,7 @@ class ProfilePage(QWidget):
                 border-radius: 12px;
                 font-weight: 700;
                 font-size: 14px;
+                padding: 0 24px;
             }
             QPushButton:hover {
                 background: #1E293B;
@@ -909,8 +924,10 @@ class ProfilePage(QWidget):
         for goal, date in goals:
             g_row = QHBoxLayout()
             g_lbl = QLabel(goal)
+            g_lbl.setWordWrap(True)
             g_lbl.setStyleSheet("color: #475569; font-size: 13px; font-weight: 600;")
             d_lbl = QLabel(date)
+            d_lbl.setWordWrap(False)
             d_lbl.setStyleSheet("color: #38BDF8; font-size: 11px; font-weight: 700; background: #F0F9FF; padding: 2px 6px; border-radius: 4px;")
             g_row.addWidget(g_lbl); g_row.addStretch(); g_row.addWidget(d_lbl)
             goals_card.layout.addLayout(g_row)
