@@ -59,21 +59,56 @@ class KPICard(QFrame):
         l.addWidget(self.vlbl)
 
 class TimelineItem(QWidget):
-    def __init__(self, is_last=False, is_active=False, parent=None):
-        super().__init__(parent); self.setFixedWidth(50); self.is_last = is_last; self.is_active = is_active
+    def __init__(self, is_last=False, is_first=False, is_active=False, is_prev_active=False, parent=None):
+        super().__init__(parent); self.setFixedWidth(50); self.is_last = is_last; self.is_first = is_first; self.is_active = is_active; self.is_prev_active = is_prev_active
     def paintEvent(self, event):
         p = QPainter(self); p.setRenderHint(QPainter.RenderHint.Antialiasing); cx = self.width() // 2
-        if not self.is_last: p.setPen(QPen(QColor(COLOR_BORDER), 2)); p.drawLine(cx, 40, cx, self.height())
-        c = COLOR_PRIMARY if self.is_active else COLOR_BORDER
+        # Continuous vertical line ABOVE the dot (from previous node)
+        if not self.is_first:
+            lc = QColor(COLOR_SUCCESS) if self.is_prev_active else QColor("#CBD5E1")
+            p.setPen(QPen(lc, 2)); p.drawLine(cx, 0, cx, 25)
+        # Continuous vertical line BELOW the dot (to next node)
+        if not self.is_last:
+            lc = QColor(COLOR_SUCCESS) if self.is_active else QColor("#CBD5E1")
+            p.setPen(QPen(lc, 2)); p.drawLine(cx, 40, cx, self.height())
+        # Dot itself
+        c = COLOR_SUCCESS if self.is_active else "#CBD5E1"
         p.setBrush(QColor(c)); p.setPen(Qt.PenStyle.NoPen); p.drawEllipse(cx - 7, 25, 14, 14)
         if self.is_active: p.setBrush(Qt.BrushStyle.NoBrush); p.setPen(QPen(QColor(c), 1.5)); p.drawEllipse(cx - 12, 20, 24, 24)
 
+# Sub-task placeholder data keyed by milestone title keywords
+_SUBTASK_DATA = {
+    "default": [
+        (True,  "Complete Calculus 1"),
+        (False, "Master Object-Oriented Programming"),
+        (False, "Data Structures and Algorithms project"),
+    ]
+}
+
+class SubTaskChecklist(QWidget):
+    """Compact, read-only checklist previewing sub-tasks inside a milestone card."""
+    def __init__(self, items, parent=None):
+        super().__init__(parent)
+        self.setStyleSheet("background: #F8FAFC; border-radius: 10px; border: none;")
+        layout = QVBoxLayout(self); layout.setContentsMargins(16, 12, 16, 12); layout.setSpacing(8)
+        lbl = QLabel("SUB-TASKS"); lbl.setStyleSheet("color: #94A3B8; font-size: 10px; font-weight: 800; letter-spacing: 1px; border: none; background: transparent;"); layout.addWidget(lbl)
+        for done, text in items:
+            row = QHBoxLayout(); row.setSpacing(10)
+            icon = QLabel("✓" if done else "○")
+            icon.setFixedWidth(18)
+            if done: icon.setStyleSheet("color: #10B981; font-size: 14px; font-weight: 900; border: none; background: transparent;")
+            else: icon.setStyleSheet("color: #CBD5E1; font-size: 14px; font-weight: 600; border: none; background: transparent;")
+            task_lbl = QLabel(text)
+            if done: task_lbl.setStyleSheet("color: #94A3B8; font-size: 13px; font-weight: 600; text-decoration: line-through; border: none; background: transparent;")
+            else: task_lbl.setStyleSheet("color: #64748B; font-size: 13px; font-weight: 600; border: none; background: transparent;")
+            row.addWidget(icon); row.addWidget(task_lbl); row.addStretch(); layout.addLayout(row)
+
 class RoadmapCard(QWidget):
     clicked = pyqtSignal(dict)
-    def __init__(self, data, is_last=False, parent=None):
+    def __init__(self, data, is_last=False, is_first=False, is_prev_active=False, parent=None):
         super().__init__(parent); self.data = data; l = QHBoxLayout(self); l.setContentsMargins(0,0,0,0); l.setSpacing(0)
         s = data.get("status", "not_started").lower(); active = "progress" in s or "completed" in s
-        self.timeline = TimelineItem(is_last=is_last, is_active=active); l.addWidget(self.timeline)
+        self.timeline = TimelineItem(is_last=is_last, is_first=is_first, is_active=active, is_prev_active=is_prev_active); l.addWidget(self.timeline)
         self.card = SaaSCard(); self.card.setCursor(Qt.CursorShape.PointingHandCursor); cl = self.card.internal_layout; cl.setSpacing(20)
         tm = QHBoxLayout(); cat = "AI" if "AI" in data.get("title", "") else "DEV"; tag = QLabel(f"🤖 {cat}")
         tag.setStyleSheet(f"color: {COLOR_PRIMARY}; background: rgba(56,189,248,0.08); padding: 5px 12px; border-radius: 12px; font-size: 11px; font-weight: 800; border: 1px solid rgba(56,189,248,0.2);")
@@ -83,6 +118,9 @@ class RoadmapCard(QWidget):
         tl = QLabel(data.get("title", "Milestone")); tl.setStyleSheet(f"color: {COLOR_TEXT_MAIN}; font-size: 22px; font-weight: 800;"); tl.setWordWrap(True); cl.addWidget(tl)
         if data.get("ai_insight"):
             il = QLabel(data.get("ai_insight")); il.setWordWrap(True); il.setStyleSheet(f"color: {COLOR_TEXT_SUB}; font-size: 14px; line-height: 1.6;"); cl.addWidget(il)
+        # Sub-task Checklist Preview
+        subtasks = _SUBTASK_DATA.get("default", [])
+        if subtasks: cl.addWidget(SubTaskChecklist(subtasks))
         f = QHBoxLayout(); f.setSpacing(25); pc = QVBoxLayout(); pc.setSpacing(10); ph = QHBoxLayout()
         pt = QLabel("PROGRESS"); pt.setStyleSheet(f"color: {COLOR_TEXT_SUB}; font-size: 10px; font-weight: 800; letter-spacing: 0.5px;")
         pv = QLabel(f"{data.get('progress_pct', 0)}%"); pv.setStyleSheet(f"color: {COLOR_TEXT_MAIN}; font-size: 11px; font-weight: 900;")
@@ -110,8 +148,15 @@ class LearningRoadmapPage(QWidget):
         style = "background: white; border: 1px solid #E2E8F0; padding: 8px 16px; border-radius: 8px; font-weight: 600; color: #0F172A;"
         self.fcb = QComboBox(); self.fcb.addItems(["All Milestones", "Not Started", "In Progress", "Completed"]); self.fcb.setStyleSheet(style); self.fcb.currentIndexChanged.connect(self.refresh)
         self.scb = QComboBox(); self.scb.addItems(["Default Order", "Sort by Progress"]); self.scb.setStyleSheet(style); self.scb.currentIndexChanged.connect(self.refresh)
+        self.aibtn = QPushButton("✨ AI Auto-Plan"); self.aibtn.setFixedHeight(36); self.aibtn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.aibtn.setStyleSheet("background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #8B5CF6, stop:1 #3B82F6); color: white; border-radius: 8px; padding: 0 20px; font-weight: 700; border: none;")
+        ai_glow = QGraphicsDropShadowEffect(); ai_glow.setBlurRadius(16); ai_glow.setColor(QColor(139, 92, 246, 70)); ai_glow.setOffset(0, 4); self.aibtn.setGraphicsEffect(ai_glow)
+        self.aibtn.clicked.connect(self._ai_auto_plan)
         self.abtn = QPushButton("+ Add Milestone"); self.abtn.setFixedHeight(36); self.abtn.setCursor(Qt.CursorShape.PointingHandCursor); self.abtn.setStyleSheet("background: #0F172A; color: white; border-radius: 8px; padding: 0 20px; font-weight: 700; border: none;"); self.abtn.clicked.connect(self._add_milestone)
-        cs.addWidget(self.fcb); cs.addWidget(self.scb); cs.addWidget(self.abtn); l.addLayout(cs); self.main_layout.addWidget(h)
+        cs.addWidget(self.fcb); cs.addWidget(self.scb); cs.addWidget(self.aibtn); cs.addWidget(self.abtn); l.addLayout(cs); self.main_layout.addWidget(h)
+    def _ai_auto_plan(self):
+        # Placeholder for future AI Auto-Plan API call
+        pass
     def _add_milestone(self):
         d = MilestoneDialog(parent=self)
         if d.exec() and d.action != "delete": self._update_sqlite(None, d.get_data(), action="add")
@@ -151,6 +196,8 @@ class LearningRoadmapPage(QWidget):
         if si == 1: fl.sort(key=lambda x: int(x.get("progress_pct", 0)), reverse=True)
         if not fl: self._render_empty_state("No matching milestones."); return
         for i, m in enumerate(fl):
-            c = RoadmapCard(m, is_last=(i == len(fl) - 1)); c.clicked.connect(self._edit_milestone); self.cnl.addWidget(c)
+            s_prev = fl[i-1].get("status", "not_started").lower() if i > 0 else ""
+            prev_active = "progress" in s_prev or "completed" in s_prev
+            c = RoadmapCard(m, is_last=(i == len(fl) - 1), is_first=(i == 0), is_prev_active=prev_active); c.clicked.connect(self._edit_milestone); self.cnl.addWidget(c)
     def _render_empty_state(self, msg):
         l = QLabel(msg); l.setAlignment(Qt.AlignmentFlag.AlignCenter); l.setStyleSheet(f"color: {COLOR_TEXT_SUB}; font-size: 16px; padding: 60px;"); self.cnl.addWidget(l)

@@ -6,6 +6,7 @@ from PyQt6.QtGui import *
 from core.config import *
 from database import crud
 from modules.sync_worker import worker
+from modules.local_storage import local_data
 
 # Authentication Pages
 from pages.auth.login import LoginPage
@@ -20,6 +21,9 @@ from pages.recruitment import RecruitmentPage
 from pages.code_lab import CodeLabPage
 from pages.mock_interviews import MockInterviewsPage
 from pages.project_portfolio import ProjectPortfolioPage
+from pages.cv_builder import CVBuilderPage
+from pages.community_chat import CommunityChatPage
+from pages.skill_tree import SkillTreePage
 from ui_core.sidebar_component import SidebarComponent
 from ui_core.neumorphic_components import NeumorphicFrame
 
@@ -140,6 +144,15 @@ class MainWindow(QMainWindow):
         # Global Styles
         self.setStyleSheet(get_global_stylesheet())
 
+        # Restore last viewed tab from local storage
+        last_tab = local_data.get("ui.last_tab", 0)
+        if isinstance(last_tab, int) and 0 <= last_tab < self.pages_container.count():
+            self.pages_container.setCurrentIndex(last_tab)
+            # Also check the corresponding sidebar button
+            btn = self.sidebar.button_group.button(last_tab)
+            if btn:
+                btn.setChecked(True)
+
     def logout(self):
         crud.clear_session()
         if self.on_logout_callback:
@@ -155,9 +168,10 @@ class MainWindow(QMainWindow):
         self.pages_container.addWidget(RecruitmentPage(controller=self))  # 6
         self.pages_container.addWidget(ProjectPortfolioPage(controller=self))  # 7
         self.pages_container.addWidget(SettingsPage(controller=self))  # 8
-        self.pages_container.addWidget(QWidget())  # 9 placeholder
-        self.pages_container.addWidget(QWidget())  # 10 placeholder
+        self.pages_container.addWidget(CVBuilderPage(controller=self))  # 9 CV Builder
+        self.pages_container.addWidget(CommunityChatPage(controller=self))  # 10 Community Chat
         self.pages_container.addWidget(ProfilePage(controller=self))  # 11
+        self.pages_container.addWidget(SkillTreePage(controller=self))  # 12 AI Skill Tree
 
     def show_page(self, idx_or_name):
         if isinstance(idx_or_name, int):
@@ -172,10 +186,16 @@ class MainWindow(QMainWindow):
                 "RecruitmentPage": 6,
                 "ProjectPortfolio": 7,
                 "SettingsPage": 8,
-                "ProfilePage": 11
+                "CVBuilder": 9,
+                "CommunityChat": 10,
+                "ProfilePage": 11,
+                "SkillTree": 12
             }
             idx = mapping.get(idx_or_name, 0)
         self.pages_container.setCurrentIndex(idx)
+
+        # Persist last viewed tab
+        local_data.save("ui.last_tab", idx)
         
         # Trigger refresh on newly selected widget if defined
         active_widget = self.pages_container.widget(idx)
@@ -196,6 +216,8 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         print("Shutting down Application...")
+        # Persist local data to disk
+        local_data.save_to_disk()
         worker.stop_worker()
         # Clean up recruitment page background threads
         try:

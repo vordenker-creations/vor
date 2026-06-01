@@ -64,6 +64,9 @@ class SidebarComponent(QFrame):
             ("🎙", "Mock Interviews", 5),
             ("🏢", "Recruitment", 6),
             ("💼", "Project Portfolio", 7),
+            ("📄", "CV Builder", 9),
+            ("💬", "Community Chat", 10),
+            ("🌳", "AI Skill Tree", 12),
             ("⚙", "Settings", 8),
         ]
         
