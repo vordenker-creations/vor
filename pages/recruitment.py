@@ -368,9 +368,9 @@ class JobDetailPanel(QWidget):
         self.bottom_layout = QHBoxLayout(self.bottom_bar)
         self.bottom_layout.setContentsMargins(32, 16, 32, 16)
         
-        self.btn_apply = GlowingButton("Apply via Web", width=180, height=44)
-        self.btn_apply.setEnabled(False)
-        self.btn_apply.setToolTip("Applications are handled through the web portal.")
+        self.btn_apply = GlowingButton("Apply Now", width=180, height=44)
+        self.btn_apply.setEnabled(True)
+        self.btn_apply.clicked.connect(self._on_apply_clicked)
         self.btn_apply.setStyleSheet(self.btn_apply.styleSheet() + """
             QPushButton:disabled {
                 background: #E2E8F0;
@@ -480,6 +480,8 @@ class JobDetailPanel(QWidget):
         if not job_data:
             return
             
+        self.btn_apply.setEnabled(True)
+        self.btn_apply.setText("Apply Now")
         self.title_lbl.setText(job_data.get("title", ""))
         self.company_lbl.setText(job_data.get("company", ""))
         
@@ -725,6 +727,7 @@ class RecruitmentPage(QWidget):
         self.selected_job_data = None
         self.current_filter_type = "All"
         self.search_query = ""
+        self.applied_job_ids = []
         
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
@@ -813,6 +816,7 @@ class RecruitmentPage(QWidget):
         self.empty_state = JobEmptyState()
         self.skeleton = JobDetailSkeleton()
         self.detail_panel = JobDetailPanel()
+        self.detail_panel.apply_clicked.connect(self._on_apply_clicked)
         self.error_state = JobErrorState()
         self.error_state.retry_clicked.connect(self._on_retry_detail)
         
@@ -875,6 +879,12 @@ class RecruitmentPage(QWidget):
         self.fetch_jobs()
 
     def fetch_jobs(self):
+        # Fetch applied jobs in the background if logged in
+        from database import crud
+        student = crud.get_current_student()
+        if student and student.get("email"):
+            self.fetch_applied_jobs(student.get("email"))
+
         # Cancel previous list worker if it is running
         if hasattr(self, "jobs_worker") and self.jobs_worker.isRunning():
             try:
@@ -928,6 +938,29 @@ class RecruitmentPage(QWidget):
         error_card = ListErrorCard(error_msg, self)
         error_card.retry_clicked.connect(self.fetch_jobs)
         self.list_layout.addWidget(error_card)
+
+    def fetch_applied_jobs(self, email):
+        if hasattr(self, "applications_worker") and self.applications_worker.isRunning():
+            try:
+                self.applications_worker.success.disconnect()
+                self.applications_worker.error.disconnect()
+            except TypeError:
+                pass
+            self.applications_worker.terminate()
+            self.applications_worker.wait()
+
+        from modules.recruitment_worker import ApplicationsFetchWorker
+        self.applications_worker = ApplicationsFetchWorker(email)
+        self.applications_worker.success.connect(self._on_applications_loaded)
+        self.applications_worker.start()
+
+    def _on_applications_loaded(self, applied_ids):
+        self.applied_job_ids = applied_ids
+        if self.selected_job_data:
+            job_id = self.selected_job_data.get("id")
+            if job_id in self.applied_job_ids:
+                self.detail_panel.btn_apply.setEnabled(False)
+                self.detail_panel.btn_apply.setText("Applied")
 
     def clear_job_list(self):
         while self.list_layout.count():
@@ -1050,6 +1083,9 @@ class RecruitmentPage(QWidget):
             
         if self.selected_job_data and self.selected_job_data.get("id") == full_job_data.get("id"):
             self.detail_panel.update_job(full_job_data)
+            if full_job_data.get("id") in getattr(self, "applied_job_ids", []):
+                self.detail_panel.btn_apply.setEnabled(False)
+                self.detail_panel.btn_apply.setText("Applied")
             self.detail_stack.setCurrentIndex(2)
             AnimationEngine.fade_in_widget(self.detail_panel.content_widget, delay_ms=0, duration=400)
             
@@ -1062,8 +1098,58 @@ class RecruitmentPage(QWidget):
             self._on_job_selected(self.selected_job_data)
 
     def _on_apply_clicked(self, job_data):
-        # Read-only desktop mode fallback
-        pass
+        from database import crud
+        student = crud.get_current_student()
+        if not student:
+            QMessageBox.warning(self, "Warning", "You must be logged in to apply for jobs.")
+            return
+
+        email = student.get("email")
+        display_name = student.get("display_name") or student.get("username") or email
+        if not email:
+            QMessageBox.warning(self, "Warning", "Student profile has no email address. Cannot apply.")
+            return
+
+        # Cancel active apply worker if running
+        if hasattr(self, "apply_worker") and self.apply_worker.isRunning():
+            try:
+                self.apply_worker.success.disconnect()
+                self.apply_worker.error.disconnect()
+            except TypeError:
+                pass
+            self.apply_worker.terminate()
+            self.apply_worker.wait()
+
+        # Disable button and update text
+        self.detail_panel.btn_apply.setEnabled(False)
+        self.detail_panel.btn_apply.setText("Applying...")
+
+        # Start background worker
+        from modules.recruitment_worker import JobApplyWorker
+        self.apply_worker = JobApplyWorker(
+            job_data.get("id"), 
+            email, 
+            display_name,
+            major=student.get("major"),
+            student_year=student.get("student_year", 1)
+        )
+        self.apply_worker.success.connect(self._on_apply_success)
+        self.apply_worker.error.connect(self._on_apply_failed)
+        self.apply_worker.start()
+
+    def _on_apply_success(self):
+        QMessageBox.information(self, "Success", "Job application submitted successfully!")
+        self.detail_panel.btn_apply.setEnabled(False)
+        self.detail_panel.btn_apply.setText("Applied")
+        if self.selected_job_data:
+            job_id = self.selected_job_data.get("id")
+            if job_id not in self.applied_job_ids:
+                self.applied_job_ids.append(job_id)
+
+    def _on_apply_failed(self, error_msg):
+        QMessageBox.critical(self, "Error", f"Failed to submit job application:\n{error_msg}")
+        self.detail_panel.btn_apply.setEnabled(True)
+        self.detail_panel.btn_apply.setText("Apply Now")
 
     def cleanup(self):
         """
@@ -1086,3 +1172,21 @@ class RecruitmentPage(QWidget):
                 pass
             self.detail_worker.terminate()
             self.detail_worker.wait()
+
+        if hasattr(self, "apply_worker") and self.apply_worker.isRunning():
+            try:
+                self.apply_worker.success.disconnect()
+                self.apply_worker.error.disconnect()
+            except TypeError:
+                pass
+            self.apply_worker.terminate()
+            self.apply_worker.wait()
+
+        if hasattr(self, "applications_worker") and self.applications_worker.isRunning():
+            try:
+                self.applications_worker.success.disconnect()
+                self.applications_worker.error.disconnect()
+            except TypeError:
+                pass
+            self.applications_worker.terminate()
+            self.applications_worker.wait()

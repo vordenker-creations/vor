@@ -1,9 +1,11 @@
 import logging
 import os
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, status, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from typing import List
+import json
 
 from database import (
     initialize_db, 
@@ -23,6 +25,33 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s - %(message)s"
 )
 logger = logging.getLogger("news_bridge.server")
+
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: List[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+        logger.info(f"WebSocket client connected. Total active connections: {len(self.active_connections)}")
+
+    def disconnect(self, websocket: WebSocket):
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
+        logger.info(f"WebSocket client disconnected. Total active connections: {len(self.active_connections)}")
+
+    async def broadcast(self, data: dict):
+        message = json.dumps(data)
+        logger.info(f"WebSocket broadcasting message to {len(self.active_connections)} clients: {data}")
+        for connection in list(self.active_connections):
+            try:
+                await connection.send_text(message)
+            except Exception as e:
+                logger.error(f"Failed to send message to connection: {e}")
+                if connection in self.active_connections:
+                    self.active_connections.remove(connection)
+
+manager = ConnectionManager()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -200,6 +229,9 @@ async def apply_to_job(payload: dict):
     """Records a new job application in the SQLite database."""
     email = payload.get("email")
     job_id = payload.get("job_id")
+    display_name = payload.get("display_name") or email
+    major = payload.get("major") or ""
+    student_year = payload.get("student_year") or 1
     if not email or not job_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -208,8 +240,60 @@ async def apply_to_job(payload: dict):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("INSERT OR IGNORE INTO applications (user_email, job_id) VALUES (?, ?);", (email, job_id))
+        from datetime import datetime
+        local_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        cursor.execute("""
+            INSERT INTO applications (user_email, job_id, applied_at, student_major, student_year, student_name)
+            VALUES (?, ?, ?, ?, ?, ?)
+            ON CONFLICT(user_email, job_id) DO UPDATE SET
+                applied_at = excluded.applied_at,
+                student_major = CASE WHEN excluded.student_major != '' THEN excluded.student_major ELSE student_major END,
+                student_year = CASE WHEN excluded.student_year != 1 THEN excluded.student_year ELSE student_year END,
+                student_name = CASE WHEN excluded.student_name != '' THEN excluded.student_name ELSE student_name END;
+        """, (email, job_id, local_now, major, student_year, display_name))
+        
+        # Query job title and company for notification
+        cursor.execute("SELECT title, company FROM jobs WHERE id = ?;", (job_id,))
+        job_row = cursor.fetchone()
         conn.commit()
+        
+        if job_row:
+            job_title = job_row["title"]
+            job_company = job_row["company"]
+            message_text = f"Ứng viên {display_name} vừa ứng tuyển vào vị trí {job_title} tại {job_company}!"
+        else:
+            job_title = f"Công việc ID {job_id}"
+            job_company = "Hệ thống"
+            message_text = f"Ứng viên {display_name} vừa ứng tuyển vào công việc ID {job_id}!"
+            
+        logger.info(f"Broadcasting notification: {message_text}")
+        
+        applicant_data = {
+            "name": display_name,
+            "email": email,
+            "major": major or "Chưa cập nhật",
+            "student_year": student_year,
+            "job_title": job_title,
+            "job_company": job_company
+        }
+        
+        # Broadcast toast notification
+        await manager.broadcast({
+            "type": "notification",
+            "message": message_text,
+            "applicant": applicant_data
+        })
+        
+        # Broadcast chat room message notification
+        from datetime import datetime
+        timestamp = datetime.now().strftime("%H:%M")
+        await manager.broadcast({
+            "type": "chat",
+            "username": "Hệ thống (Thông báo)",
+            "message": message_text,
+            "timestamp": timestamp
+        })
+            
         return {"success": True, "message": "Job application registered."}
     except Exception as e:
         logger.error(f"Failed to record application: {e}", exc_info=True)
@@ -220,6 +304,29 @@ async def apply_to_job(payload: dict):
     finally:
         if conn:
             conn.close()
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await manager.connect(websocket)
+    try:
+        while True:
+            data_str = await websocket.receive_text()
+            logger.info(f"WebSocket received raw message: {data_str}")
+            try:
+                data = json.loads(data_str)
+                if data.get("type") == "chat":
+                    from datetime import datetime
+                    timestamp = datetime.now().strftime("%H:%M")
+                    await manager.broadcast({
+                        "type": "chat",
+                        "username": data.get("username", "Ẩn danh"),
+                        "message": data.get("message", ""),
+                        "timestamp": timestamp
+                    })
+            except Exception as e:
+                logger.error(f"WebSocket error parsing chat message: {e}")
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
 
 @app.get("/applications", status_code=status.HTTP_200_OK)
 async def get_user_applications(email: str):
@@ -236,6 +343,66 @@ async def get_user_applications(email: str):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve applied job listings."
+        )
+    finally:
+        if conn:
+            conn.close()
+
+@app.get("/notifications", status_code=status.HTTP_200_OK)
+async def get_recent_notifications():
+    """Retrieves all notifications generated from recent job applications."""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT a.user_email, a.job_id, a.applied_at, a.student_major, a.student_year, a.student_name, j.title, j.company 
+            FROM applications a
+            LEFT JOIN jobs j ON a.job_id = j.id
+            ORDER BY a.applied_at DESC
+            LIMIT 10;
+        """)
+        rows = cursor.fetchall()
+        
+        notifications = []
+        for row in rows:
+            display_name = row["student_name"] or row["user_email"]
+            job_title = row["title"]
+            job_company = row["company"]
+            applied_at = row["applied_at"]
+            
+            if job_title:
+                message = f"Ứng viên {display_name} vừa ứng tuyển vào vị trí {job_title} tại {job_company}!"
+            else:
+                job_title = f"Công việc ID {row['job_id']}"
+                job_company = "Hệ thống"
+                message = f"Ứng viên {display_name} vừa ứng tuyển vào công việc ID {row['job_id']}!"
+                
+            try:
+                time_part = applied_at.split()[1][:5] if " " in applied_at else applied_at[:5]
+            except:
+                time_part = "Gần đây"
+                
+            applicant_data = {
+                "name": display_name,
+                "email": row["user_email"],
+                "major": row["student_major"] or "Chưa cập nhật",
+                "student_year": row["student_year"] or 1,
+                "job_title": job_title,
+                "job_company": job_company
+            }
+                
+            notifications.append({
+                "message": message,
+                "timestamp": time_part,
+                "applicant": applicant_data
+            })
+            
+        return notifications
+    except Exception as e:
+        logger.error(f"Failed to fetch notifications: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve notifications."
         )
     finally:
         if conn:

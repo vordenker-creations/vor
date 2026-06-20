@@ -4,6 +4,125 @@
  * inline validation display, loading indicator, and FastAPI integration.
  */
 
+// Initialize theme on script load to prevent light mode flash
+const initTheme = () => {
+  const currentTheme = localStorage.getItem('theme') || 'dark';
+  if (currentTheme === 'dark') {
+    document.documentElement.classList.add('dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+  }
+};
+initTheme();
+
+// Dynamic API & WebSocket host configuration
+const getBackendHost = () => {
+  const rawHost = window.location.host;
+  if (!rawHost || rawHost.includes('file://') || rawHost.includes('localhost:5500') || rawHost.includes('127.0.0.1:5500')) {
+    return '127.0.0.1:8000';
+  }
+  if (rawHost.includes(':5500')) {
+    return rawHost.replace(':5500', ':8000');
+  }
+  return rawHost;
+};
+
+const BACKEND_HOST = getBackendHost();
+const BASE_URL = `${window.location.protocol === 'file:' ? 'http:' : window.location.protocol}//${BACKEND_HOST}`;
+
+function syncThemeIcon() {
+  const iconEl = document.getElementById('theme-toggle-icon');
+  if (!iconEl) return;
+  const isDark = document.documentElement.classList.contains('dark');
+  if (isDark) {
+    iconEl.setAttribute('data-lucide', 'sun');
+  } else {
+    iconEl.setAttribute('data-lucide', 'moon');
+  }
+  lucide.createIcons();
+}
+
+function toggleTheme() {
+  const isDark = document.documentElement.classList.contains('dark');
+  if (isDark) {
+    document.documentElement.classList.remove('dark');
+    localStorage.setItem('theme', 'light');
+  } else {
+    document.documentElement.classList.add('dark');
+    localStorage.setItem('theme', 'dark');
+  }
+  syncThemeIcon();
+  showToast(`Switched to ${isDark ? 'Light' : 'Dark'} mode.`);
+}
+
+// Salary filter slider change handler
+function handleSalarySliderInput(val) {
+  STATE.minSalary = parseInt(val) || 50000;
+  const displayVal = document.getElementById('salary-min-val');
+  if (displayVal) {
+    if (STATE.minSalary === 50000) {
+      displayVal.innerText = "Any";
+    } else {
+      displayVal.innerText = `$${Math.round(STATE.minSalary / 1000)}k`;
+    }
+  }
+  renderJobs();
+}
+
+// Helper to parse min salary from strings (like "$160k - $210k" or "$1,200 - $2,000")
+function parseMinSalary(salaryStr) {
+  if (!salaryStr) return 0;
+  const clean = salaryStr.toLowerCase().replace(/[$,\s]/g, '');
+  const match = clean.match(/^(\d+)(k)?/);
+  if (match) {
+    let val = parseInt(match[1]);
+    if (match[2] === 'k') {
+      val = val * 1000;
+    } else if (val < 1000) {
+      val = val * 12; // convert monthly to annual approximately
+    }
+    return val;
+  }
+  return 0;
+}
+
+// Recent Searches logic
+function loadRecentSearches() {
+  const container = document.getElementById('recent-searches-container');
+  const list = document.getElementById('recent-searches-list');
+  if (!container || !list) return;
+
+  const history = JSON.parse(localStorage.getItem('recentSearches') || '[]');
+  if (history.length === 0) {
+    container.classList.add('hidden');
+    return;
+  }
+
+  container.classList.remove('hidden');
+  list.innerHTML = history.map(term => `
+    <button onclick="applyRecentSearch('${term}')" class="px-2 py-0.5 rounded-md bg-slate-900/65 dark:bg-slate-800/40 text-slate-300 hover:text-cyan-400 border border-slate-800 dark:border-slate-700/50 hover:border-cyan-500/35 duration-100 transition-colors font-medium">
+      ${term}
+    </button>
+  `).join('');
+}
+
+function saveSearchHistory(term) {
+  if (!term) return;
+  let history = JSON.parse(localStorage.getItem('recentSearches') || '[]');
+  history = history.filter(t => t !== term);
+  history.unshift(term);
+  if (history.length > 3) history.pop();
+  localStorage.setItem('recentSearches', JSON.stringify(history));
+  loadRecentSearches();
+}
+
+function applyRecentSearch(term) {
+  const input = document.getElementById('search-keyword');
+  if (input) input.value = term;
+  STATE.currentSearch.keyword = term.toLowerCase().trim();
+  renderJobs();
+}
+
 // Load session from localStorage if exists to prevent logout on reload
 const savedUser = localStorage.getItem('user');
 const initialUser = savedUser ? JSON.parse(savedUser) : {
@@ -104,6 +223,7 @@ const STATE = {
     keyword: "",
     location: ""
   },
+  minSalary: 50000,
   activeTab: "jobs",
   activeJobId: null
 };
@@ -113,10 +233,14 @@ window.addEventListener('DOMContentLoaded', async () => {
   syncAuthNav();
   await loadJobsFromBackend();
   await syncUserApplications();
+  await loadNotificationsFromBackend();
   renderProfile();
+  syncThemeIcon();
+  loadRecentSearches();
+  initWebSocket();
+  const salaryVal = document.getElementById('salary-min-val');
+  if (salaryVal) salaryVal.innerText = "Any";
   lucide.createIcons();
-
-
 
   // Setup filter checkboxes change listeners for real-time reactivity
   const ftCheckbox = document.getElementById('filter-fulltime');
@@ -125,6 +249,9 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (ftCheckbox) ftCheckbox.addEventListener('change', renderJobs);
   if (ctCheckbox) ctCheckbox.addEventListener('change', renderJobs);
   if (rmCheckbox) rmCheckbox.addEventListener('change', renderJobs);
+
+  const salarySlider = document.getElementById('filter-salary');
+  if (salarySlider) salarySlider.addEventListener('input', renderJobs);
 
   // Setup input key listeners to clear warnings dynamically
   setupWarningClearers();
@@ -142,7 +269,7 @@ function switchTab(tabName, additionalParams = {}) {
   STATE.activeTab = tabName;
   
   // Update UI active views
-  const views = ['jobs', 'job-detail', 'login', 'register', 'post-job', 'profile'];
+  const views = ['jobs', 'job-detail', 'login', 'register', 'post-job', 'profile', 'chat'];
   views.forEach(v => {
     const el = document.getElementById(`view-${v}`);
     if (el) {
@@ -157,7 +284,7 @@ function switchTab(tabName, additionalParams = {}) {
   });
 
   // Update Nav Link Highlights
-  const navLinks = ['jobs', 'post-job', 'profile'];
+  const navLinks = ['jobs', 'post-job', 'profile', 'chat'];
   navLinks.forEach(link => {
     const el = document.getElementById(`nav-${link}`);
     if (el) {
@@ -197,7 +324,7 @@ function toggleMobileMenu() {
 }
 
 // ==================== TOAST NOTIFICATION HELPERS ====================
-function showToast(message, type = 'success') {
+function showToast(message, type = 'success', applicant = null) {
   const container = document.getElementById('toast-container');
   const toast = document.createElement('div');
   
@@ -212,7 +339,15 @@ function showToast(message, type = 'success') {
     icon = 'alert-triangle';
   }
 
-  toast.className = `glass-card border px-4 py-3 rounded-xl flex items-center gap-2.5 shadow-lg transform transition-all duration-300 translate-y-2 opacity-0 pointer-events-auto ${typeStyle}`;
+  let clickClass = '';
+  if (applicant) {
+    clickClass = ' cursor-pointer hover:border-cyan-400/50 hover:shadow-glow-cyan/30 transition-all duration-300';
+    toast.onclick = () => {
+      showApplicantDetails(applicant);
+    };
+  }
+
+  toast.className = `glass-card border px-4 py-3 rounded-xl flex items-center gap-2.5 shadow-lg transform transition-all duration-300 translate-y-2 opacity-0 pointer-events-auto ${typeStyle}${clickClass}`;
   toast.innerHTML = `
     <i data-lucide="${icon}" class="w-4 h-4 shrink-0"></i>
     <p class="text-xs font-semibold">${message}</p>
@@ -226,13 +361,13 @@ function showToast(message, type = 'success') {
     toast.classList.remove('translate-y-2', 'opacity-0');
   }, 50);
 
-  // Auto dismiss after 3 seconds
+  // Auto dismiss after 12 seconds
   setTimeout(() => {
     toast.classList.add('translate-y-[-10px]', 'opacity-0');
     setTimeout(() => {
       toast.remove();
     }, 300);
-  }, 3000);
+  }, 12000);
 }
 
 // ==================== FIELD VALIDATION HELPERS ====================
@@ -299,7 +434,7 @@ async function handleLoginSubmit(event) {
   const pass = document.getElementById('login-password').value;
 
   try {
-    const response = await fetch('http://127.0.0.1:8000/login', {
+    const response = await fetch(`${BASE_URL}/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password: pass })
@@ -350,7 +485,7 @@ async function handleRegisterSubmit(event) {
   }
 
   try {
-    const response = await fetch('http://127.0.0.1:8000/register', {
+    const response = await fetch(`${BASE_URL}/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, title, email, password: pass })
@@ -443,8 +578,12 @@ function toggleQuickTech(tech) {
 }
 
 function triggerSearch() {
-  STATE.currentSearch.keyword = document.getElementById('search-keyword').value.toLowerCase().trim();
+  const keyword = document.getElementById('search-keyword').value.trim();
+  STATE.currentSearch.keyword = keyword.toLowerCase();
   STATE.currentSearch.location = document.getElementById('search-location').value.toLowerCase().trim();
+  if (keyword) {
+    saveSearchHistory(keyword);
+  }
   renderJobs();
 }
 
@@ -457,6 +596,12 @@ function clearFilters() {
   document.getElementById('filter-fulltime').checked = true;
   document.getElementById('filter-contract').checked = false;
   document.getElementById('filter-remote').checked = false;
+  
+  const salarySlider = document.getElementById('filter-salary');
+  if (salarySlider) salarySlider.value = 50000;
+  STATE.minSalary = 50000;
+  const salaryVal = document.getElementById('salary-min-val');
+  if (salaryVal) salaryVal.innerText = "Any";
   
   // Remove visual highlights
   const pills = document.querySelectorAll('.tag-pill');
@@ -484,6 +629,12 @@ function resetFiltersWithoutToast() {
   if (ftCheckbox) ftCheckbox.checked = true;
   if (ctCheckbox) ctCheckbox.checked = true;
   if (rmCheckbox) rmCheckbox.checked = false;
+  
+  const salarySlider = document.getElementById('filter-salary');
+  if (salarySlider) salarySlider.value = 50000;
+  STATE.minSalary = 50000;
+  const salaryVal = document.getElementById('salary-min-val');
+  if (salaryVal) salaryVal.innerText = "Any";
   
   const pills = document.querySelectorAll('.tag-pill');
   pills.forEach(pill => {
@@ -531,6 +682,12 @@ function renderJobs() {
       if (!matchAllTech) return false;
     }
 
+    // Salary Range match
+    if (STATE.minSalary && STATE.minSalary > 50000) {
+      const jobMinSalary = parseMinSalary(job.salary);
+      if (jobMinSalary && jobMinSalary < STATE.minSalary) return false;
+    }
+
     return true;
   });
 
@@ -563,7 +720,13 @@ function renderJobs() {
   // Render Cards
   container.innerHTML = filtered.map(job => {
     const skillsString = job.tags.map(t => `<span class="bg-slate-900/65 text-slate-300 text-[10px] font-semibold px-2.5 py-1 rounded-md border border-slate-800/80">${t}</span>`).join('');
-    
+    const isApplied = STATE.user.isLoggedIn && STATE.user.appliedJobIds.includes(job.id);
+    const appliedBadge = isApplied ? `
+      <span class="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[9px] font-bold text-emerald-400 border border-emerald-500/20 mr-1.5 animate-pulse">
+        <span class="h-1 w-1 rounded-full bg-emerald-400"></span> Applied
+      </span>
+    ` : '';
+
     return `
       <article class="glass-card rounded-3xl p-6 shadow-md border border-slate-800/60 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1.5 hover:shadow-glow-cyan hover:border-cyan-500/30 group">
         <div>
@@ -579,7 +742,10 @@ function renderJobs() {
                 <p class="text-xs text-slate-400">${job.company} ✦ <span class="text-[10px] uppercase font-semibold text-slate-500 tracking-wide">${job.type}</span></p>
               </div>
             </div>
-            <span class="text-[10px] text-slate-500 font-medium">${job.postedTime}</span>
+            <div class="flex flex-col items-end gap-1.5">
+              <span class="text-[10px] text-slate-500 font-medium">${job.postedTime}</span>
+              ${appliedBadge}
+            </div>
           </div>
           
           <!-- Meta Row -->
@@ -746,7 +912,7 @@ async function applyToActiveJob(jobId) {
   }
 
   try {
-    const response = await fetch('http://127.0.0.1:8000/apply', {
+    const response = await fetch(`${BASE_URL}/apply`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -783,7 +949,7 @@ async function handleDeleteJob(jobId) {
   if (!confirm("Are you sure you want to delete this job listing?")) return;
   
   try {
-    const response = await fetch(`http://127.0.0.1:8000/jobs/${jobId}?email=${encodeURIComponent(STATE.user.email)}`, {
+    const response = await fetch(`${BASE_URL}/jobs/${jobId}?email=${encodeURIComponent(STATE.user.email)}`, {
       method: 'DELETE'
     });
     
@@ -875,7 +1041,7 @@ async function handlePostJobSubmit(event) {
   event.preventDefault();
   clearAllErrors();
 
-  const API_URL = 'http://127.0.0.1:8000/post-job';
+  const API_URL = `${BASE_URL}/post-job`;
   
   // Extract form variables
   const company = document.getElementById('post-comp-name').value.trim();
@@ -1048,10 +1214,39 @@ function renderProfile() {
   const emailEl = document.getElementById('profile-email');
   const createdAtEl = document.getElementById('profile-created-at');
   
+  let bioText = STATE.user.bio || "";
+  let expText = "";
+  let eduText = "";
+  
+  if (bioText.startsWith('{"') || bioText.startsWith('{')) {
+    try {
+      const parsed = JSON.parse(bioText);
+      bioText = parsed.bio || "";
+      expText = parsed.experience || "";
+      eduText = parsed.education || "";
+    } catch (e) {
+      console.error("Failed to parse bio JSON", e);
+    }
+  }
+
+  // Set default placeholders if empty
+  if (!expText) {
+    expText = "Staff Frontend Architect\nVercel ✦ 2022 - Present\nLead development of core responsive layout components and modern dashboard dashboards.\n\nSenior React Engineer\nLinear ✦ 2020 - 2022\nRefactored workspace lists for premium loading animations and low latency page states.";
+  }
+  if (!eduText) {
+    eduText = "B.S. in Computer Science\nStanford University ✦ Class of 2017";
+  }
+  
   if (nameEl) nameEl.innerText = STATE.user.name || "";
   if (titleEl) titleEl.innerText = STATE.user.title || "";
-  if (bioEl) bioEl.innerText = STATE.user.bio || "";
+  if (bioEl) bioEl.innerText = bioText || "";
   if (emailEl) emailEl.innerText = STATE.user.email || "";
+  
+  const expContainer = document.getElementById('profile-experience-container');
+  if (expContainer) expContainer.innerHTML = renderExperienceHtml(expText);
+  
+  const eduContainer = document.getElementById('profile-education-container');
+  if (eduContainer) eduContainer.innerHTML = renderEducationHtml(eduText);
   
   if (createdAtEl) {
     if (STATE.user.created_at) {
@@ -1077,6 +1272,7 @@ function renderProfile() {
   
   renderProfileSkills();
   renderAppliedJobs();
+  renderMyPostedJobs();
 }
 
 function renderProfileSkills() {
@@ -1099,7 +1295,7 @@ function renderAppliedJobs() {
   const appliedList = STATE.jobs.filter(j => STATE.user.appliedJobIds.includes(j.id));
   
   container.innerHTML = appliedList.map(job => `
-    <div class="flex items-center justify-between p-3.5 rounded-2xl bg-brand-background/45 border border-slate-800/60 hover:border-cyan-500/20 transition-all duration-200">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-brand-background/45 border border-slate-800/60 hover:border-cyan-500/20 transition-all duration-200">
       <div class="flex items-center gap-3">
         <div class="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs select-none shrink-0 ${job.logoBg}">
           ${job.logo}
@@ -1109,7 +1305,7 @@ function renderAppliedJobs() {
           <p class="text-[10px] text-slate-400">${job.company} ✦ ${job.location}</p>
         </div>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-800/40">
         <span class="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-400 border border-emerald-500/20">
           <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span> Applied
         </span>
@@ -1124,9 +1320,31 @@ function renderAppliedJobs() {
 }
 
 function openProfileModal() {
+  let bioText = STATE.user.bio || "";
+  let expText = "";
+  let eduText = "";
+  
+  if (bioText.startsWith('{"') || bioText.startsWith('{')) {
+    try {
+      const parsed = JSON.parse(bioText);
+      bioText = parsed.bio || "";
+      expText = parsed.experience || "";
+      eduText = parsed.education || "";
+    } catch (e) {}
+  }
+  
+  if (!expText) {
+    expText = "Staff Frontend Architect\nVercel ✦ 2022 - Present\nLead development of core responsive layout components and modern dashboard dashboards.\n\nSenior React Engineer\nLinear ✦ 2020 - 2022\nRefactored workspace lists for premium loading animations and low latency page states.";
+  }
+  if (!eduText) {
+    eduText = "B.S. in Computer Science\nStanford University ✦ Class of 2017";
+  }
+
   document.getElementById('edit-name').value = STATE.user.name || "";
   document.getElementById('edit-title').value = STATE.user.title || "";
-  document.getElementById('edit-bio').value = STATE.user.bio || "";
+  document.getElementById('edit-bio').value = bioText;
+  document.getElementById('edit-experience').value = expText;
+  document.getElementById('edit-education').value = eduText;
   document.getElementById('edit-skills').value = STATE.user.skills ? STATE.user.skills.join(', ') : "";
   
   document.getElementById('profile-edit-modal').classList.remove('hidden');
@@ -1142,17 +1360,25 @@ async function handleProfileEditSubmit(event) {
   const name = document.getElementById('edit-name').value.trim();
   const title = document.getElementById('edit-title').value.trim();
   const bio = document.getElementById('edit-bio').value.trim();
+  const experience = document.getElementById('edit-experience').value.trim();
+  const education = document.getElementById('edit-education').value.trim();
   const skills = document.getElementById('edit-skills').value.trim();
 
+  const bioJson = JSON.stringify({
+    bio: bio,
+    experience: experience,
+    education: education
+  });
+
   try {
-    const response = await fetch('http://127.0.0.1:8000/update-profile', {
+    const response = await fetch(`${BASE_URL}/update-profile`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         email: STATE.user.email,
         name: name,
         title: title,
-        bio: bio,
+        bio: bioJson,
         skills: skills
       })
     });
@@ -1183,7 +1409,7 @@ async function handleProfileEditSubmit(event) {
 async function syncUserApplications() {
   if (!STATE.user.isLoggedIn || !STATE.user.email) return;
   try {
-    const response = await fetch(`http://127.0.0.1:8000/applications?email=${encodeURIComponent(STATE.user.email)}`);
+    const response = await fetch(`${BASE_URL}/applications?email=${encodeURIComponent(STATE.user.email)}`);
     if (response.ok) {
       const appliedJobIds = await response.json();
       STATE.user.appliedJobIds = appliedJobIds || [];
@@ -1232,7 +1458,7 @@ async function handleJobEditSubmit(event) {
   const descriptionWithTags = desc + tagsStr;
 
   try {
-    const response = await fetch(`http://127.0.0.1:8000/jobs/${jobId}?email=${encodeURIComponent(STATE.user.email)}`, {
+    const response = await fetch(`${BASE_URL}/jobs/${jobId}?email=${encodeURIComponent(STATE.user.email)}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -1267,7 +1493,7 @@ async function handleJobEditSubmit(event) {
 
 async function loadJobsFromBackend() {
   try {
-    const response = await fetch('http://127.0.0.1:8000/jobs');
+    const response = await fetch(`${BASE_URL}/jobs`);
     if (response.ok) {
       const dbJobs = await response.json();
       
@@ -1339,5 +1565,345 @@ function changeProfilePhoto() {
     document.getElementById('profile-avatar').src = avatarUrl;
     syncAuthNav();
     showToast("Avatar image updated.");
+  }
+}
+
+function renderMyPostedJobs() {
+  const card = document.getElementById('my-posted-jobs-card');
+  const container = document.getElementById('my-posted-jobs-list');
+  if (!card || !container) return;
+
+  if (!STATE.user.isLoggedIn || !STATE.user.email) {
+    card.classList.add('hidden');
+    return;
+  }
+
+  const myJobs = STATE.jobs.filter(j => j.posted_by === STATE.user.email);
+  if (myJobs.length === 0) {
+    card.classList.add('hidden');
+    return;
+  }
+
+  card.classList.remove('hidden');
+  container.innerHTML = myJobs.map(job => `
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-brand-background/45 border border-slate-800/60 hover:border-cyan-500/20 transition-all duration-200">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs select-none shrink-0 ${job.logoBg}">
+          ${job.logo}
+        </div>
+        <div>
+          <h4 class="text-xs font-bold text-white">${job.title}</h4>
+          <p class="text-[10px] text-slate-400">${job.company} ✦ ${job.location} ✦ <span class="text-emerald-400 font-bold">${job.salary}</span></p>
+        </div>
+      </div>
+      <div class="flex items-center justify-end gap-2 w-full sm:w-auto border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-800/40">
+        <button onclick="openJobModal(${job.id})" class="text-cyan-400 hover:text-cyan-300 p-1" title="Edit Listing">
+          <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+        </button>
+        <button onclick="handleDeleteJob(${job.id})" class="text-red-400 hover:text-red-300 p-1" title="Delete Listing">
+          <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+        </button>
+        <button onclick="switchTab('job-detail', { id: ${job.id} })" class="text-slate-400 hover:text-white p-1" title="View details">
+          <i data-lucide="chevron-right" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+  `).join('');
+
+  lucide.createIcons();
+}
+
+function renderExperienceHtml(expText) {
+  if (!expText) return "";
+  const blocks = expText.split('\n\n').filter(Boolean);
+  return blocks.map((block, idx) => {
+    const lines = block.split('\n').filter(Boolean);
+    const title = lines[0] || "Role Title";
+    const companyDate = lines[1] || "";
+    const description = lines.slice(2).join('\n') || "";
+    const dotColor = idx === 0 ? "bg-cyan-400" : "bg-slate-700";
+    
+    return `
+      <div class="relative pl-6 border-l border-slate-800 dark:border-slate-700/50">
+        <div class="absolute -left-1.5 top-1.5 w-3 h-3 rounded-full ${dotColor}"></div>
+        <h4 class="text-sm font-bold text-white">${title}</h4>
+        <p class="text-xs text-slate-400">${companyDate}</p>
+        ${description ? `<p class="text-xs text-slate-300 mt-1">${description}</p>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+function renderEducationHtml(eduText) {
+  if (!eduText) return "";
+  const blocks = eduText.split('\n\n').filter(Boolean);
+  return blocks.map(block => {
+    const lines = block.split('\n').filter(Boolean);
+    const degree = lines[0] || "Degree";
+    const schoolDate = lines[1] || "";
+    
+    return `
+      <div class="relative pl-6 border-l border-slate-800 dark:border-slate-700/50">
+        <div class="absolute -left-1.5 top-1.5 w-3 h-3 rounded-full bg-cyan-400/50"></div>
+        <h4 class="text-sm font-bold text-white">${degree}</h4>
+        <p class="text-xs text-slate-400">${schoolDate}</p>
+      </div>
+    `;
+  }).join('');
+}
+
+// ==================== WEBSOCKET GENERAL CHAT & NOTIFICATIONS ====================
+let chatSocket = null;
+let notificationHistory = [];
+
+function toggleNotificationDropdown() {
+  const dropdown = document.getElementById('notification-dropdown');
+  if (dropdown) {
+    dropdown.classList.toggle('hidden');
+  }
+}
+
+// Close notification dropdown when clicking outside
+window.addEventListener('click', (e) => {
+  const dropdown = document.getElementById('notification-dropdown');
+  if (!dropdown) return;
+  const btn = dropdown.previousElementSibling;
+  const target = e.target;
+  if (!dropdown.classList.contains('hidden') && !dropdown.contains(target) && (!btn || !btn.contains(target))) {
+    dropdown.classList.add('hidden');
+  }
+});
+
+function addNotification(message, applicant = null) {
+  notificationHistory.unshift({
+    message: message,
+    timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+    applicant: applicant
+  });
+  
+  if (notificationHistory.length > 10) {
+    notificationHistory.pop();
+  }
+  
+  updateNotificationUI();
+}
+
+function updateNotificationUI() {
+  const badge = document.getElementById('notification-badge');
+  const list = document.getElementById('notification-list');
+  if (!list) return;
+  
+  if (notificationHistory.length > 0) {
+    if (badge) badge.classList.remove('hidden');
+    list.innerHTML = notificationHistory.map((n, idx) => {
+      const clickableClass = n.applicant ? ' cursor-pointer hover:border-cyan-400/50 hover:bg-slate-900/80 transition duration-150' : '';
+      const clickAttr = n.applicant ? ` onclick="handleNotificationClick(${idx})"` : '';
+      return `
+        <div class="p-2.5 rounded-xl bg-slate-900/45 border border-slate-800/60 flex flex-col gap-1${clickableClass}"${clickAttr}>
+          <p class="text-slate-300 leading-normal font-medium">${n.message}</p>
+          <span class="text-[9px] text-slate-500 self-end">${n.timestamp}</span>
+        </div>
+      `;
+    }).join('');
+  } else {
+    if (badge) badge.classList.add('hidden');
+    list.innerHTML = `<p class="text-center py-4 text-slate-500">Chưa có thông báo nào mới.</p>`;
+  }
+}
+
+function handleNotificationClick(idx) {
+  const item = notificationHistory[idx];
+  if (item && item.applicant) {
+    showApplicantDetails(item.applicant);
+  }
+}
+
+function clearNotifications() {
+  notificationHistory = [];
+  updateNotificationUI();
+}
+
+async function loadNotificationsFromBackend() {
+  try {
+    const response = await fetch(`${BASE_URL}/notifications`);
+    if (response.ok) {
+      const data = await response.json();
+      notificationHistory = data;
+      updateNotificationUI();
+    }
+  } catch (error) {
+    console.error("Failed to load notifications from backend:", error);
+  }
+}
+
+function initWebSocket() {
+  const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+  const rawHost = window.location.host;
+  let wsHost = '127.0.0.1:8000';
+  if (rawHost && !rawHost.includes('file://')) {
+    if (rawHost.includes(':5500')) {
+      wsHost = rawHost.replace(':5500', ':8000');
+    } else {
+      wsHost = rawHost;
+    }
+  }
+  const wsUrl = `${wsProtocol}://${wsHost}/ws`;
+  
+  console.log("Connecting to WebSocket:", wsUrl);
+  chatSocket = new WebSocket(wsUrl);
+
+  chatSocket.onopen = () => {
+    console.log("WebSocket connected successfully.");
+    const statusDot = document.getElementById('chat-status-dot');
+    const statusText = document.getElementById('chat-status-text');
+    if (statusDot) {
+      statusDot.className = "flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse";
+    }
+    if (statusText) {
+      statusText.innerText = "Trực tuyến";
+      statusText.className = "text-emerald-400 text-xs font-semibold";
+    }
+  };
+
+  chatSocket.onmessage = async (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      if (data.type === 'notification') {
+        showToast(data.message, 'success', data.applicant);
+        addNotification(data.message, data.applicant);
+        await syncUserApplications();
+        if (STATE.activeTab === 'profile') {
+          renderProfile();
+        }
+      } else if (data.type === 'chat') {
+        appendChatMessage(data);
+      }
+    } catch (e) {
+      console.error("Failed to parse incoming WebSocket message:", e);
+    }
+  };
+
+  chatSocket.onclose = () => {
+    console.log("WebSocket disconnected. Reconnecting in 3 seconds...");
+    const statusDot = document.getElementById('chat-status-dot');
+    const statusText = document.getElementById('chat-status-text');
+    if (statusDot) {
+      statusDot.className = "flex h-2 w-2 rounded-full bg-red-400 animate-pulse";
+    }
+    if (statusText) {
+      statusText.innerText = "Ngoại tuyến (Kết nối lại...)";
+      statusText.className = "text-red-400 text-xs font-semibold";
+    }
+    setTimeout(initWebSocket, 3000);
+  };
+
+  chatSocket.onerror = (err) => {
+    console.error("WebSocket connection error:", err);
+  };
+}
+
+function appendChatMessage(data) {
+  const chatMessages = document.getElementById('chat-messages');
+  if (!chatMessages) return;
+
+  const isMe = STATE.user.isLoggedIn && data.username === STATE.user.name;
+  const username = data.username || "Ẩn danh";
+  const initials = username.charAt(0).toUpperCase();
+
+  const messageHtml = isMe ? `
+    <div class="flex items-start gap-2.5 max-w-lg ml-auto justify-end">
+      <div class="space-y-1 text-right">
+        <div class="flex items-center gap-2 justify-end">
+          <span class="text-[9px] text-slate-500">${data.timestamp || ''}</span>
+          <span class="text-xs font-bold text-cyan-400">${username}</span>
+        </div>
+        <div class="rounded-2xl rounded-tr-none p-3.5 bg-cyan-950/60 border border-cyan-500/30 text-xs text-cyan-100 leading-relaxed text-left">
+          ${escapeHTML(data.message)}
+        </div>
+      </div>
+      <div class="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 flex items-center justify-center font-bold text-xs shrink-0 select-none">${initials}</div>
+    </div>
+  ` : `
+    <div class="flex items-start gap-2.5 max-w-lg">
+      <div class="w-8 h-8 rounded-lg bg-slate-800 text-slate-300 border border-slate-700 flex items-center justify-center font-bold text-xs shrink-0 select-none">${initials}</div>
+      <div class="space-y-1">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-bold text-slate-200">${username}</span>
+          <span class="text-[9px] text-slate-500">${data.timestamp || ''}</span>
+        </div>
+        <div class="rounded-2xl rounded-tl-none p-3.5 bg-slate-900/60 border border-slate-800 text-xs text-slate-300 leading-relaxed">
+          ${escapeHTML(data.message)}
+        </div>
+      </div>
+    </div>
+  `;
+
+  chatMessages.insertAdjacentHTML('beforeend', messageHtml);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function handleChatSubmit(event) {
+  event.preventDefault();
+  const chatInput = document.getElementById('chat-input');
+  if (!chatInput || !chatSocket || chatSocket.readyState !== WebSocket.OPEN) return;
+
+  const msg = chatInput.value.trim();
+  if (!msg) return;
+
+  const username = STATE.user.isLoggedIn ? STATE.user.name : "Ẩn danh";
+  chatSocket.send(JSON.stringify({
+    type: 'chat',
+    username: username,
+    message: msg
+  }));
+
+  chatInput.value = '';
+}
+
+function escapeHTML(str) {
+  return str.replace(/[&<>'"]/g, 
+    tag => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      "'": '&#39;',
+      '"': '&quot;'
+    }[tag] || tag)
+  );
+}
+
+function showApplicantDetails(applicant) {
+  if (!applicant) return;
+  
+  // Set text fields
+  document.getElementById('applicant-modal-name').innerText = applicant.name || "Candidate Name";
+  document.getElementById('applicant-modal-email').innerText = applicant.email || "candidate@email.com";
+  document.getElementById('applicant-modal-major').innerText = applicant.major || "Chưa cập nhật";
+  
+  let yearText = "Năm 1";
+  if (applicant.student_year) {
+    yearText = `Năm ${applicant.student_year}`;
+  }
+  document.getElementById('applicant-modal-year').innerText = yearText;
+  document.getElementById('applicant-modal-job').innerText = applicant.job_title || "Software Engineer";
+  document.getElementById('applicant-modal-company').innerText = applicant.job_company || "Vercel";
+  
+  // Set initials
+  const initials = (applicant.name || "U").charAt(0).toUpperCase();
+  document.getElementById('applicant-modal-avatar').innerText = initials;
+  
+  // Display modal
+  const modal = document.getElementById('applicant-detail-modal');
+  if (modal) {
+    modal.classList.remove('hidden');
+  }
+  
+  lucide.createIcons();
+}
+
+function closeApplicantModal() {
+  const modal = document.getElementById('applicant-detail-modal');
+  if (modal) {
+    modal.classList.add('hidden');
   }
 }

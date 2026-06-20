@@ -77,9 +77,26 @@ def initialize_db() -> None:
             user_email TEXT NOT NULL,
             job_id INTEGER NOT NULL,
             applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            student_major TEXT DEFAULT '',
+            student_year INTEGER DEFAULT 1,
+            student_name TEXT DEFAULT '',
             UNIQUE(user_email, job_id)
         );
         """)
+        
+        # Safe migration for existing tables: add columns if missing
+        try:
+            cursor.execute("ALTER TABLE applications ADD COLUMN student_major TEXT DEFAULT '';")
+        except sqlite3.OperationalError:
+            pass
+        try:
+            cursor.execute("ALTER TABLE applications ADD COLUMN student_year INTEGER DEFAULT 1;")
+        except sqlite3.OperationalError:
+            pass
+        try:
+            cursor.execute("ALTER TABLE applications ADD COLUMN student_name TEXT DEFAULT '';")
+        except sqlite3.OperationalError:
+            pass
         
         conn.commit()
         

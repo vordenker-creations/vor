@@ -1,5 +1,7 @@
 import requests
 
+from core.config import SERVER_URL
+
 # Centralized configuration
 BASE_URL = "http://127.0.0.1:8000"
 TIMEOUT = 10
@@ -78,3 +80,25 @@ def create_job(data):
     POST /post-job
     """
     return _request("POST", "post-job", json=data)
+
+def apply_job(job_id, email, display_name, major=None, student_year=1):
+    """
+    Submits a new job application.
+    POST /apply
+    """
+    payload = {
+        "job_id": job_id,
+        "email": email,
+        "display_name": display_name,
+        "major": major,
+        "student_year": student_year
+    }
+    return _request("POST", "apply", json=payload)
+
+def get_applications(email):
+    """
+    Retrieves all job IDs applied to by the specified user email.
+    GET /applications
+    """
+    return _request("GET", f"applications?email={email}")
+

@@ -47,3 +47,50 @@ class JobDetailFetchWorker(QThread):
             self.error.emit(str(e))
         except Exception as e:
             self.error.emit(f"Unexpected error: {str(e)}")
+
+class JobApplyWorker(QThread):
+    """
+    QThread worker to submit job applications asynchronously.
+    Emits success() or error(str) upon completion.
+    """
+    success = pyqtSignal()
+    error = pyqtSignal(str)
+
+    def __init__(self, job_id, email, display_name, major=None, student_year=1):
+        super().__init__()
+        self.job_id = job_id
+        self.email = email
+        self.display_name = display_name
+        self.major = major
+        self.student_year = student_year
+
+    def run(self):
+        try:
+            web_client.apply_job(self.job_id, self.email, self.display_name, self.major, self.student_year)
+            self.success.emit()
+        except web_client.WebClientError as e:
+            self.error.emit(str(e))
+        except Exception as e:
+            self.error.emit(f"Unexpected error: {str(e)}")
+
+class ApplicationsFetchWorker(QThread):
+    """
+    QThread worker to fetch the list of applied job IDs for a student in the background.
+    Emits success(list) or error(str) upon completion.
+    """
+    success = pyqtSignal(list)
+    error = pyqtSignal(str)
+
+    def __init__(self, email):
+        super().__init__()
+        self.email = email
+
+    def run(self):
+        try:
+            applied_ids = web_client.get_applications(self.email)
+            self.success.emit(applied_ids)
+        except web_client.WebClientError as e:
+            self.error.emit(str(e))
+        except Exception as e:
+            self.error.emit(f"Unexpected error: {str(e)}")
+

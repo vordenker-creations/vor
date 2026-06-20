@@ -3,11 +3,19 @@
    ========================================================================== */
 
 /* Custom Radial Background */
-body {
+html.dark body {
   background: radial-gradient(circle at 50% 0%, #0c1535 0%, #030712 100%) !important;
+}
+html:not(.dark) body {
+  background: radial-gradient(circle at 50% 0%, #f8fafc 0%, #f1f5f9 100%) !important;
+  color: #0f172a !important;
+}
+
+body {
   font-family: 'Plus Jakarta Sans', sans-serif;
   min-height: 100vh;
   overflow-x: hidden;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 /* Custom Scrollbar */
@@ -93,3 +101,187 @@ body {
     transform: rotate(360deg);
   }
 }
+
+/* ==========================================================================
+   LIGHT MODE PREMIUM STYLING OVERRIDES (OPTIMIZED)
+   ========================================================================== */
+html:not(.dark) .bg-brand-background,
+html:not(.dark) .bg-slate-950,
+html:not(.dark) .bg-slate-950\/70,
+html:not(.dark) .bg-slate-950\/30 {
+  background-color: #f8fafc !important;
+}
+
+html:not(.dark) .bg-brand-card,
+html:not(.dark) .glass-card,
+html:not(.dark) #my-posted-jobs-list > div,
+html:not(.dark) #applied-jobs-list > div {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05) !important;
+}
+
+html:not(.dark) .bg-brand-background\/90 {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+}
+
+html:not(.dark) header.sticky {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+  border-color: rgba(226, 232, 240, 0.8) !important;
+}
+
+/* Text Colors & Contrast */
+html:not(.dark) .text-slate-100,
+html:not(.dark) .text-slate-200,
+html:not(.dark) .text-slate-300,
+html:not(.dark) .text-white,
+html:not(.dark) h1,
+html:not(.dark) h2,
+html:not(.dark) h3,
+html:not(.dark) h4,
+html:not(.dark) .prose-invert h1,
+html:not(.dark) .prose-invert h2,
+html:not(.dark) .prose-invert h3,
+html:not(.dark) .prose-invert h4 {
+  color: #0f172a !important;
+}
+
+html:not(.dark) .text-slate-400,
+html:not(.dark) .text-slate-500 {
+  color: #64748b !important;
+}
+
+html:not(.dark) .text-slate-600 {
+  color: #475569 !important;
+}
+
+/* Active tab and accent highlights */
+html:not(.dark) .text-cyan-400 {
+  color: #0891b2 !important; /* cyan-600 */
+}
+html:not(.dark) .text-cyan-400\/90 {
+  color: #0e7490 !important; /* cyan-700 */
+}
+html:not(.dark) .text-cyan-400\/80 {
+  color: #0891b2 !important;
+}
+html:not(.dark) .text-emerald-400 {
+  color: #059669 !important; /* emerald-600 */
+}
+
+/* Borders */
+html:not(.dark) .border-slate-800,
+html:not(.dark) .border-slate-800\/40,
+html:not(.dark) .border-slate-800\/60,
+html:not(.dark) .border-slate-800\/80,
+html:not(.dark) .border-slate-700\/30,
+html:not(.dark) .border-brand-border {
+  border-color: #cbd5e1 !important;
+}
+
+/* Inputs & Form Elements */
+html:not(.dark) input,
+html:not(.dark) select,
+html:not(.dark) textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+html:not(.dark) input::placeholder,
+html:not(.dark) textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Header link hovers */
+html:not(.dark) nav a.text-slate-300:hover,
+html:not(.dark) #auth-nav-guest button.text-slate-300:hover,
+html:not(.dark) #view-job-detail button:hover {
+  color: #0f172a !important;
+}
+
+html:not(.dark) nav a.text-slate-300,
+html:not(.dark) #auth-nav-guest button.text-slate-300 {
+  color: #475569 !important;
+}
+
+/* Quick technology filters & Job card tags */
+html:not(.dark) .tag-pill,
+html:not(.dark) #jobs-grid-container span.bg-slate-900\/65 {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #475569 !important;
+}
+
+html:not(.dark) .tag-pill:hover {
+  border-color: #0891b2 !important;
+  color: #0891b2 !important;
+  background-color: #ecfeff !important;
+}
+
+html:not(.dark) .tag-pill.bg-cyan-950\/45 {
+  background-color: #ecfeff !important;
+  border-color: #22d3ee !important;
+  color: #0891b2 !important;
+}
+
+/* Hero card styling in light mode */
+html:not(.dark) .relative.overflow-hidden.rounded-3xl.border.bg-gradient-to-br.from-brand-navyLight\/80 {
+  background: linear-gradient(135deg, #eff6ff 0%, #f0fdfa 100%) !important;
+  border-color: #bfdbfe !important;
+}
+
+html:not(.dark) .from-cyan-400.to-blue-400 {
+  background-image: linear-gradient(to right, #0891b2, #2563eb) !important;
+  background-clip: text !important;
+  -webkit-background-clip: text !important;
+}
+
+html:not(.dark) .text-slate-300 {
+  color: #475569 !important;
+}
+
+/* Job card specific styles */
+html:not(.dark) article.glass-card:hover {
+  border-color: rgba(34, 211, 238, 0.6) !important;
+  box-shadow: 0 10px 25px -5px rgba(34, 211, 238, 0.15) !important;
+}
+
+html:not(.dark) #jobs-grid-container span.bg-slate-900\/65 {
+  border-color: #e2e8f0 !important;
+}
+
+/* Apply / Edit buttons */
+html:not(.dark) #jobs-grid-container button.border-slate-800\/80 {
+  border-color: #cbd5e1 !important;
+  color: #475569 !important;
+}
+
+html:not(.dark) #jobs-grid-container button.border-slate-800\/80:hover {
+  border-color: #0891b2 !important;
+  color: #0891b2 !important;
+  background-color: #ecfeff !important;
+}
+
+/* Mobile menu & Hamburger overrides for Light Mode */
+html:not(.dark) #mobile-menu a {
+  color: #475569 !important;
+}
+
+html:not(.dark) #mobile-menu a:hover {
+  color: #0f172a !important;
+  background-color: #f1f5f9 !important;
+}
+
+html:not(.dark) #hamburger-icon,
+html:not(.dark) #theme-toggle-icon {
+  color: #475569 !important;
+}
+
+html:not(.dark) #hamburger-icon:hover,
+html:not(.dark) #theme-toggle-icon:hover {
+  color: #0f172a !important;
+}
+
+
