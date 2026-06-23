@@ -10,56 +10,9 @@ from PyQt6.QtGui import (
     QColor, QPen, QBrush, QRadialGradient, QLinearGradient,
     QFont, QPainter, QPainterPath
 )
-
-
-# ==========================================
-# DATA: Skill Tree Definitions
-# ==========================================
-
-SKILL_BRANCHES = {
-    "Software Dev": {
-        "color_start": "#06B6D4",  # Cyan
-        "color_end":   "#3B82F6",  # Blue
-        "nodes": [
-            {"name": "Python",       "mastery": 90, "unlocked": True,  "x": -320, "y": -60},
-            {"name": "C++",          "mastery": 75, "unlocked": True,  "x": -420, "y": -180},
-            {"name": "Java",         "mastery": 60, "unlocked": True,  "x": -220, "y": -180},
-            {"name": "Web Dev",      "mastery": 40, "unlocked": True,  "x": -320, "y": -300},
-            {"name": "System Design","mastery": 0,  "unlocked": False, "x": -420, "y": -420},
-            {"name": "DevOps",       "mastery": 0,  "unlocked": False, "x": -220, "y": -420},
-        ],
-        "edges": [(0,1),(0,2),(1,3),(2,3),(3,4),(3,5)]
-    },
-    "Artificial Intelligence": {
-        "color_start": "#8B5CF6",  # Purple
-        "color_end":   "#EC4899",  # Pink
-        "nodes": [
-            {"name": "Machine Learning","mastery": 80, "unlocked": True,  "x": 0, "y": -60},
-            {"name": "Deep Learning",   "mastery": 55, "unlocked": True,  "x": -80, "y": -200},
-            {"name": "Computer Vision", "mastery": 45, "unlocked": True,  "x": 80,  "y": -200},
-            {"name": "NLP",             "mastery": 0,  "unlocked": False, "x": -80, "y": -340},
-            {"name": "Reinforcement L.","mastery": 0,  "unlocked": False, "x": 80,  "y": -340},
-            {"name": "AGI Research",    "mastery": 0,  "unlocked": False, "x": 0,   "y": -460},
-        ],
-        "edges": [(0,1),(0,2),(1,3),(2,4),(3,5),(4,5)]
-    },
-    "Hardware & IoT": {
-        "color_start": "#F59E0B",  # Amber
-        "color_end":   "#EF4444",  # Red
-        "nodes": [
-            {"name": "Arduino",          "mastery": 85, "unlocked": True,  "x": 320, "y": -60},
-            {"name": "ESP32",            "mastery": 70, "unlocked": True,  "x": 220, "y": -180},
-            {"name": "Robotics",         "mastery": 65, "unlocked": True,  "x": 420, "y": -180},
-            {"name": "FPV Drones",       "mastery": 35, "unlocked": True,  "x": 320, "y": -300},
-            {"name": "FPGA Design",      "mastery": 0,  "unlocked": False, "x": 220, "y": -420},
-            {"name": "Adv. Robotics",    "mastery": 0,  "unlocked": False, "x": 420, "y": -420},
-        ],
-        "edges": [(0,1),(0,2),(1,3),(2,3),(3,4),(3,5)]
-    }
-}
+from database import skill_tree_db
 
 NODE_RADIUS = 38
-
 
 # ==========================================
 # COMPONENT: Skill Node (QGraphicsEllipseItem)
@@ -146,7 +99,10 @@ class SkillTreeCanvas(QGraphicsView):
         self._build_tree()
 
     def _build_tree(self):
-        for branch_name, branch in SKILL_BRANCHES.items():
+        # Fetch structured data from SQLite database
+        self.branches_data = skill_tree_db.load_skill_branches_structured()
+
+        for branch_name, branch in self.branches_data.items():
             c1 = branch["color_start"]
             c2 = branch["color_end"]
             nodes_data = branch["nodes"]
@@ -154,36 +110,65 @@ class SkillTreeCanvas(QGraphicsView):
 
             # Draw edges first (underneath)
             for i, j in edges:
-                n1 = nodes_data[i]
-                n2 = nodes_data[j]
-                both_unlocked = n1["unlocked"] and n2["unlocked"]
+                if i < len(nodes_data) and j < len(nodes_data):
+                    n1 = nodes_data[i]
+                    n2 = nodes_data[j]
+                    both_unlocked = n1["unlocked"] and n2["unlocked"]
 
-                line = QGraphicsLineItem(n1["x"], n1["y"], n2["x"], n2["y"])
-                if both_unlocked:
-                    pen = QPen(QColor(c1))
-                    pen.setWidth(2)
-                    pen.setStyle(Qt.PenStyle.SolidLine)
-                else:
-                    pen = QPen(QColor("#1E293B"))
-                    pen.setWidth(1)
-                    pen.setStyle(Qt.PenStyle.DashLine)
-                line.setPen(pen)
-                line.setZValue(1)
-                self.scene.addItem(line)
+                    line = QGraphicsLineItem(n1["x"], n1["y"], n2["x"], n2["y"])
+                    if both_unlocked:
+                        pen = QPen(QColor(c1))
+                        pen.setWidth(2)
+                        pen.setStyle(Qt.PenStyle.SolidLine)
+                    else:
+                        pen = QPen(QColor("#1E293B"))
+                        pen.setWidth(1)
+                        pen.setStyle(Qt.PenStyle.DashLine)
+                    line.setPen(pen)
+                    line.setZValue(1)
+                    self.scene.addItem(line)
 
             # Draw nodes
             for nd in nodes_data:
+                # Inject branch_name context to node data
+                nd["branch_name"] = branch_name
                 node = SkillNode(nd, c1, c2, on_click=self.on_node_click)
                 self.scene.addItem(node)
 
-            # Branch label
-            root = nodes_data[0]
-            lbl = QGraphicsTextItem(branch_name)
-            lbl.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
-            lbl.setDefaultTextColor(QColor("#64748B"))
-            br = lbl.boundingRect()
-            lbl.setPos(root["x"] - br.width() / 2, root["y"] + NODE_RADIUS + 12)
-            self.scene.addItem(lbl)
+            # Branch label (only if nodes exist)
+            if nodes_data:
+                root = nodes_data[0]
+                lbl = QGraphicsTextItem(branch_name)
+                lbl.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+                lbl.setDefaultTextColor(QColor("#64748B"))
+                br = lbl.boundingRect()
+                lbl.setPos(root["x"] - br.width() / 2, root["y"] + NODE_RADIUS + 12)
+                self.scene.addItem(lbl)
+
+        # Dynamic Scene Rect calculation
+        rect = self.scene.itemsBoundingRect()
+        if not rect.isNull():
+            padding = 150
+            rect.adjust(-padding, -padding, padding, padding)
+            
+            # Ensure minimum size to prevent excessive zooming on few nodes
+            min_width = 800
+            min_height = 600
+            if rect.width() < min_width:
+                dx = (min_width - rect.width()) / 2
+                rect.adjust(-dx, 0, dx, 0)
+            if rect.height() < min_height:
+                dy = (min_height - rect.height()) / 2
+                rect.adjust(0, -dy, 0, dy)
+                
+            self.scene.setSceneRect(rect)
+        else:
+            self.scene.setSceneRect(-600, -550, 1200, 650)
+
+    def refresh_scene(self):
+        self.scene.clear()
+        self._build_tree()
+        self.fitInView(self.scene.sceneRect(), Qt.AspectRatioMode.KeepAspectRatio)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -196,6 +181,8 @@ class SkillTreeCanvas(QGraphicsView):
 class SkillDetailPanel(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.parent_page = parent
+        self.selected_node_data = None
         self.setFixedWidth(300)
         self.setStyleSheet("""
             QFrame {
@@ -212,8 +199,8 @@ class SkillDetailPanel(QFrame):
         self.setGraphicsEffect(shadow)
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(28, 36, 28, 36)
-        layout.setSpacing(20)
+        layout.setContentsMargins(28, 30, 28, 30)
+        layout.setSpacing(16)
         layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         # Node icon placeholder
@@ -235,7 +222,7 @@ class SkillDetailPanel(QFrame):
         self.status_lbl.setStyleSheet("font-size: 13px; color: #94A3B8; border: none; background: transparent; font-weight: 600;")
         layout.addWidget(self.status_lbl)
 
-        layout.addSpacing(10)
+        layout.addSpacing(5)
 
         # Progress section
         prog_title = QLabel("MASTERY")
@@ -264,7 +251,7 @@ class SkillDetailPanel(QFrame):
         self.progress_lbl.setStyleSheet("font-size: 14px; font-weight: 800; color: #CBD5E1; border: none; background: transparent;")
         layout.addWidget(self.progress_lbl)
 
-        layout.addSpacing(10)
+        layout.addSpacing(5)
 
         # CTA Button
         self.btn_learn = QPushButton("⚡ Start Mission")
@@ -275,7 +262,7 @@ class SkillDetailPanel(QFrame):
                 color: #FFFFFF;
                 font-weight: 800;
                 border-radius: 16px;
-                padding: 16px;
+                padding: 14px;
                 font-size: 15px;
                 border: none;
                 letter-spacing: 0.5px;
@@ -284,16 +271,40 @@ class SkillDetailPanel(QFrame):
                 background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #7C3AED, stop:1 #0891B2);
             }
         """)
+        self.btn_learn.clicked.connect(self._on_learn_click)
         layout.addWidget(self.btn_learn)
+
+        # Edit Skill Button
+        self.btn_edit_skill = QPushButton("✏️ Edit Skill Details")
+        self.btn_edit_skill.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_edit_skill.setStyleSheet("""
+            QPushButton {
+                background-color: #1E293B;
+                color: #38BDF8;
+                font-weight: bold;
+                border-radius: 16px;
+                padding: 12px;
+                font-size: 14px;
+                border: 1px solid #334155;
+            }
+            QPushButton:hover {
+                background-color: #334155;
+            }
+        """)
+        self.btn_edit_skill.clicked.connect(self._on_edit_click)
+        self.btn_edit_skill.hide()
+        layout.addWidget(self.btn_edit_skill)
 
         layout.addStretch()
 
     def update_detail(self, data):
+        self.selected_node_data = data
         name = data["name"]
         mastery = data["mastery"]
         unlocked = data["unlocked"]
 
         self.title_lbl.setText(name)
+        self.btn_edit_skill.show()
 
         if unlocked:
             self.node_icon.setStyleSheet("font-size: 56px; color: #06B6D4; border: none; background: transparent;")
@@ -308,7 +319,7 @@ class SkillDetailPanel(QFrame):
                 QPushButton {
                     background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #8B5CF6, stop:1 #06B6D4);
                     color: #FFFFFF; font-weight: 800; border-radius: 16px;
-                    padding: 16px; font-size: 15px; border: none;
+                    padding: 14px; font-size: 15px; border: none;
                 }
                 QPushButton:hover {
                     background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #7C3AED, stop:1 #0891B2);
@@ -326,10 +337,18 @@ class SkillDetailPanel(QFrame):
             self.btn_learn.setStyleSheet("""
                 QPushButton {
                     background-color: #1E293B; color: #475569;
-                    font-weight: 800; border-radius: 16px; padding: 16px;
+                    font-weight: 800; border-radius: 16px; padding: 14px;
                     font-size: 15px; border: 1px solid #334155;
                 }
             """)
+
+    def _on_edit_click(self):
+        if self.parent_page and self.selected_node_data:
+            self.parent_page._on_edit_node(self.selected_node_data)
+
+    def _on_learn_click(self):
+        if self.parent_page and self.selected_node_data:
+            self.parent_page._on_start_mission(self.selected_node_data)
 
 
 # ==========================================
@@ -370,10 +389,68 @@ class SkillTreePage(QWidget):
         h_layout.addWidget(page_sub)
         h_layout.addStretch()
 
+        # Action Buttons in Header
+        self.btn_manage_branches = QPushButton("📁 Branches")
+        self.btn_manage_branches.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_manage_branches.setStyleSheet("""
+            QPushButton {
+                background-color: #1E293B;
+                color: #F1F5F9;
+                border: 1px solid #334155;
+                border-radius: 8px;
+                padding: 6px 12px;
+                font-weight: 600;
+                font-size: 12px;
+            }
+            QPushButton:hover {
+                background-color: #334155;
+            }
+        """)
+        self.btn_manage_branches.clicked.connect(self._on_manage_branches)
+        h_layout.addWidget(self.btn_manage_branches)
+
+        self.btn_add_node = QPushButton("➕ Add Skill")
+        self.btn_add_node.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_add_node.setStyleSheet("""
+            QPushButton {
+                background-color: #1E293B;
+                color: #F1F5F9;
+                border: 1px solid #334155;
+                border-radius: 8px;
+                padding: 6px 12px;
+                font-weight: 600;
+                font-size: 12px;
+            }
+            QPushButton:hover {
+                background-color: #334155;
+            }
+        """)
+        self.btn_add_node.clicked.connect(self._on_add_node)
+        h_layout.addWidget(self.btn_add_node)
+
+        self.btn_manage_paths = QPushButton("🔗 Connect Paths")
+        self.btn_manage_paths.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_manage_paths.setStyleSheet("""
+            QPushButton {
+                background-color: #1E293B;
+                color: #F1F5F9;
+                border: 1px solid #334155;
+                border-radius: 8px;
+                padding: 6px 12px;
+                font-weight: 600;
+                font-size: 12px;
+            }
+            QPushButton:hover {
+                background-color: #334155;
+            }
+        """)
+        self.btn_manage_paths.clicked.connect(self._on_manage_paths)
+        h_layout.addWidget(self.btn_manage_paths)
+
         canvas_layout.addWidget(header)
 
         # Canvas
-        self.detail_panel = SkillDetailPanel()
+        self.detail_panel = SkillDetailPanel(parent=self)
         self.canvas = SkillTreeCanvas(on_node_click=self._on_node_selected)
         canvas_layout.addWidget(self.canvas, 1)
 
@@ -389,3 +466,57 @@ class SkillTreePage(QWidget):
 
     def _on_node_selected(self, data):
         self.detail_panel.update_detail(data)
+
+    def _on_edit_node(self, node_data):
+        from pages.skill_tree_node_dialog import NodeDialog
+        dlg = NodeDialog(node_data=node_data, parent=self)
+        if dlg.exec():
+            self.refresh()
+
+    def _on_add_node(self):
+        from pages.skill_tree_node_dialog import NodeDialog
+        branch_name = None
+        if self.detail_panel.selected_node_data:
+            branch_name = self.detail_panel.selected_node_data.get("branch_name")
+        dlg = NodeDialog(current_branch_name=branch_name, parent=self)
+        if dlg.exec():
+            self.refresh()
+
+    def _on_manage_branches(self):
+        from pages.skill_tree_branch_dialog import BranchDialog
+        dlg = BranchDialog(parent=self)
+        if dlg.exec():
+            self.refresh()
+
+    def _on_manage_paths(self):
+        from pages.skill_tree_edge_dialog import EdgeDialog
+        branch_name = None
+        if self.detail_panel.selected_node_data:
+            branch_name = self.detail_panel.selected_node_data.get("branch_name")
+        dlg = EdgeDialog(current_branch_name=branch_name, parent=self)
+        if dlg.exec():
+            self.refresh()
+
+    def _on_start_mission(self, node_data):
+        from pages.skill_tree_mission_dialog import MissionDialog
+        dlg = MissionDialog(node_data=node_data, controller=self.controller, parent=self)
+        if dlg.exec():
+            if dlg.navigation_target:
+                if self.controller and hasattr(self.controller, "show_page"):
+                    self.controller.show_page(dlg.navigation_target)
+            self.refresh()
+
+    def refresh(self):
+        self.canvas.refresh_scene()
+        
+        # Reset detail panel
+        self.detail_panel.selected_node_data = None
+        self.detail_panel.title_lbl.setText("Select a Skill")
+        self.detail_panel.status_lbl.setText("Click a node to view details")
+        self.detail_panel.progress_bar.setValue(0)
+        self.detail_panel.progress_lbl.setText("0%")
+        self.detail_panel.node_icon.setStyleSheet("font-size: 56px; color: #38BDF8; border: none; background: transparent;")
+        self.detail_panel.node_icon.setText("⬡")
+        self.detail_panel.btn_learn.setText("⚡ Start Mission")
+        self.detail_panel.btn_learn.setEnabled(True)
+        self.detail_panel.btn_edit_skill.hide()
