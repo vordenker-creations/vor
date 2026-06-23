@@ -32,6 +32,13 @@ class BranchDialog(QDialog):
             QLineEdit:focus, QComboBox:focus {
                 border: 1px solid #38BDF8;
             }
+            QComboBox QAbstractItemView {
+                background-color: #1E293B;
+                color: #F1F5F9;
+                selection-background-color: #38BDF8;
+                selection-color: #0F172A;
+                border: 1px solid #334155;
+            }
             QPushButton {
                 background-color: #1E293B;
                 color: #F1F5F9;

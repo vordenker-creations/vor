@@ -155,6 +155,13 @@ class CodeLabPage(QWidget):
                 padding: 8px 12px;
                 font-size: 13px;
             }
+            QComboBox QAbstractItemView {
+                background-color: #1E293B;
+                color: #F1F5F9;
+                selection-background-color: #38BDF8;
+                selection-color: #0F172A;
+                border: 1px solid #334155;
+            }
         """)
         self.diff_combo.currentTextChanged.connect(self._apply_filters)
         left_lay.addWidget(self.diff_combo)

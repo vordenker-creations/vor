@@ -190,6 +190,13 @@ class ProjectPortfolioPage(QWidget):
             QComboBox:focus {
                 border: 1px solid #38BDF8;
             }
+            QComboBox QAbstractItemView {
+                background-color: #1E293B;
+                color: #F1F5F9;
+                selection-background-color: #38BDF8;
+                selection-color: #0F172A;
+                border: 1px solid #334155;
+            }
         """)
         self.filter_status.currentTextChanged.connect(self._apply_filters)
         self.filter_layout.addWidget(self.filter_status, 2)
@@ -207,6 +214,13 @@ class ProjectPortfolioPage(QWidget):
             }
             QComboBox:focus {
                 border: 1px solid #38BDF8;
+            }
+            QComboBox QAbstractItemView {
+                background-color: #1E293B;
+                color: #F1F5F9;
+                selection-background-color: #38BDF8;
+                selection-color: #0F172A;
+                border: 1px solid #334155;
             }
         """)
         self.filter_skill.currentTextChanged.connect(self._apply_filters)
