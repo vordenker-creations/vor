@@ -44,9 +44,9 @@ class SkillNode(QGraphicsEllipseItem):
             glow_pen.setWidth(3)
             self.setPen(glow_pen)
         else:
-            # Dimmed / locked
-            self.setBrush(QBrush(QColor("#1E293B")))
-            dim_pen = QPen(QColor("#334155"))
+            # Dimmed / locked (Light Mode)
+            self.setBrush(QBrush(QColor("#F8FAFC")))
+            dim_pen = QPen(QColor("#CBD5E1"))
             dim_pen.setWidth(2)
             self.setPen(dim_pen)
 
@@ -57,7 +57,7 @@ class SkillNode(QGraphicsEllipseItem):
         if self.unlocked:
             self.label.setDefaultTextColor(QColor("#FFFFFF"))
         else:
-            self.label.setDefaultTextColor(QColor("#475569"))
+            self.label.setDefaultTextColor(QColor("#64748B"))
         br = self.label.boundingRect()
         self.label.setPos(-br.width() / 2, -br.height() / 2)
 
@@ -121,8 +121,8 @@ class SkillTreeCanvas(QGraphicsView):
                         pen.setWidth(2)
                         pen.setStyle(Qt.PenStyle.SolidLine)
                     else:
-                        pen = QPen(QColor("#1E293B"))
-                        pen.setWidth(1)
+                        pen = QPen(QColor("#CBD5E1"))
+                        pen.setWidth(2)
                         pen.setStyle(Qt.PenStyle.DashLine)
                     line.setPen(pen)
                     line.setZValue(1)
@@ -140,7 +140,7 @@ class SkillTreeCanvas(QGraphicsView):
                 root = nodes_data[0]
                 lbl = QGraphicsTextItem(branch_name)
                 lbl.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
-                lbl.setDefaultTextColor(QColor("#64748B"))
+                lbl.setDefaultTextColor(QColor("#475569"))
                 br = lbl.boundingRect()
                 lbl.setPos(root["x"] - br.width() / 2, root["y"] + NODE_RADIUS + 12)
                 self.scene.addItem(lbl)
@@ -186,15 +186,15 @@ class SkillDetailPanel(QFrame):
         self.setFixedWidth(300)
         self.setStyleSheet("""
             QFrame {
-                background-color: rgba(30, 41, 59, 200);
-                border-radius: 20px;
-                border: 1px solid rgba(148, 163, 184, 40);
+                background-color: #FFFFFF;
+                border-radius: 24px;
+                border: 1px solid #E2E8F0;
             }
         """)
 
         shadow = QGraphicsDropShadowEffect()
-        shadow.setBlurRadius(40)
-        shadow.setColor(QColor(0, 0, 0, 60))
+        shadow.setBlurRadius(30)
+        shadow.setColor(QColor(18, 55, 105, 20))
         shadow.setOffset(0, 8)
         self.setGraphicsEffect(shadow)
 
@@ -213,20 +213,20 @@ class SkillDetailPanel(QFrame):
         self.title_lbl = QLabel("Select a Skill")
         self.title_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.title_lbl.setWordWrap(True)
-        self.title_lbl.setStyleSheet("font-size: 22px; font-weight: 900; color: #F1F5F9; border: none; background: transparent; letter-spacing: -0.5px;")
+        self.title_lbl.setStyleSheet("font-size: 22px; font-weight: 900; color: #0F172A; border: none; background: transparent; letter-spacing: -0.5px;")
         layout.addWidget(self.title_lbl)
 
         # Status label
         self.status_lbl = QLabel("Click a node to view details")
         self.status_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.status_lbl.setStyleSheet("font-size: 13px; color: #94A3B8; border: none; background: transparent; font-weight: 600;")
+        self.status_lbl.setStyleSheet("font-size: 13px; color: #64748B; border: none; background: transparent; font-weight: 600;")
         layout.addWidget(self.status_lbl)
 
         layout.addSpacing(5)
 
         # Progress section
         prog_title = QLabel("MASTERY")
-        prog_title.setStyleSheet("font-size: 11px; font-weight: 800; color: #64748B; letter-spacing: 1px; border: none; background: transparent;")
+        prog_title.setStyleSheet("font-size: 11px; font-weight: 800; color: #94A3B8; letter-spacing: 1px; border: none; background: transparent;")
         layout.addWidget(prog_title)
 
         self.progress_bar = QProgressBar()
@@ -235,12 +235,12 @@ class SkillDetailPanel(QFrame):
         self.progress_bar.setTextVisible(False)
         self.progress_bar.setStyleSheet("""
             QProgressBar {
-                background-color: #1E293B;
+                background-color: #F1F5F9;
                 border-radius: 5px;
                 border: none;
             }
             QProgressBar::chunk {
-                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #8B5CF6, stop:1 #06B6D4);
+                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #38BDF8, stop:1 #0284C7);
                 border-radius: 5px;
             }
         """)
@@ -248,7 +248,7 @@ class SkillDetailPanel(QFrame):
 
         self.progress_lbl = QLabel("0%")
         self.progress_lbl.setAlignment(Qt.AlignmentFlag.AlignRight)
-        self.progress_lbl.setStyleSheet("font-size: 14px; font-weight: 800; color: #CBD5E1; border: none; background: transparent;")
+        self.progress_lbl.setStyleSheet("font-size: 14px; font-weight: 800; color: #0F172A; border: none; background: transparent;")
         layout.addWidget(self.progress_lbl)
 
         layout.addSpacing(5)
@@ -258,7 +258,7 @@ class SkillDetailPanel(QFrame):
         self.btn_learn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_learn.setStyleSheet("""
             QPushButton {
-                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #8B5CF6, stop:1 #06B6D4);
+                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #38BDF8, stop:1 #0284C7);
                 color: #FFFFFF;
                 font-weight: 800;
                 border-radius: 16px;
@@ -268,7 +268,7 @@ class SkillDetailPanel(QFrame):
                 letter-spacing: 0.5px;
             }
             QPushButton:hover {
-                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #7C3AED, stop:1 #0891B2);
+                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #0284C7, stop:1 #0369A1);
             }
         """)
         self.btn_learn.clicked.connect(self._on_learn_click)
@@ -279,16 +279,16 @@ class SkillDetailPanel(QFrame):
         self.btn_edit_skill.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_edit_skill.setStyleSheet("""
             QPushButton {
-                background-color: #1E293B;
-                color: #38BDF8;
+                background-color: #FFFFFF;
+                color: #0F172A;
                 font-weight: bold;
                 border-radius: 16px;
                 padding: 12px;
                 font-size: 14px;
-                border: 1px solid #334155;
+                border: 1px solid #E2E8F0;
             }
             QPushButton:hover {
-                background-color: #334155;
+                background-color: #F8FAFC;
             }
         """)
         self.btn_edit_skill.clicked.connect(self._on_edit_click)
@@ -307,7 +307,7 @@ class SkillDetailPanel(QFrame):
         self.btn_edit_skill.show()
 
         if unlocked:
-            self.node_icon.setStyleSheet("font-size: 56px; color: #06B6D4; border: none; background: transparent;")
+            self.node_icon.setStyleSheet("font-size: 56px; color: #38BDF8; border: none; background: transparent;")
             self.node_icon.setText("◈")
             self.status_lbl.setText(f"{'Mastered' if mastery >= 80 else 'In Progress' if mastery > 0 else 'Not Started'}")
             self.status_lbl.setStyleSheet("font-size: 13px; color: #38BDF8; border: none; background: transparent; font-weight: 700;")
@@ -317,28 +317,28 @@ class SkillDetailPanel(QFrame):
             self.btn_learn.setEnabled(True)
             self.btn_learn.setStyleSheet("""
                 QPushButton {
-                    background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #8B5CF6, stop:1 #06B6D4);
+                    background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #38BDF8, stop:1 #0284C7);
                     color: #FFFFFF; font-weight: 800; border-radius: 16px;
                     padding: 14px; font-size: 15px; border: none;
                 }
                 QPushButton:hover {
-                    background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #7C3AED, stop:1 #0891B2);
+                    background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #0284C7, stop:1 #0369A1);
                 }
             """)
         else:
-            self.node_icon.setStyleSheet("font-size: 56px; color: #334155; border: none; background: transparent;")
+            self.node_icon.setStyleSheet("font-size: 56px; color: #CBD5E1; border: none; background: transparent;")
             self.node_icon.setText("🔒")
             self.status_lbl.setText("Locked — Complete prerequisites")
-            self.status_lbl.setStyleSheet("font-size: 13px; color: #475569; border: none; background: transparent; font-weight: 600;")
+            self.status_lbl.setStyleSheet("font-size: 13px; color: #94A3B8; border: none; background: transparent; font-weight: 600;")
             self.progress_bar.setValue(0)
             self.progress_lbl.setText("0%")
             self.btn_learn.setText("🔒 Locked")
             self.btn_learn.setEnabled(False)
             self.btn_learn.setStyleSheet("""
                 QPushButton {
-                    background-color: #1E293B; color: #475569;
+                    background-color: #F1F5F9; color: #94A3B8;
                     font-weight: 800; border-radius: 16px; padding: 14px;
-                    font-size: 15px; border: 1px solid #334155;
+                    font-size: 15px; border: none;
                 }
             """)
 
@@ -359,7 +359,7 @@ class SkillTreePage(QWidget):
         super().__init__()
         self.controller = controller
 
-        self.setStyleSheet("background-color: #0F172A;")
+        self.setStyleSheet("background-color: #F8FAFC;")
 
         main_layout = QHBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
@@ -378,72 +378,52 @@ class SkillTreePage(QWidget):
         h_layout = QHBoxLayout(header)
         h_layout.setContentsMargins(10, 0, 10, 0)
 
+        title_v = QVBoxLayout()
+        title_v.setSpacing(4)
+        
         page_title = QLabel("AI Skill Tree")
-        page_title.setStyleSheet("font-size: 28px; font-weight: 900; color: #F1F5F9; letter-spacing: -0.5px; border: none; background: transparent;")
+        page_title.setStyleSheet("font-size: 28px; font-weight: 900; color: #0F172A; letter-spacing: -0.5px; border: none; background: transparent;")
 
         page_sub = QLabel("Navigate your learning journey")
         page_sub.setStyleSheet("font-size: 14px; color: #64748B; font-weight: 600; border: none; background: transparent;")
 
-        h_layout.addWidget(page_title)
-        h_layout.addSpacing(16)
-        h_layout.addWidget(page_sub)
+        title_v.addWidget(page_title)
+        title_v.addWidget(page_sub)
+        
+        h_layout.addLayout(title_v)
         h_layout.addStretch()
 
         # Action Buttons in Header
-        self.btn_manage_branches = QPushButton("📁 Branches")
-        self.btn_manage_branches.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_manage_branches.setStyleSheet("""
+        btn_style = """
             QPushButton {
-                background-color: #1E293B;
-                color: #F1F5F9;
-                border: 1px solid #334155;
+                background-color: #FFFFFF;
+                color: #0F172A;
+                border: 1px solid #E2E8F0;
                 border-radius: 8px;
-                padding: 6px 12px;
-                font-weight: 600;
-                font-size: 12px;
+                padding: 8px 16px;
+                font-weight: 700;
+                font-size: 13px;
             }
             QPushButton:hover {
-                background-color: #334155;
+                background-color: #F8FAFC;
             }
-        """)
+        """
+        
+        self.btn_manage_branches = QPushButton("📁 Branches")
+        self.btn_manage_branches.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_manage_branches.setStyleSheet(btn_style)
         self.btn_manage_branches.clicked.connect(self._on_manage_branches)
         h_layout.addWidget(self.btn_manage_branches)
 
         self.btn_add_node = QPushButton("➕ Add Skill")
         self.btn_add_node.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_add_node.setStyleSheet("""
-            QPushButton {
-                background-color: #1E293B;
-                color: #F1F5F9;
-                border: 1px solid #334155;
-                border-radius: 8px;
-                padding: 6px 12px;
-                font-weight: 600;
-                font-size: 12px;
-            }
-            QPushButton:hover {
-                background-color: #334155;
-            }
-        """)
+        self.btn_add_node.setStyleSheet(btn_style)
         self.btn_add_node.clicked.connect(self._on_add_node)
         h_layout.addWidget(self.btn_add_node)
 
         self.btn_manage_paths = QPushButton("🔗 Connect Paths")
         self.btn_manage_paths.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_manage_paths.setStyleSheet("""
-            QPushButton {
-                background-color: #1E293B;
-                color: #F1F5F9;
-                border: 1px solid #334155;
-                border-radius: 8px;
-                padding: 6px 12px;
-                font-weight: 600;
-                font-size: 12px;
-            }
-            QPushButton:hover {
-                background-color: #334155;
-            }
-        """)
+        self.btn_manage_paths.setStyleSheet(btn_style)
         self.btn_manage_paths.clicked.connect(self._on_manage_paths)
         h_layout.addWidget(self.btn_manage_paths)
 

@@ -328,12 +328,12 @@ class ProfilePage(QWidget):
         
         # 3. Right Insights Panel (Collapsible)
         self.insights_content = self._setup_insights_panel()
-        self.insights_content.setMinimumWidth(350)
-        self.insights_content.setMaximumWidth(400)
+        self.insights_content.setMinimumWidth(300)
         self.right_panel = CollapsiblePanel(self.insights_content, orientation="right")
-        self.right_panel.max_w = 400
-        self.right_panel.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding)
-        self.content_layout.addWidget(self.right_panel, 0)
+        self.right_panel.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.content_layout.addWidget(self.right_panel, 3)
+        self.content_layout.setStretch(0, 7)
+        self.content_layout.setStretch(1, 3)
         
         self.main_layout.addWidget(content_container, 1)
         
@@ -400,7 +400,7 @@ class ProfilePage(QWidget):
         form_scroll = QScrollArea()
         form_scroll.setWidgetResizable(True)
         form_scroll.setFrameShape(QFrame.Shape.NoFrame)
-        form_scroll.setStyleSheet("background: transparent;")
+        form_scroll.setStyleSheet("QScrollArea { background: transparent; border: none; }")
         form_scroll.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         form_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         
@@ -411,6 +411,7 @@ class ProfilePage(QWidget):
         form_layout.setSpacing(24)
         
         self.form_card = ShadowCard(radius=24)
+        self.form_card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         fc_layout = self.form_card.layout
         
         form_title = QLabel("Edit Academic Profile")
@@ -892,12 +893,12 @@ class ProfilePage(QWidget):
         ai_card.layout.setSpacing(12)
         
         ai_title = QLabel("AI Recommendations")
-        ai_title.setStyleSheet("color: #38BDF8; font-size: 14px; font-weight: 800; text-transform: uppercase;")
+        ai_title.setStyleSheet("color: #38BDF8; font-size: 14px; font-weight: 800; text-transform: uppercase; background: transparent; border: none;")
         ai_card.layout.addWidget(ai_title)
         
         tip = QLabel(recommendation_text)
         tip.setWordWrap(True)
-        tip.setStyleSheet("color: #E2E8F0; font-size: 13px; line-height: 1.5;")
+        tip.setStyleSheet("color: #E2E8F0; font-size: 13px; line-height: 1.5; background: transparent; border: none;")
         ai_card.layout.addWidget(tip)
         
         opt_btn = QPushButton("Generate/Refresh Plan")

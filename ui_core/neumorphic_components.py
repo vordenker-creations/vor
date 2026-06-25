@@ -29,6 +29,17 @@ class NeumorphicFrame(QFrame):
         self.content_layout.setContentsMargins(30, 30, 30, 30)
         self.content_layout.setSpacing(20)
 
+    def update_theme(self, is_dark):
+        self.is_dark = is_dark
+        if is_dark:
+            if self.bg_color_str == "#FFFFFF" or self.bg_color_str == "#F8FAFC":
+                self.bg_color = QColor("#1E293B")
+            self.dark_shadow.setColor(QColor(0, 0, 0, 80))
+        else:
+            self.bg_color = QColor(self.bg_color_str)
+            self.dark_shadow.setColor(QColor(18, 55, 105, 20))
+        self.update()
+
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -36,7 +47,8 @@ class NeumorphicFrame(QFrame):
         # Light shadow (top-left)
         # We draw a series of rectangles with decreasing opacity to simulate blur
         for i in range(self.offset):
-            alpha = int(255 * (1 - i/self.offset) * 0.5)
+            alpha_factor = 0.05 if getattr(self, "is_dark", False) else 0.5
+            alpha = int(255 * (1 - i/self.offset) * alpha_factor)
             painter.setPen(Qt.PenStyle.NoPen)
             painter.setBrush(QColor(255, 255, 255, alpha))
             painter.drawRoundedRect(self.rect().adjusted(-i, -i, -self.offset, -self.offset), self.radius, self.radius)
@@ -85,6 +97,10 @@ class NeumorphicInput(QLineEdit):
             }}
         """)
         
+    def update_theme(self, is_dark):
+        self.is_dark = is_dark
+        self.update()
+
     def paintEvent(self, event):
         super().paintEvent(event)
         painter = QPainter(self)
@@ -94,11 +110,13 @@ class NeumorphicInput(QLineEdit):
         rect = QRectF(self.rect()).adjusted(1, 1, -1, -1)
         
         # Top-Left Dark
-        painter.setPen(QPen(QColor(163, 177, 198, 80), 2))
+        dark_color = QColor(0, 0, 0, 100) if getattr(self, "is_dark", False) else QColor(163, 177, 198, 80)
+        painter.setPen(QPen(dark_color, 2))
         painter.drawRoundedRect(rect, self.radius, self.radius)
         
         # Bottom-Right Light
-        painter.setPen(QPen(QColor(255, 255, 255, 150), 2))
+        light_color = QColor(255, 255, 255, 10) if getattr(self, "is_dark", False) else QColor(255, 255, 255, 150)
+        painter.setPen(QPen(light_color, 2))
         painter.drawRoundedRect(rect.adjusted(1, 1, 0, 0), self.radius, self.radius)
 
         if self.icon_text:

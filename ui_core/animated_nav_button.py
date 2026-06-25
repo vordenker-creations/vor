@@ -56,9 +56,20 @@ class AnimatedNavButton(QPushButton):
         # Tooltip for collapsed state
         self.tooltip = None
 
+    def update_theme(self, is_dark):
+        self.is_dark = is_dark
+        self.update_style()
+
     def update_style(self, hovered=False):
-        active_bg = "#F0F9FF" if self.isChecked() else ("#F1F5F9" if hovered else "transparent")
-        active_color = "#0284C7" if self.isChecked() else ("#334155" if hovered else "#64748B")
+        is_dark = getattr(self, "is_dark", False)
+        
+        if is_dark:
+            active_bg = "#1E293B" if self.isChecked() else ("#334155" if hovered else "transparent")
+            active_color = "#38BDF8" if self.isChecked() else ("#F8FAFC" if hovered else "#94A3B8")
+        else:
+            active_bg = "#F0F9FF" if self.isChecked() else ("#F1F5F9" if hovered else "transparent")
+            active_color = "#0284C7" if self.isChecked() else ("#334155" if hovered else "#64748B")
+            
         font_weight = "600" if self.isChecked() else "500"
         
         self.setStyleSheet(f"""

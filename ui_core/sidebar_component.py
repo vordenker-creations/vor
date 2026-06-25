@@ -11,8 +11,10 @@ class SidebarComponent(QFrame):
         self.setFixedWidth(260)
         self.is_collapsed = False
         
+        self.setObjectName("SidebarComponent")
+        
         self.setStyleSheet("""
-            SidebarComponent {
+            #SidebarComponent {
                 background-color: #FFFFFF;
                 border-right: 1px solid #E2E8F0;
             }

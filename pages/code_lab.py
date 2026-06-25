@@ -25,8 +25,8 @@ class ClickableCard(QFrame):
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setStyleSheet("""
             #ClickableCard {
-                background-color: #1E293B;
-                border: 1px solid #334155;
+                background-color: #FFFFFF;
+                border: 1px solid #E2E8F0;
                 border-radius: 12px;
             }
             #ClickableCard:hover {
@@ -54,10 +54,15 @@ class CodeLabPage(QWidget):
     def __init__(self, parent=None, controller=None):
         super().__init__(parent)
         self.controller = controller
-        self.setStyleSheet("background-color: #0F172A;")
+        self.setStyleSheet("background-color: #F8FAFC;")
         
         self.active_challenge = None
         self.challenges_list = []
+        
+        from PyQt6.QtCore import QTimer
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self._update_timer)
+        self.time_left = 1800 # 30 mins
         
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
@@ -72,7 +77,7 @@ class CodeLabPage(QWidget):
         header_layout.setSpacing(16)
         
         title_lbl = QLabel("💻 Code & Algorithm Lab")
-        title_lbl.setStyleSheet("font-size: 20px; font-weight: 900; color: #F1F5F9; border: none; background: transparent;")
+        title_lbl.setStyleSheet("font-size: 20px; font-weight: 900; color: #0F172A; border: none; background: transparent;")
         header_layout.addWidget(title_lbl)
         
         sub_lbl = QLabel("Practice algorithms with instant local tests and AI mentor analysis")
@@ -99,13 +104,13 @@ class CodeLabPage(QWidget):
         
         # Progress Card
         progress_card = QFrame()
-        progress_card.setStyleSheet("background-color: #1E293B; border: 1px solid #334155; border-radius: 12px;")
+        progress_card.setStyleSheet("background-color: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px;")
         pc_lay = QVBoxLayout(progress_card)
         pc_lay.setContentsMargins(15, 12, 15, 12)
         pc_lay.setSpacing(8)
         
         self.progress_lbl = QLabel("Challenges Solved: 0 / 0")
-        self.progress_lbl.setStyleSheet("color: #F1F5F9; font-size: 13px; font-weight: bold; background: transparent; border: none;")
+        self.progress_lbl.setStyleSheet("color: #0F172A; font-size: 13px; font-weight: bold; background: transparent; border: none;")
         pc_lay.addWidget(self.progress_lbl)
         
         self.progress_bar = QProgressBar()
@@ -113,7 +118,7 @@ class CodeLabPage(QWidget):
         self.progress_bar.setTextVisible(False)
         self.progress_bar.setStyleSheet("""
             QProgressBar {
-                background: #0F172A;
+                background: #F8FAFC;
                 border-radius: 3px;
                 border: none;
             }
@@ -130,9 +135,9 @@ class CodeLabPage(QWidget):
         self.search_box.setPlaceholderText("🔍 Search challenges...")
         self.search_box.setStyleSheet("""
             QLineEdit {
-                background-color: #1E293B;
-                color: #F1F5F9;
-                border: 1px solid #334155;
+                background-color: #FFFFFF;
+                color: #0F172A;
+                border: 1px solid #E2E8F0;
                 border-radius: 8px;
                 padding: 8px 12px;
                 font-size: 13px;
@@ -148,19 +153,19 @@ class CodeLabPage(QWidget):
         self.diff_combo.addItems(["All Difficulties", "Easy", "Medium", "Hard"])
         self.diff_combo.setStyleSheet("""
             QComboBox {
-                background-color: #1E293B;
-                color: #F1F5F9;
-                border: 1px solid #334155;
+                background-color: #FFFFFF;
+                color: #0F172A;
+                border: 1px solid #E2E8F0;
                 border-radius: 8px;
                 padding: 8px 12px;
                 font-size: 13px;
             }
             QComboBox QAbstractItemView {
-                background-color: #1E293B;
-                color: #F1F5F9;
+                background-color: #FFFFFF;
+                color: #0F172A;
                 selection-background-color: #38BDF8;
-                selection-color: #0F172A;
-                border: 1px solid #334155;
+                selection-color: #F8FAFC;
+                border: 1px solid #E2E8F0;
             }
         """)
         self.diff_combo.currentTextChanged.connect(self._apply_filters)
@@ -210,7 +215,7 @@ class CodeLabPage(QWidget):
         
         # State 0: Welcome Pane
         self.welcome_card = QFrame()
-        self.welcome_card.setStyleSheet("background-color: #1E293B; border: 1px solid #334155; border-radius: 16px;")
+        self.welcome_card.setStyleSheet("background-color: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 16px;")
         wc_lay = QVBoxLayout(self.welcome_card)
         wc_lay.setContentsMargins(40, 40, 40, 40)
         wc_lay.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -221,7 +226,7 @@ class CodeLabPage(QWidget):
         wc_lay.addWidget(code_icon)
         
         wc_title = QLabel("AI Code & Algorithm Playground")
-        wc_title.setStyleSheet("color: #F1F5F9; font-size: 20px; font-weight: 800; background: transparent; border: none;")
+        wc_title.setStyleSheet("color: #0F172A; font-size: 20px; font-weight: 800; background: transparent; border: none;")
         wc_lay.addWidget(wc_title)
         
         wc_desc = QLabel("Select an algorithmic challenge from the left panel to open the interactive coding workspace, write your solution, run test cases, and obtain instant AI complexity analysis and optimization feedback.")
@@ -250,7 +255,7 @@ class CodeLabPage(QWidget):
         dl.setSpacing(8)
         
         self.problem_title = QLabel("Problem Title")
-        self.problem_title.setStyleSheet("color: #F1F5F9; font-size: 18px; font-weight: 800;")
+        self.problem_title.setStyleSheet("color: #0F172A; font-size: 18px; font-weight: 800;")
         dl.addWidget(self.problem_title)
         
         meta_row = QHBoxLayout()
@@ -266,9 +271,9 @@ class CodeLabPage(QWidget):
         self.desc_browser = QTextBrowser()
         self.desc_browser.setStyleSheet("""
             QTextBrowser {
-                background-color: #1E293B;
+                background-color: #FFFFFF;
                 color: #E2E8F0;
-                border: 1px solid #334155;
+                border: 1px solid #E2E8F0;
                 border-radius: 8px;
                 padding: 12px;
                 font-size: 13px;
@@ -290,9 +295,9 @@ class CodeLabPage(QWidget):
         self.code_editor.setTabChangesFocus(False)
         self.code_editor.setStyleSheet("""
             QPlainTextEdit {
-                background-color: #1E293B;
+                background-color: #FFFFFF;
                 color: #38BDF8;
-                border: 1px solid #334155;
+                border: 1px solid #E2E8F0;
                 border-radius: 8px;
                 padding: 12px;
             }
@@ -316,7 +321,7 @@ class CodeLabPage(QWidget):
             QTextBrowser {
                 background-color: #020617;
                 color: #64748B;
-                border: 1px solid #334155;
+                border: 1px solid #E2E8F0;
                 border-radius: 8px;
                 padding: 10px;
             }
@@ -332,12 +337,17 @@ class CodeLabPage(QWidget):
         self.btn_run.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_run.setStyleSheet("""
             QPushButton {
-                background-color: #1E293B; color: #F1F5F9; border: 1px solid #334155;
+                background-color: #FFFFFF; color: #0F172A; border: 1px solid #E2E8F0;
                 border-radius: 8px; font-weight: bold; height: 36px; padding: 0 16px;
             }
-            QPushButton:hover { background-color: #334155; }
+            QPushButton:hover { background-color: #E2E8F0; }
         """)
         self.btn_run.clicked.connect(self._run_local_tests)
+        
+        self.timer_lbl = QLabel("⏱️ 30:00")
+        self.timer_lbl.setStyleSheet("color: #0F172A; font-weight: bold; font-size: 14px; background: #FFFFFF; border-radius: 8px; padding: 0 15px;")
+        actions.addWidget(self.timer_lbl)
+        
         actions.addWidget(self.btn_run)
         
         self.btn_ai = QPushButton("🧠 Ask AI Mentor")
@@ -425,7 +435,7 @@ class CodeLabPage(QWidget):
                 
                 # Title
                 lbl_title = QLabel(challenge["title"])
-                lbl_title.setStyleSheet("color: #F1F5F9; font-size: 13px; font-weight: bold; background: transparent; border: none;")
+                lbl_title.setStyleSheet("color: #0F172A; font-size: 13px; font-weight: bold; background: transparent; border: none;")
                 header.addWidget(lbl_title)
                 header.addStretch()
                 
@@ -504,6 +514,20 @@ class CodeLabPage(QWidget):
             self.code_editor.setPlainText(challenge["starter_code"])
             self.console.setText("Write your code and run tests or request AI review...")
             self.console.setStyleSheet("background-color: #020617; color: #64748B; font-family: Consolas, monospace; font-size: 11px;")
+
+        # Start timer for 30 mins
+        self.time_left = 1800
+        self._update_timer()
+        self.timer.start(1000)
+
+    def _update_timer(self):
+        if self.time_left > 0:
+            self.time_left -= 1
+            mins, secs = divmod(self.time_left, 60)
+            self.timer_lbl.setText(f"⏱️ {mins:02d}:{secs:02d}")
+        else:
+            self.timer.stop()
+            self._show_message("Time's Up!", "Thời gian làm bài đã hết!", is_warning=True)
 
     def _run_local_tests(self):
         if not self.active_challenge:
@@ -773,17 +797,17 @@ class CodeLabPage(QWidget):
         msg_box.setText(text)
         msg_box.setStyleSheet("""
             QMessageBox {
-                background-color: #1E293B;
-                border: 1px solid #334155;
+                background-color: #FFFFFF;
+                border: 1px solid #E2E8F0;
             }
             QLabel {
-                color: #F1F5F9;
+                color: #0F172A;
                 font-size: 13px;
                 min-width: 250px;
             }
             QPushButton {
                 background-color: #10B981;
-                color: #0F172A;
+                color: #F8FAFC;
                 border: none;
                 border-radius: 6px;
                 padding: 6px 16px;

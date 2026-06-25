@@ -41,14 +41,21 @@ class PlannerToolbar(QFrame):
         layout.addLayout(info_v)
         layout.addStretch()
         
-        # Filters and Sort
+        cb_style = """
+            QComboBox {
+                background: white; color: #0F172A; border: 1px solid #E2E8F0; padding: 6px 12px; border-radius: 6px;
+            }
+            QComboBox QAbstractItemView {
+                background-color: white; color: #0F172A; selection-background-color: #F1F5F9; selection-color: #0F172A; border: 1px solid #E2E8F0;
+            }
+        """
         self.filter_cb = QComboBox()
         self.filter_cb.addItems(["All Tasks", "Only Manual Classes", "Only AI Study Tasks"])
-        self.filter_cb.setStyleSheet("background: white; border: 1px solid #E2E8F0; padding: 6px 12px; border-radius: 6px;")
+        self.filter_cb.setStyleSheet(cb_style)
         
         self.sort_cb = QComboBox()
         self.sort_cb.addItems(["Sort AI by Time", "Sort AI by Duration"])
-        self.sort_cb.setStyleSheet("background: white; border: 1px solid #E2E8F0; padding: 6px 12px; border-radius: 6px;")
+        self.sort_cb.setStyleSheet(cb_style)
         
         # Add Button
         self.add_btn = QPushButton("+ Add Class")
@@ -70,20 +77,31 @@ class ClassDialog(QDialog):
         
         form = QFormLayout()
         
+        input_style = """
+            QLineEdit, QComboBox { border: 1px solid #E2E8F0; padding: 6px; border-radius: 4px; color: #0F172A; background: white; }
+            QComboBox QAbstractItemView { background-color: white; color: #0F172A; selection-background-color: #F1F5F9; selection-color: #0F172A; }
+        """
+        
         self.title_le = QLineEdit()
-        self.title_le.setStyleSheet("border: 1px solid #E2E8F0; padding: 6px; border-radius: 4px;")
+        self.title_le.setStyleSheet(input_style)
         self.day_cb = QComboBox()
         self.day_cb.addItems(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
-        self.day_cb.setStyleSheet("border: 1px solid #E2E8F0; padding: 6px; border-radius: 4px;")
+        self.day_cb.setStyleSheet(input_style)
         
         self.start_cb = QComboBox()
         self.start_cb.addItems([str(i) for i in range(1, 11)])
+        self.start_cb.setStyleSheet(input_style)
+        
         self.end_cb = QComboBox()
         self.end_cb.addItems([str(i) for i in range(1, 11)])
+        self.end_cb.setStyleSheet(input_style)
         
         self.room_le = QLineEdit()
+        self.room_le.setStyleSheet(input_style)
+        
         self.type_cb = QComboBox()
         self.type_cb.addItems(["class", "makeup", "self_study", "exam", "other", "study_task"])
+        self.type_cb.setStyleSheet(input_style)
         
         form.addRow("Title:", self.title_le)
         form.addRow("Day:", self.day_cb)
@@ -281,7 +299,7 @@ class SmartTaskPlanner(QWidget):
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True)
         self.scroll.setFrameShape(QFrame.Shape.NoFrame)
-        self.scroll.setStyleSheet("background: transparent;")
+        self.scroll.setStyleSheet("QScrollArea { background: transparent; border: none; }")
         
         self.grid_container = QWidget()
         self.grid_layout = QGridLayout(self.grid_container)

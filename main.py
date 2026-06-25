@@ -92,6 +92,22 @@ class MainWindow(QMainWindow):
 
         header_h.addStretch()
 
+        # Theme toggle button
+        self.is_dark_mode = False
+        self.btn_theme = QPushButton("🌙")
+        self.btn_theme.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_theme.setStyleSheet("""
+            QPushButton {
+                background-color: transparent;
+                color: #0F172A;
+                font-size: 16px;
+                border: none;
+                padding: 4px;
+            }
+        """)
+        self.btn_theme.clicked.connect(self.toggle_theme)
+        header_h.addWidget(self.btn_theme)
+        
         self.btn_status = QPushButton("✨ AI Intelligence")
         self.btn_status.setStyleSheet("""
             QPushButton {
@@ -158,6 +174,74 @@ class MainWindow(QMainWindow):
         if self.on_logout_callback:
             self.on_logout_callback()
 
+    def toggle_theme(self):
+        self.is_dark_mode = not self.is_dark_mode
+        self.btn_theme.setText("☀️" if self.is_dark_mode else "🌙")
+        self._apply_theme_globally(self.is_dark_mode)
+
+    def _apply_theme_globally(self, is_dark):
+        import re
+        import gc
+        
+        # Combine C++ widgets (avoids Python GC issues for unreferenced widgets)
+        # and Python widgets (avoids C++ downcasting issues for custom methods)
+        widgets_to_process = set()
+        
+        # 1. Native Qt Children
+        for w in self.findChildren(QWidget):
+            widgets_to_process.add(w)
+        widgets_to_process.add(self)
+            
+        # 2. Python GC Objects
+        for obj in gc.get_objects():
+            if isinstance(obj, QWidget):
+                widgets_to_process.add(obj)
+                
+        for widget in widgets_to_process:
+            try:
+                # Save original CSS once
+                if not hasattr(widget, '_original_css'):
+                    widget._original_css = widget.styleSheet()
+                    
+                css = widget._original_css
+                if css:
+                    if is_dark:
+                        # Map Light to Soft Dark Neumorphism
+                        css = re.sub(r'#F8FAFC|#f8fafc', '#0B1120', css) # App Bg
+                        css = re.sub(r'#FFFFFF|#ffffff|\bwhite\b', '#1E293B', css) # Card Bg
+                        css = re.sub(r'#0F172A|#0f172a', '#F8FAFC', css) # Main Text
+                        css = re.sub(r'#64748B|#64748b', '#94A3B8', css) # Sub Text
+                        css = re.sub(r'#E2E8F0|#e2e8f0', '#334155', css) # Border
+                        css = re.sub(r'#F1F5F9|#f1f5f9', '#0F172A', css) # Input Bg
+                        css = re.sub(r'#475569', '#CBD5E1', css)         # Additional grey
+                        
+                        # Revert white text on primary buttons (using negative lookbehind to avoid replacing background-color)
+                        css = re.sub(r'(?<!-)color:\s*#1E293B', 'color: #FFFFFF', css)
+                    
+                    if css != widget.styleSheet():
+                        widget.setStyleSheet(css)
+                        if hasattr(widget, 'style'):
+                            widget.style().unpolish(widget)
+                            widget.style().polish(widget)
+                        widget.update()
+                        
+                # Handle DropShadow Effects
+                effect = widget.graphicsEffect()
+                if effect and isinstance(effect, QGraphicsDropShadowEffect):
+                    if not hasattr(effect, '_original_color'):
+                        effect._original_color = effect.color()
+                    if is_dark:
+                        effect.setColor(QColor(0, 0, 0, 150)) # Stronger shadow for dark mode
+                    else:
+                        effect.setColor(effect._original_color)
+                        
+                # Custom components with paintEvent
+                if hasattr(widget, 'update_theme'):
+                    widget.update_theme(is_dark)
+            except RuntimeError:
+                # Widget was already deleted in C++, skip it safely
+                continue
+
     def _init_pages(self):
         self.pages_container.addWidget(DashboardPage(controller=self))  # 0
         self.pages_container.addWidget(QWidget())  # 1 placeholder for index keeping
@@ -201,6 +285,9 @@ class MainWindow(QMainWindow):
         active_widget = self.pages_container.widget(idx)
         if active_widget and hasattr(active_widget, "refresh"):
             active_widget.refresh()
+            
+        # Ensure any dynamically created widgets during refresh are themed correctly
+        self._apply_theme_globally(self.is_dark_mode)
 
     def overview_page_start_polling(self):
         dashboard = self.pages_container.widget(0)

@@ -291,7 +291,35 @@ class CVBuilderPage(QWidget):
         self.projects_input.textChanged.connect(self._update_preview)
         
         self.btn_ai_generate.clicked.connect(self._on_ai_generate)
+        self.btn_export.clicked.connect(self._export_pdf)
         
+    def _export_pdf(self):
+        from PyQt6.QtGui import QPainter, QPageSize
+        from PyQt6.QtPrintSupport import QPrinter
+        from PyQt6.QtWidgets import QFileDialog, QMessageBox
+        
+        filepath, _ = QFileDialog.getSaveFileName(self, "Export PDF", "My_CV.pdf", "PDF Files (*.pdf)")
+        if not filepath:
+            return
+            
+        printer = QPrinter(QPrinter.PrinterMode.HighResolution)
+        printer.setOutputFormat(QPrinter.OutputFormat.PdfFormat)
+        printer.setOutputFileName(filepath)
+        
+        # Set A4 Page Size
+        printer.setPageSize(QPageSize(QPageSize.PageSizeId.A4))
+        
+        painter = QPainter(printer)
+        rect = printer.pageRect(QPrinter.Unit.DevicePixel)
+        xscale = rect.width() / self.a4_paper.width()
+        yscale = rect.height() / self.a4_paper.height()
+        scale = min(xscale, yscale)
+        painter.scale(scale, scale)
+        self.a4_paper.render(painter)
+        painter.end()
+        
+        QMessageBox.information(self, "Thành công", f"Đã xuất CV ra file PDF tại:\n{filepath}")
+
     def _update_preview(self):
         self.cv_name.setText(self.name_input.text().strip() or "Họ và Tên")
         self.cv_contact.setText(self.email_input.text().strip() or "email@example.com")

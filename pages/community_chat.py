@@ -128,7 +128,7 @@ class ChatLeftSidebar(QWidget):
         self.channel_list.setCurrentRow(0)
         hc_layout.addWidget(self.channel_list)
 
-        layout.addWidget(header_card)
+        layout.addWidget(header_card, 1)
 
 
 # ==========================================
@@ -151,22 +151,27 @@ class ChatMessageBubble(QWidget):
         if is_user:
             # --- Own message (right-aligned, brand color) ---
             bubble.setStyleSheet("""
-                background-color: #2563EB;
+                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #60A5FA, stop:1 #2563EB);
                 color: #FFFFFF;
-                border-radius: 18px;
+                border-radius: 20px;
                 border-bottom-right-radius: 4px;
-                padding: 12px 18px;
-                font-size: 14px;
+                padding: 14px 20px;
+                font-size: 15px;
                 font-weight: 500;
             """)
+            bubble_shadow = QGraphicsDropShadowEffect()
+            bubble_shadow.setBlurRadius(16)
+            bubble_shadow.setColor(QColor(37, 99, 235, 40))
+            bubble_shadow.setOffset(0, 4)
+            bubble.setGraphicsEffect(bubble_shadow)
 
             # Avatar
             av = QLabel(sender[0].upper())
-            av.setFixedSize(32, 32)
+            av.setFixedSize(36, 36)
             av.setAlignment(Qt.AlignmentFlag.AlignCenter)
             av.setStyleSheet("""
                 background-color: #2563EB; color: #FFFFFF;
-                border-radius: 16px; font-weight: 900; font-size: 12px; border: none;
+                border-radius: 18px; font-weight: 900; font-size: 14px; border: none;
             """)
 
             time_lbl = QLabel(timestamp)
@@ -185,26 +190,28 @@ class ChatMessageBubble(QWidget):
         else:
             # --- Other message (left-aligned, white card) ---
             av = QLabel(sender[0].upper())
-            av.setFixedSize(32, 32)
+            av.setFixedSize(36, 36)
             av.setAlignment(Qt.AlignmentFlag.AlignCenter)
             av.setStyleSheet("""
-                background-color: #E2E8F0; color: #475569;
-                border-radius: 16px; font-weight: 900; font-size: 12px; border: none;
+                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #F1F5F9, stop:1 #E2E8F0);
+                color: #334155;
+                border-radius: 18px; font-weight: 900; font-size: 14px; border: 1px solid #E2E8F0;
             """)
 
             bubble.setStyleSheet("""
                 background-color: #FFFFFF;
-                color: #1E293B;
-                border-radius: 18px;
+                color: #334155;
+                border-radius: 20px;
                 border-bottom-left-radius: 4px;
-                padding: 12px 18px;
-                font-size: 14px;
+                padding: 14px 20px;
+                font-size: 15px;
                 font-weight: 500;
+                border: 1px solid #F1F5F9;
             """)
             bubble_shadow = QGraphicsDropShadowEffect()
-            bubble_shadow.setBlurRadius(12)
+            bubble_shadow.setBlurRadius(15)
             bubble_shadow.setColor(QColor(15, 23, 42, 8))
-            bubble_shadow.setOffset(0, 2)
+            bubble_shadow.setOffset(0, 5)
             bubble.setGraphicsEffect(bubble_shadow)
 
             header = QHBoxLayout()
@@ -296,7 +303,7 @@ class MainChatArea(QWidget):
         input_card.setStyleSheet("""
             QFrame {
                 background-color: #FFFFFF;
-                border-radius: 24px;
+                border-radius: 28px;
                 border: 1px solid #E2E8F0;
             }
         """)
@@ -331,14 +338,14 @@ class MainChatArea(QWidget):
         """)
 
         self.btn_send = QPushButton("↑")
-        self.btn_send.setFixedSize(38, 38)
+        self.btn_send.setFixedSize(42, 42)
         self.btn_send.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_send.setStyleSheet("""
             QPushButton {
-                background-color: #2563EB;
+                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #60A5FA, stop:1 #2563EB);
                 color: white;
-                border-radius: 19px;
-                font-size: 18px;
+                border-radius: 21px;
+                font-size: 20px;
                 font-weight: 900;
                 border: none;
             }
@@ -346,6 +353,11 @@ class MainChatArea(QWidget):
                 background-color: #1D4ED8;
             }
         """)
+        btn_shadow = QGraphicsDropShadowEffect()
+        btn_shadow.setBlurRadius(12)
+        btn_shadow.setColor(QColor(37, 99, 235, 60))
+        btn_shadow.setOffset(0, 3)
+        self.btn_send.setGraphicsEffect(btn_shadow)
 
         ic_layout.addWidget(btn_attach)
         ic_layout.addWidget(self.msg_input)
@@ -430,7 +442,7 @@ class ChatRightPanel(QWidget):
             cl.addLayout(row)
 
         cl.addStretch()
-        layout.addWidget(card)
+        layout.addWidget(card, 1)
 
 
 # ==========================================

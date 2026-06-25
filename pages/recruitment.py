@@ -131,7 +131,7 @@ class JobCard(QFrame):
         header_h.setSpacing(10)
         
         self.title_lbl = QLabel(self.job_data.get("title", ""))
-        self.title_lbl.setStyleSheet("font-size: 13px; font-weight: 700; color: #0F172A; background: transparent; border: none;")
+        self.title_lbl.setStyleSheet("font-size: 13px; font-weight: 700; color: #F8FAFC; background: transparent; border: none;")
         self.title_lbl.setWordWrap(False)
         
         self.date_lbl = QLabel(self.job_data.get("posted_date", ""))
@@ -204,7 +204,7 @@ class JobSearchBar(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setFixedHeight(38)
-        self.setStyleSheet("background: #F1F5F9; border-radius: 10px; border: none;")
+        self.setStyleSheet("background: #0F172A; border-radius: 10px; border: none;")
         layout = QHBoxLayout(self)
         layout.setContentsMargins(12, 0, 12, 0)
         layout.setSpacing(8)
@@ -215,7 +215,7 @@ class JobSearchBar(QFrame):
         
         self.input = QLineEdit()
         self.input.setPlaceholderText("Search jobs, companies, skills...")
-        self.input.setStyleSheet("background: transparent; color: #0F172A; font-size: 13px; font-weight: 500; border: none;")
+        self.input.setStyleSheet("background: transparent; color: #F8FAFC; font-size: 13px; font-weight: 500; border: none;")
         self.input.textChanged.connect(self.text_changed.emit)
         layout.addWidget(self.input)
 
@@ -256,7 +256,7 @@ class JobDetailSkeleton(QWidget):
         title_placeholder = QFrame()
         title_placeholder.setFixedHeight(26)
         title_placeholder.setFixedWidth(280)
-        title_placeholder.setStyleSheet("background-color: #F1F5F9; border-radius: 6px;")
+        title_placeholder.setStyleSheet("background-color: #0F172A; border-radius: 6px;")
         header_v.addWidget(title_placeholder)
         
         # Company bar placeholder
@@ -285,7 +285,7 @@ class JobDetailSkeleton(QWidget):
         section_placeholder = QFrame()
         section_placeholder.setFixedHeight(16)
         section_placeholder.setFixedWidth(120)
-        section_placeholder.setStyleSheet("background-color: #F1F5F9; border-radius: 4px;")
+        section_placeholder.setStyleSheet("background-color: #0F172A; border-radius: 4px;")
         desc_v.addWidget(section_placeholder)
         
         for _ in range(4):
@@ -302,7 +302,7 @@ class JobDetailSkeleton(QWidget):
         skills_title_placeholder = QFrame()
         skills_title_placeholder.setFixedHeight(16)
         skills_title_placeholder.setFixedWidth(100)
-        skills_title_placeholder.setStyleSheet("background-color: #F1F5F9; border-radius: 4px;")
+        skills_title_placeholder.setStyleSheet("background-color: #0F172A; border-radius: 4px;")
         skills_v.addWidget(skills_title_placeholder)
         
         skills_h = QHBoxLayout()
@@ -323,7 +323,7 @@ class JobDetailSkeleton(QWidget):
         btn_placeholder = QFrame()
         btn_placeholder.setFixedHeight(44)
         btn_placeholder.setFixedWidth(160)
-        btn_placeholder.setStyleSheet("background-color: #F1F5F9; border-radius: 22px;")
+        btn_placeholder.setStyleSheet("background-color: #0F172A; border-radius: 22px;")
         layout.addWidget(btn_placeholder)
 
 # ==================================================
@@ -392,7 +392,7 @@ class JobDetailPanel(QWidget):
         self.header_v.setSpacing(6)
         
         self.title_lbl = QLabel("Select a Job")
-        self.title_lbl.setStyleSheet("font-size: 22px; font-weight: 800; color: #0F172A; background: transparent; border: none; letter-spacing: -0.5px;")
+        self.title_lbl.setStyleSheet("font-size: 22px; font-weight: 800; color: #F8FAFC; background: transparent; border: none; letter-spacing: -0.5px;")
         self.title_lbl.setWordWrap(True)
         self.header_v.addWidget(self.title_lbl)
         
@@ -420,7 +420,7 @@ class JobDetailPanel(QWidget):
         self.desc_v.setSpacing(10)
         
         self.desc_title = QLabel("Job Description")
-        self.desc_title.setStyleSheet("font-size: 15px; font-weight: 700; color: #0F172A; background: transparent; border: none;")
+        self.desc_title.setStyleSheet("font-size: 15px; font-weight: 700; color: #F8FAFC; background: transparent; border: none;")
         self.desc_v.addWidget(self.desc_title)
         
         self.desc_lbl = QLabel("")
@@ -434,7 +434,7 @@ class JobDetailPanel(QWidget):
         self.skills_v.setSpacing(10)
         
         self.skills_title = QLabel("Key Requirements & Skills")
-        self.skills_title.setStyleSheet("font-size: 15px; font-weight: 700; color: #0F172A; background: transparent; border: none;")
+        self.skills_title.setStyleSheet("font-size: 15px; font-weight: 700; color: #F8FAFC; background: transparent; border: none;")
         self.skills_v.addWidget(self.skills_title)
         
         # Container for skills chips
@@ -468,7 +468,7 @@ class JobDetailPanel(QWidget):
         lbl.setStyleSheet("font-size: 10px; font-weight: 600; color: #64748B; background: transparent; border: none;")
         
         val = QLabel(value_text)
-        val.setStyleSheet("font-size: 12px; font-weight: 700; color: #0F172A; background: transparent; border: none;")
+        val.setStyleSheet("font-size: 12px; font-weight: 700; color: #F8FAFC; background: transparent; border: none;")
         val.setObjectName("val_label")
         
         c_layout.addWidget(lbl)
@@ -538,7 +538,7 @@ class JobEmptyState(QWidget):
         layout.addWidget(icon)
         
         title = QLabel("Select a job opportunity")
-        title.setStyleSheet("font-size: 18px; font-weight: 800; color: #0F172A; background: transparent; border: none;")
+        title.setStyleSheet("font-size: 18px; font-weight: 800; color: #F8FAFC; background: transparent; border: none;")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(title)
         
@@ -696,7 +696,7 @@ class RecruitmentToolbar(QFrame):
         title_h = QHBoxLayout()
         title_h.setSpacing(12)
         title = QLabel("Job Openings & Recruitment")
-        title.setStyleSheet("font-size: 18px; font-weight: 800; color: #0F172A; border: none;")
+        title.setStyleSheet("font-size: 18px; font-weight: 800; color: #F8FAFC; border: none;")
         
         badge = QLabel("Direct Matching")
         badge.setStyleSheet("font-size: 10px; font-weight: 800; color: #38BDF8; background: #F0F9FF; padding: 2px 8px; border-radius: 6px; border: 1px solid #BAE6FD;")
@@ -762,7 +762,7 @@ class RecruitmentPage(QWidget):
         self.chips_layout.setSpacing(6)
         
         self.chip_buttons = {}
-        for chip_name in ["All", "Full-time", "Remote", "Hybrid", "Intern"]:
+        for chip_name in ["All", "Applied", "Full-time", "Remote", "Hybrid", "Intern"]:
             btn = QPushButton(chip_name)
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
             btn.setFixedHeight(28)
@@ -987,6 +987,8 @@ class RecruitmentPage(QWidget):
             title = job.get("title", "").lower()
             
             if self.current_filter_type == "All":
+                matches_chip = True
+            elif self.current_filter_type == "Applied" and job.get("id") in getattr(self, "applied_job_ids", []):
                 matches_chip = True
             elif self.current_filter_type == "Remote" and "remote" in location:
                 matches_chip = True

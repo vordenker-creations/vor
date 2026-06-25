@@ -16,8 +16,8 @@ class ModernCard(QFrame):
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setStyleSheet("""
             #ModernCard {
-                background-color: #1E293B;
-                border: 1px solid #334155;
+                background-color: #FFFFFF;
+                border: 1px solid #E2E8F0;
                 border-radius: 16px;
             }
             #ModernCard:hover {
@@ -46,8 +46,8 @@ class StatsBox(QFrame):
         super().__init__(parent)
         self.setStyleSheet("""
             QFrame {
-                background-color: #1E293B;
-                border: 1px solid #334155;
+                background-color: #FFFFFF;
+                border: 1px solid #E2E8F0;
                 border-radius: 12px;
             }
         """)
@@ -75,7 +75,7 @@ class StatsBox(QFrame):
         title_lbl.setStyleSheet("color: #64748B; font-size: 10px; font-weight: 800; background: transparent; border: none; letter-spacing: 0.5px;")
         
         self.val_lbl = QLabel(value)
-        self.val_lbl.setStyleSheet("color: #F1F5F9; font-size: 18px; font-weight: 800; background: transparent; border: none;")
+        self.val_lbl.setStyleSheet("color: #0F172A; font-size: 18px; font-weight: 800; background: transparent; border: none;")
         
         text_lay.addWidget(title_lbl)
         text_lay.addWidget(self.val_lbl)
@@ -90,7 +90,7 @@ class ProjectPortfolioPage(QWidget):
     def __init__(self, controller=None, parent=None):
         super().__init__(parent)
         self.controller = controller
-        self.setStyleSheet("background-color: #0F172A;")
+        self.setStyleSheet("background-color: #F8FAFC;")
         
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
@@ -105,7 +105,7 @@ class ProjectPortfolioPage(QWidget):
         header_layout.setSpacing(16)
         
         title_lbl = QLabel("💼 Project Portfolio")
-        title_lbl.setStyleSheet("font-size: 20px; font-weight: 900; color: #F1F5F9; border: none; background: transparent;")
+        title_lbl.setStyleSheet("font-size: 20px; font-weight: 900; color: #0F172A; border: none; background: transparent;")
         header_layout.addWidget(title_lbl)
         
         sub_lbl = QLabel("Display and track your engineering work")
@@ -118,7 +118,7 @@ class ProjectPortfolioPage(QWidget):
         self.btn_add.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_add.setStyleSheet("""
             QPushButton {
-                background: #38BDF8; color: #0F172A; font-weight: 800; font-size: 13px;
+                background: #38BDF8; color: #F8FAFC; font-weight: 800; font-size: 13px;
                 border-radius: 18px; padding: 0 20px; height: 36px; border: none;
             }
             QPushButton:hover { background: #0EA5E9; }
@@ -162,9 +162,9 @@ class ProjectPortfolioPage(QWidget):
         self.search_input.setPlaceholderText("🔍 Search projects by title, tech stack, description, or skills...")
         self.search_input.setStyleSheet("""
             QLineEdit {
-                background-color: #1E293B;
-                color: #F1F5F9;
-                border: 1px solid #334155;
+                background-color: #FFFFFF;
+                color: #0F172A;
+                border: 1px solid #E2E8F0;
                 border-radius: 8px;
                 padding: 8px 12px;
                 font-size: 13px;
@@ -180,9 +180,9 @@ class ProjectPortfolioPage(QWidget):
         self.filter_status.addItems(["All Statuses", "Completed (100%)", "In Progress (1-99%)", "Planned (0%)"])
         self.filter_status.setStyleSheet("""
             QComboBox {
-                background-color: #1E293B;
-                color: #F1F5F9;
-                border: 1px solid #334155;
+                background-color: #FFFFFF;
+                color: #0F172A;
+                border: 1px solid #E2E8F0;
                 border-radius: 8px;
                 padding: 8px 12px;
                 font-size: 13px;
@@ -191,11 +191,11 @@ class ProjectPortfolioPage(QWidget):
                 border: 1px solid #38BDF8;
             }
             QComboBox QAbstractItemView {
-                background-color: #1E293B;
-                color: #F1F5F9;
+                background-color: #FFFFFF;
+                color: #0F172A;
                 selection-background-color: #38BDF8;
-                selection-color: #0F172A;
-                border: 1px solid #334155;
+                selection-color: #F8FAFC;
+                border: 1px solid #E2E8F0;
             }
         """)
         self.filter_status.currentTextChanged.connect(self._apply_filters)
@@ -205,9 +205,9 @@ class ProjectPortfolioPage(QWidget):
         self.filter_skill.addItem("All Skills")
         self.filter_skill.setStyleSheet("""
             QComboBox {
-                background-color: #1E293B;
-                color: #F1F5F9;
-                border: 1px solid #334155;
+                background-color: #FFFFFF;
+                color: #0F172A;
+                border: 1px solid #E2E8F0;
                 border-radius: 8px;
                 padding: 8px 12px;
                 font-size: 13px;
@@ -216,11 +216,11 @@ class ProjectPortfolioPage(QWidget):
                 border: 1px solid #38BDF8;
             }
             QComboBox QAbstractItemView {
-                background-color: #1E293B;
-                color: #F1F5F9;
+                background-color: #FFFFFF;
+                color: #0F172A;
                 selection-background-color: #38BDF8;
-                selection-color: #0F172A;
-                border: 1px solid #334155;
+                selection-color: #F8FAFC;
+                border: 1px solid #E2E8F0;
             }
         """)
         self.filter_skill.currentTextChanged.connect(self._apply_filters)
@@ -337,7 +337,7 @@ class ProjectPortfolioPage(QWidget):
                 # Card Header
                 c_header = QHBoxLayout()
                 c_t = QLabel(project["title"])
-                c_t.setStyleSheet("color: #F1F5F9; font-size: 16px; font-weight: 800; background: transparent; border: none;")
+                c_t.setStyleSheet("color: #0F172A; font-size: 16px; font-weight: 800; background: transparent; border: none;")
                 c_header.addWidget(c_t)
                 c_header.addStretch()
                 
@@ -455,10 +455,10 @@ class ProjectPortfolioPage(QWidget):
                 bar.setValue(prog)
                 bar.setTextVisible(False)
                 color = "#10B981" if prog == 100 else "#38BDF8"
-                bar.setStyleSheet(f"QProgressBar {{ background: #0F172A; border-radius: 3px; border: none; }} QProgressBar::chunk {{ background: {color}; border-radius: 3px; }}")
+                bar.setStyleSheet(f"QProgressBar {{ background: #F8FAFC; border-radius: 3px; border: none; }} QProgressBar::chunk {{ background: {color}; border-radius: 3px; }}")
                 
                 c_foot.addWidget(bar)
-                c_foot.addWidget(QLabel(f"{prog}%", styleSheet="color: #F1F5F9; font-size: 11px; font-weight: 700; background: transparent; border: none;"))
+                c_foot.addWidget(QLabel(f"{prog}%", styleSheet="color: #0F172A; font-size: 11px; font-weight: 700; background: transparent; border: none;"))
                 
                 card.internal_layout.addLayout(c_foot)
                 

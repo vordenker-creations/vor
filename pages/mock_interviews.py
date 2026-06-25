@@ -62,7 +62,7 @@ class MockInterviewsPage(QWidget):
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.Shape.NoFrame)
-        scroll.setStyleSheet("background: transparent;")
+        scroll.setStyleSheet("QScrollArea { background: transparent; border: none; }")
         
         content = QWidget()
         content_layout = QVBoxLayout(content)
