@@ -373,12 +373,7 @@ class RegisterPage(QWidget):
         lang_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         lang_btn.setStyleSheet(
             f"color: {COLOR_TEXT_SECONDARY}; font-size: 13px; font-weight: 600; border: none; background: transparent;")
-        theme_btn = QPushButton("🌙")
-        theme_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        theme_btn.setStyleSheet(
-            f"color: {COLOR_TEXT_SECONDARY}; font-size: 16px; border: none; background: transparent;")
         top_controls.addWidget(lang_btn)
-        top_controls.addWidget(theme_btn)
 
         # Floating Help Widget Mock
         help_btn = QPushButton("? Need Help")

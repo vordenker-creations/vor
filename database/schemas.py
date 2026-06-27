@@ -8,7 +8,11 @@ RAW_INPUT_SCHEMA = {
         "major": "",
         "current_semester": 1,
         "gpa": 0.0,
-        "skills": []
+        "skills": [],
+        "university": "",
+        "age": "",
+        "birth_year": "",
+        "phone": ""
     },
     "academic_context": {
         "current_courses": [],

@@ -15,9 +15,11 @@ from database import (
     get_user_by_email, 
     update_user_profile,
     delete_job,
-    get_db_connection
+    get_db_connection,
+    insert_cv,
+    get_all_cvs
 )
-from models import JobCreate, UserRegister, UserLogin, UserProfileUpdate
+from models import JobCreate, UserRegister, UserLogin, UserProfileUpdate, CVCreate
 
 # Configure logging with standard production layout
 logging.basicConfig(
@@ -28,28 +30,41 @@ logger = logging.getLogger("news_bridge.server")
 
 class ConnectionManager:
     def __init__(self):
-        self.active_connections: List[WebSocket] = []
+        self.connections: List[dict] = [] # stores {"websocket": ws, "email": email}
 
-    async def connect(self, websocket: WebSocket):
+    async def connect(self, websocket: WebSocket, email: str = None):
         await websocket.accept()
-        self.active_connections.append(websocket)
-        logger.info(f"WebSocket client connected. Total active connections: {len(self.active_connections)}")
+        self.connections.append({"websocket": websocket, "email": email})
+        logger.info(f"WebSocket client connected. Email: {email}. Total active connections: {len(self.connections)}")
 
     def disconnect(self, websocket: WebSocket):
-        if websocket in self.active_connections:
-            self.active_connections.remove(websocket)
-        logger.info(f"WebSocket client disconnected. Total active connections: {len(self.active_connections)}")
+        self.connections = [c for c in self.connections if c["websocket"] != websocket]
+        logger.info(f"WebSocket client disconnected. Total active connections: {len(self.connections)}")
 
     async def broadcast(self, data: dict):
         message = json.dumps(data)
-        logger.info(f"WebSocket broadcasting message to {len(self.active_connections)} clients: {data}")
-        for connection in list(self.active_connections):
+        logger.info(f"WebSocket broadcasting message to {len(self.connections)} clients: {data}")
+        for conn in list(self.connections):
             try:
-                await connection.send_text(message)
+                await conn["websocket"].send_text(message)
             except Exception as e:
-                logger.error(f"Failed to send message to connection: {e}")
-                if connection in self.active_connections:
-                    self.active_connections.remove(connection)
+                logger.error(f"Failed to send broadcast message: {e}")
+                if conn in self.connections:
+                    self.connections.remove(conn)
+
+    async def send_to_email(self, email: str, data: dict):
+        if not email:
+            return
+        message = json.dumps(data)
+        logger.info(f"WebSocket sending private message to {email}: {data}")
+        for conn in list(self.connections):
+            if conn["email"] == email:
+                try:
+                    await conn["websocket"].send_text(message)
+                except Exception as e:
+                    logger.error(f"Failed to send private message to {email}: {e}")
+                    if conn in self.connections:
+                        self.connections.remove(conn)
 
 manager = ConnectionManager()
 
@@ -107,6 +122,11 @@ async def serve_js():
     """Serves the dashboard logic and API connector script."""
     return FileResponse(os.path.join(WEB_DIR, "app.js"))
 
+@app.get("/pages/{filename}")
+async def serve_page(filename: str):
+    """Serves Javascript page modules dynamically."""
+    return FileResponse(os.path.join(WEB_DIR, "pages", filename))
+
 # ==================== JOBS API ROUTING ====================
 
 @app.get("/jobs", status_code=status.HTTP_200_OK)
@@ -137,7 +157,11 @@ async def post_job(job: JobCreate):
             salary=job.salary,
             location=job.location,
             description=job.description,
-            posted_by=job.posted_by
+            posted_by=job.posted_by,
+            logo=job.logo,
+            gpa=job.gpa,
+            languages=job.languages,
+            other_reqs=job.other_reqs
         )
         logger.info("Job successfully stored in database.")
         return {
@@ -206,9 +230,9 @@ async def update_job_listing(job_id: int, job: JobCreate, email: str):
             
         cursor.execute("""
             UPDATE jobs 
-            SET title = ?, company = ?, salary = ?, location = ?, description = ?
+            SET title = ?, company = ?, salary = ?, location = ?, description = ?, logo = ?, gpa = ?, languages = ?, other_reqs = ?
             WHERE id = ?;
-        """, (job.title, job.company, job.salary, job.location, job.description, job_id))
+        """, (job.title, job.company, job.salary, job.location, job.description, job.logo, job.gpa, job.languages, job.other_reqs, job_id))
         conn.commit()
         
         return {"success": True, "message": "Job listing updated successfully."}
@@ -252,21 +276,23 @@ async def apply_to_job(payload: dict):
                 student_name = CASE WHEN excluded.student_name != '' THEN excluded.student_name ELSE student_name END;
         """, (email, job_id, local_now, major, student_year, display_name))
         
-        # Query job title and company for notification
-        cursor.execute("SELECT title, company FROM jobs WHERE id = ?;", (job_id,))
+        # Query job title, company and posted_by for notification
+        cursor.execute("SELECT title, company, posted_by FROM jobs WHERE id = ?;", (job_id,))
         job_row = cursor.fetchone()
         conn.commit()
         
         if job_row:
             job_title = job_row["title"]
             job_company = job_row["company"]
+            job_posted_by = job_row["posted_by"]
             message_text = f"Ứng viên {display_name} vừa ứng tuyển vào vị trí {job_title} tại {job_company}!"
         else:
             job_title = f"Công việc ID {job_id}"
             job_company = "Hệ thống"
+            job_posted_by = "system"
             message_text = f"Ứng viên {display_name} vừa ứng tuyển vào công việc ID {job_id}!"
             
-        logger.info(f"Broadcasting notification: {message_text}")
+        logger.info(f"Sending private notification to {job_posted_by}: {message_text}")
         
         applicant_data = {
             "name": display_name,
@@ -277,8 +303,8 @@ async def apply_to_job(payload: dict):
             "job_company": job_company
         }
         
-        # Broadcast toast notification
-        await manager.broadcast({
+        # Send targeted notification only to the recruiter who posted the job
+        await manager.send_to_email(job_posted_by, {
             "type": "notification",
             "message": message_text,
             "applicant": applicant_data
@@ -306,8 +332,8 @@ async def apply_to_job(payload: dict):
             conn.close()
 
 @app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
-    await manager.connect(websocket)
+async def websocket_endpoint(websocket: WebSocket, email: str = None):
+    await manager.connect(websocket, email)
     try:
         while True:
             data_str = await websocket.receive_text()
@@ -349,18 +375,28 @@ async def get_user_applications(email: str):
             conn.close()
 
 @app.get("/notifications", status_code=status.HTTP_200_OK)
-async def get_recent_notifications():
-    """Retrieves all notifications generated from recent job applications."""
+async def get_recent_notifications(email: str = None):
+    """Retrieves all notifications generated from recent job applications, filtered by recruiter email if provided."""
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("""
-            SELECT a.user_email, a.job_id, a.applied_at, a.student_major, a.student_year, a.student_name, j.title, j.company 
-            FROM applications a
-            LEFT JOIN jobs j ON a.job_id = j.id
-            ORDER BY a.applied_at DESC
-            LIMIT 10;
-        """)
+        if email:
+            cursor.execute("""
+                SELECT a.user_email, a.job_id, a.applied_at, a.student_major, a.student_year, a.student_name, j.title, j.company 
+                FROM applications a
+                LEFT JOIN jobs j ON a.job_id = j.id
+                WHERE j.posted_by = ?
+                ORDER BY a.applied_at DESC
+                LIMIT 10;
+            """, (email,))
+        else:
+            cursor.execute("""
+                SELECT a.user_email, a.job_id, a.applied_at, a.student_major, a.student_year, a.student_name, j.title, j.company 
+                FROM applications a
+                LEFT JOIN jobs j ON a.job_id = j.id
+                ORDER BY a.applied_at DESC
+                LIMIT 10;
+            """)
         rows = cursor.fetchall()
         
         notifications = []
@@ -516,4 +552,210 @@ async def update_profile(profile: UserProfileUpdate):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to update user profile information."
+        )
+
+# ==================== RECRUITER & APPLICATIONS API ====================
+
+@app.get("/recruiter/applications", status_code=status.HTTP_200_OK)
+async def get_recruiter_applications(email: str):
+    """Retrieves all applications submitted to jobs posted by the specified recruiter email."""
+    logger.info(f"GET /recruiter/applications requested by recruiter email: {email}")
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT a.id as application_id, a.user_email as student_email, a.job_id, a.applied_at, 
+                   a.student_major, a.student_year, a.student_name, a.status as application_status,
+                   j.title as job_title, j.company as job_company
+            FROM applications a
+            JOIN jobs j ON a.job_id = j.id
+            WHERE j.posted_by = ?
+            ORDER BY a.applied_at DESC;
+        """, (email,))
+        rows = cursor.fetchall()
+        return [dict(row) for row in rows]
+    except Exception as e:
+        logger.error(f"Failed to query recruiter applications for {email}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve applicant list."
+        )
+    finally:
+        if conn:
+            conn.close()
+
+@app.patch("/applications/{application_id}/status", status_code=status.HTTP_200_OK)
+async def update_application_status(application_id: int, payload: dict):
+    status_val = payload.get("status")
+    recruiter_email = payload.get("email")
+    if not status_val or not recruiter_email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Status and email are required."
+        )
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Verify that the recruiter owns the job of this application
+        cursor.execute("""
+            SELECT j.posted_by, a.user_email, j.title, j.company, a.student_name
+            FROM applications a
+            JOIN jobs j ON a.job_id = j.id
+            WHERE a.id = ?;
+        """, (application_id,))
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Application not found."
+            )
+        if row["posted_by"] != recruiter_email:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You do not have permission to update this application."
+            )
+            
+        cursor.execute("""
+            UPDATE applications
+            SET status = ?
+            WHERE id = ?;
+        """, (status_val, application_id))
+        conn.commit()
+        
+        # Broadcast notification via WebSocket about status update
+        message_text = f"Trạng thái hồ sơ của ứng viên {row['student_name'] or row['user_email']} tại vị trí {row['title']} đã đổi thành: {status_val}"
+        await manager.broadcast({
+            "type": "status_update",
+            "message": message_text,
+            "student_email": row["user_email"],
+            "application_id": application_id,
+            "status": status_val
+        })
+        
+        return {"success": True, "message": "Application status updated."}
+    except HTTPException as http_err:
+        raise http_err
+    except Exception as e:
+        logger.error(f"Failed to update application status for ID {application_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update application status."
+        )
+    finally:
+        if conn:
+            conn.close()
+
+@app.patch("/jobs/{job_id}/status", status_code=status.HTTP_200_OK)
+async def update_job_status(job_id: int, payload: dict):
+    status_val = payload.get("status")
+    recruiter_email = payload.get("email")
+    if not status_val or not recruiter_email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Status and email are required."
+        )
+    if status_val not in ["active", "closed"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid status. Must be 'active' or 'closed'."
+        )
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT posted_by FROM jobs WHERE id = ?;", (job_id,))
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Job listing not found."
+            )
+        if row["posted_by"] != recruiter_email:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You do not have permission to edit this job."
+            )
+            
+        cursor.execute("""
+            UPDATE jobs
+            SET status = ?
+            WHERE id = ?;
+        """, (status_val, job_id))
+        conn.commit()
+        
+        # Broadcast job status update
+        await manager.broadcast({
+            "type": "job_status_update",
+            "job_id": job_id,
+            "status": status_val
+        })
+        
+        return {"success": True, "message": f"Job status updated to {status_val}."}
+    except HTTPException as http_err:
+        raise http_err
+    except Exception as e:
+        logger.error(f"Failed to update job status for ID {job_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update job status."
+        )
+    finally:
+        if conn:
+            conn.close()
+
+# ==================== CV API ROUTING ====================
+
+@app.post("/cvs", status_code=status.HTTP_201_CREATED)
+async def post_cv(cv: CVCreate):
+    """
+    Endpoint to receive and sync candidate CVs from the desktop client.
+    """
+    logger.info(f"POST /cvs request received for student email: '{cv.email}'")
+    try:
+        insert_cv(
+            name=cv.name,
+            email=cv.email,
+            major=cv.major,
+            university=cv.university,
+            gpa=cv.gpa,
+            skills=cv.skills,
+            languages=cv.languages,
+            bio=cv.bio,
+            avatar=cv.avatar,
+            certificates=cv.certificates
+        )
+        
+        # Broadcast notification via WebSocket
+        message_text = f"Ứng viên {cv.name} vừa cập nhật hồ sơ CV mới!"
+        await manager.broadcast({
+            "type": "chat",
+            "username": "Hệ thống (CV)",
+            "message": message_text,
+            "timestamp": "Vừa xong"
+        })
+        
+        return {
+            "success": True,
+            "message": "CV synced successfully"
+        }
+    except Exception as e:
+        logger.error(f"Internal processing failed for /cvs: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to save CV profile."
+        )
+
+@app.get("/cvs", status_code=status.HTTP_200_OK)
+async def list_cvs():
+    """Retrieves all synced student CVs."""
+    logger.info("GET /cvs request received.")
+    try:
+        cvs = get_all_cvs()
+        return cvs
+    except Exception as e:
+        logger.error(f"Error querying CVs: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve CVs."
         )

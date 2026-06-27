@@ -9,8 +9,8 @@ if sys.platform == "linux":
 # Ultra-Modern Neumorphic Theme
 COLOR_BG_APP = "#F8FAFC"        # New Base App Background
 COLOR_BG_CARD = "#FFFFFF"       # Cards/Panels
-COLOR_PRIMARY = "#38BDF8"       # Brand Cyan
-COLOR_PRIMARY_LIGHT = "#7DD3FC" # Hover cyan
+COLOR_PRIMARY = "#2563EB"       # Modern Premium Royal Blue
+COLOR_PRIMARY_LIGHT = "#3B82F6" # Hover Blue
 COLOR_TEXT_MAIN = "#0F172A"     # Slate 900
 COLOR_TEXT_SUB = "#64748B"      # Slate 500
 COLOR_BORDER = "#E2E8F0"        # Light gray border
@@ -116,5 +116,59 @@ def get_global_stylesheet():
     """
 
 # --- BACKEND SERVER URL ---
-SERVER_URL = "http://100.95.50.104:8000"
+SERVER_URL = "http://100.80.253.23:8000"
+
+
+def apply_theme(widget):
+    """Applies the current global theme (light/dark) to a specific widget and all its children."""
+    from PyQt6.QtWidgets import QWidget, QApplication
+    
+    # Force Light Mode always (remove dark mode support)
+    is_dark = False
+    
+    # 1. Apply to the parent widget
+    _apply_theme_to_single_widget(widget, is_dark)
+    
+    # 2. Apply to all descendants (findChildren is recursive by default, so we only iterate once)
+    for child in widget.findChildren(QWidget):
+        try:
+            _apply_theme_to_single_widget(child, is_dark)
+        except Exception:
+            pass
+
+
+def _apply_theme_to_single_widget(widget, is_dark):
+    import re
+    # Save original CSS once
+    if not hasattr(widget, '_original_css'):
+        widget._original_css = widget.styleSheet() or ""
+        
+    css = widget._original_css
+    if css:
+        if is_dark:
+            # 1. Map Background Colors (only when matching background or background-color properties)
+            css = re.sub(r'(background(-color)?:\s*)#F8FAFC', r'\1#0B1120', css, flags=re.I)
+            css = re.sub(r'(background(-color)?:\s*)(#FFFFFF|white)', r'\1#1E293B', css, flags=re.I)
+            css = re.sub(r'(background(-color)?:\s*)#F1F5F9', r'\1#0F172A', css, flags=re.I)
+            
+            # 2. Map Text Colors (only when matching color property)
+            css = re.sub(r'(color:\s*)#0F172A', r'\1#F8FAFC', css, flags=re.I)
+            css = re.sub(r'(color:\s*)#64748B', r'\1#94A3B8', css, flags=re.I)
+            css = re.sub(r'(color:\s*)#475569', r'\1#CBD5E1', css, flags=re.I)
+            css = re.sub(r'(color:\s*)#334155', r'\1#E2E8F0', css, flags=re.I)
+            
+            # 3. Map Border Colors (only when matching border or border-color properties)
+            css = re.sub(r'(border(-color)?:\s*[^;]*?)#E2E8F0', r'\1#334155', css, flags=re.I)
+            css = re.sub(r'(border(-color)?:\s*[^;]*?)#F1F5F9', r'\1#1E293B', css, flags=re.I)
+            
+            # 4. Brighten primary accent color in dark mode for better readability
+            css = re.sub(r'#2563EB', '#3B82F6', css, flags=re.I)
+            
+        if css != widget.styleSheet():
+            widget.setStyleSheet(css)
+            if hasattr(widget, 'style'):
+                widget.style().unpolish(widget)
+                widget.style().polish(widget)
+            widget.update()
+
 

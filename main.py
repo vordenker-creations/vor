@@ -33,6 +33,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         worker.start_worker()
         self.on_logout_callback = on_logout
+        self.is_dark_mode = False
         self.setWindowTitle("AI-Career Bridge")
         self.resize(1350, 850)
         self.setMinimumSize(1000, 700)
@@ -54,97 +55,12 @@ class MainWindow(QMainWindow):
         # 3. CONTENT AREA
         self.content_area = QWidget()
         self.content_layout = QVBoxLayout(self.content_area)
-        self.content_layout.setContentsMargins(30, 20, 30, 30)
+        self.content_layout.setContentsMargins(16, 16, 16, 16)
         self.content_layout.setSpacing(20)
-
-        # Top Global Actions Bar (Transparent, minimal)
-        self.global_actions_bar = QWidget()
-        self.global_actions_bar.setFixedHeight(50)
-        header_h = QHBoxLayout(self.global_actions_bar)
-        header_h.setContentsMargins(10, 0, 10, 0)
-        header_h.setSpacing(12)
-
-        self.btn_toggle_sidebar = QPushButton("☰")
-        self.btn_toggle_sidebar.setFixedSize(38, 38)
-        self.btn_toggle_sidebar.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_toggle_sidebar.setStyleSheet("""
-            QPushButton {
-                background-color: transparent;
-                color: #000000;
-                border-radius: 12px;
-                font-size: 18px;
-                border: none;
-            }
-            QPushButton:hover {
-                background-color: rgba(15, 23, 42, 0.08);
-            }
-            QPushButton:pressed {
-                background-color: rgba(15, 23, 42, 0.14);
-            }
-        """)
-        btn_shadow = QGraphicsDropShadowEffect()
-        btn_shadow.setBlurRadius(10)
-        btn_shadow.setColor(QColor(15, 23, 42, 15))
-        btn_shadow.setOffset(0, 2)
-        self.btn_toggle_sidebar.setGraphicsEffect(btn_shadow)
-        self.btn_toggle_sidebar.clicked.connect(self.sidebar.toggle_collapse)
-        header_h.addWidget(self.btn_toggle_sidebar)
-
-        header_h.addStretch()
-
-        # Theme toggle button
-        self.is_dark_mode = False
-        self.btn_theme = QPushButton("🌙")
-        self.btn_theme.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_theme.setStyleSheet("""
-            QPushButton {
-                background-color: transparent;
-                color: #0F172A;
-                font-size: 16px;
-                border: none;
-                padding: 4px;
-            }
-        """)
-        self.btn_theme.clicked.connect(self.toggle_theme)
-        header_h.addWidget(self.btn_theme)
-        
-        self.btn_status = QPushButton("✨ AI Intelligence")
-        self.btn_status.setStyleSheet("""
-            QPushButton {
-                background-color: transparent;
-                color: #38BDF8;
-                font-weight: 700;
-                padding: 4px 10px;
-                font-size: 11px;
-                border: none;
-            }
-        """)
-        header_h.addWidget(self.btn_status)
-
-        # Logout button
-        self.btn_logout = QPushButton("Logout")
-        self.btn_logout.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_logout.setStyleSheet("""
-            QPushButton {
-                background-color: transparent;
-                color: #94A3B8;
-                font-weight: 600;
-                border: none;
-                padding: 4px 10px;
-                font-size: 12px;
-            }
-            QPushButton:hover {
-                color: #EF4444;
-            }
-        """)
-        self.btn_logout.clicked.connect(self.logout)
-        header_h.addWidget(self.btn_logout)
-
-        self.content_layout.addWidget(self.global_actions_bar)
 
         # Pages container
         self.pages_wrapper = NeumorphicFrame(radius=20, offset=4, blur=15)
-        self.pages_wrapper.content_layout.setContentsMargins(20, 20, 20, 20)
+        self.pages_wrapper.content_layout.setContentsMargins(16, 16, 16, 16)
         self.pages_container = QStackedWidget()
         self.pages_wrapper.add_widget(self.pages_container)
         self.content_layout.addWidget(self.pages_wrapper, 1)
@@ -175,71 +91,16 @@ class MainWindow(QMainWindow):
             self.on_logout_callback()
 
     def toggle_theme(self):
-        self.is_dark_mode = not self.is_dark_mode
-        self.btn_theme.setText("☀️" if self.is_dark_mode else "🌙")
-        self._apply_theme_globally(self.is_dark_mode)
+        pass
 
     def _apply_theme_globally(self, is_dark):
-        import re
-        import gc
+        from core.config import apply_theme
         
-        # Combine C++ widgets (avoids Python GC issues for unreferenced widgets)
-        # and Python widgets (avoids C++ downcasting issues for custom methods)
-        widgets_to_process = set()
-        
-        # 1. Native Qt Children
-        for w in self.findChildren(QWidget):
-            widgets_to_process.add(w)
-        widgets_to_process.add(self)
-            
-        # 2. Python GC Objects
-        for obj in gc.get_objects():
-            if isinstance(obj, QWidget):
-                widgets_to_process.add(obj)
-                
-        for widget in widgets_to_process:
+        # Apply theme recursively to all top-level windows and dialogs
+        for widget in QApplication.topLevelWidgets():
             try:
-                # Save original CSS once
-                if not hasattr(widget, '_original_css'):
-                    widget._original_css = widget.styleSheet()
-                    
-                css = widget._original_css
-                if css:
-                    if is_dark:
-                        # Map Light to Soft Dark Neumorphism
-                        css = re.sub(r'#F8FAFC|#f8fafc', '#0B1120', css) # App Bg
-                        css = re.sub(r'#FFFFFF|#ffffff|\bwhite\b', '#1E293B', css) # Card Bg
-                        css = re.sub(r'#0F172A|#0f172a', '#F8FAFC', css) # Main Text
-                        css = re.sub(r'#64748B|#64748b', '#94A3B8', css) # Sub Text
-                        css = re.sub(r'#E2E8F0|#e2e8f0', '#334155', css) # Border
-                        css = re.sub(r'#F1F5F9|#f1f5f9', '#0F172A', css) # Input Bg
-                        css = re.sub(r'#475569', '#CBD5E1', css)         # Additional grey
-                        
-                        # Revert white text on primary buttons (using negative lookbehind to avoid replacing background-color)
-                        css = re.sub(r'(?<!-)color:\s*#1E293B', 'color: #FFFFFF', css)
-                    
-                    if css != widget.styleSheet():
-                        widget.setStyleSheet(css)
-                        if hasattr(widget, 'style'):
-                            widget.style().unpolish(widget)
-                            widget.style().polish(widget)
-                        widget.update()
-                        
-                # Handle DropShadow Effects
-                effect = widget.graphicsEffect()
-                if effect and isinstance(effect, QGraphicsDropShadowEffect):
-                    if not hasattr(effect, '_original_color'):
-                        effect._original_color = effect.color()
-                    if is_dark:
-                        effect.setColor(QColor(0, 0, 0, 150)) # Stronger shadow for dark mode
-                    else:
-                        effect.setColor(effect._original_color)
-                        
-                # Custom components with paintEvent
-                if hasattr(widget, 'update_theme'):
-                    widget.update_theme(is_dark)
-            except RuntimeError:
-                # Widget was already deleted in C++, skip it safely
+                apply_theme(widget)
+            except Exception:
                 continue
 
     def _init_pages(self):

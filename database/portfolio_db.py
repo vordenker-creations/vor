@@ -198,12 +198,85 @@ def set_project_tasks(project_id, tasks):
 def recalculate_project_progress(project_id):
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT COUNT(*), SUM(completed) FROM project_tasks WHERE project_id = ?", (project_id,))
-    row = cursor.fetchone()
-    total = row[0]
-    completed = row[1]
-    if total and total > 0:
-        progress = int((completed or 0) / total * 100)
+    
+    # Check if there are project requirements first
+    cursor.execute("SELECT COUNT(*), SUM(completed) FROM project_requirements WHERE project_id = ?", (project_id,))
+    row_reqs = cursor.fetchone()
+    total_reqs = row_reqs[0]
+    completed_reqs = row_reqs[1]
+    
+    if total_reqs and total_reqs > 0:
+        progress = int((completed_reqs or 0) / total_reqs * 100)
         cursor.execute("UPDATE student_projects SET progress = ? WHERE id = ?", (progress, project_id))
         conn.commit()
+    else:
+        # Fall back to project tasks / milestones
+        cursor.execute("SELECT COUNT(*), SUM(completed) FROM project_tasks WHERE project_id = ?", (project_id,))
+        row = cursor.fetchone()
+        total = row[0]
+        completed = row[1]
+        if total and total > 0:
+            progress = int((completed or 0) / total * 100)
+            cursor.execute("UPDATE student_projects SET progress = ? WHERE id = ?", (progress, project_id))
+            conn.commit()
+        else:
+            cursor.execute("UPDATE student_projects SET progress = 0 WHERE id = ?", (project_id,))
+            conn.commit()
     conn.close()
+
+# Project Requirements Operations
+def get_project_requirements(project_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM project_requirements WHERE project_id = ? ORDER BY id ASC", (project_id,))
+    reqs = [dict(row) for row in cursor.fetchall()]
+    conn.close()
+    return reqs
+
+def add_project_requirement(project_id, requirement_text, completed=0, detailed_suggestion=None):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO project_requirements (project_id, requirement_text, completed, detailed_suggestion) VALUES (?, ?, ?, ?)",
+        (project_id, requirement_text, completed, detailed_suggestion)
+    )
+    new_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+    recalculate_project_progress(project_id)
+    return new_id
+
+def update_project_requirement_status(req_id, completed):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT project_id FROM project_requirements WHERE id = ?", (req_id,))
+    row = cursor.fetchone()
+    if row:
+        project_id = row["project_id"]
+        cursor.execute("UPDATE project_requirements SET completed = ? WHERE id = ?", (completed, req_id))
+        conn.commit()
+        conn.close()
+        recalculate_project_progress(project_id)
+    else:
+        conn.close()
+
+def update_project_requirement_suggestion(req_id, detailed_suggestion):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE project_requirements SET detailed_suggestion = ? WHERE id = ?", (detailed_suggestion, req_id))
+    conn.commit()
+    conn.close()
+
+def delete_project_requirement(req_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT project_id FROM project_requirements WHERE id = ?", (req_id,))
+    row = cursor.fetchone()
+    if row:
+        project_id = row["project_id"]
+        cursor.execute("DELETE FROM project_requirements WHERE id = ?", (req_id,))
+        conn.commit()
+        conn.close()
+        recalculate_project_progress(project_id)
+    else:
+        conn.close()

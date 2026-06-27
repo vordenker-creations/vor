@@ -14,6 +14,10 @@ class JobCreate(BaseModel):
     location: str = Field(..., description="Location, minimum 2 characters")
     description: str = Field(..., description="Job description, minimum 10 characters")
     posted_by: str = Field("", description="Email of user who posted the job")
+    logo: str = Field("", description="Base64 encoded logo image")
+    gpa: str = Field("", description="Minimum GPA requirement")
+    languages: str = Field("", description="Language requirements")
+    other_reqs: str = Field("", description="Other requirements")
 
     @field_validator('title', 'company', 'salary', 'location', 'description', mode='before')
     @classmethod
@@ -152,3 +156,18 @@ class UserProfileUpdate(BaseModel):
         if value is None:
             return ""
         return str(value).strip()
+
+
+# ==================== CV SCHEMA ====================
+
+class CVCreate(BaseModel):
+    name: str = Field(..., description="Full name of student")
+    email: str = Field(..., description="Email of student")
+    major: str = Field(..., description="Student's major")
+    university: str = Field(..., description="Student's university")
+    gpa: float = Field(..., description="Student's GPA")
+    skills: str = Field(..., description="Student's skills")
+    languages: str = Field("", description="Languages spoken")
+    bio: str = Field("", description="Student's bio/intro")
+    avatar: str = Field("", description="Base64 encoded avatar image")
+    certificates: str = Field("", description="JSON list of certificates")

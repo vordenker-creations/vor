@@ -45,7 +45,7 @@ def get_current_student():
     conn.close()
     return student_dict
 
-def save_student_profile(student_id, email, username, display_name, major, student_year, is_dirty=0, created_at=None, updated_at=None):
+def save_student_profile(student_id, email, username, display_name, major, student_year, university=None, birth_year=None, age=None, phone=None, is_dirty=0, created_at=None, updated_at=None):
     """Upserts a student profile locally."""
     conn = get_connection()
     cursor = conn.cursor()
@@ -59,14 +59,14 @@ def save_student_profile(student_id, email, username, display_name, major, stude
     if row:
         cursor.execute('''
             UPDATE students 
-            SET email = ?, username = ?, display_name = ?, major = ?, student_year = ?, is_dirty = ?, updated_at = ?
+            SET email = ?, username = ?, display_name = ?, major = ?, student_year = ?, university = ?, birth_year = ?, age = ?, phone = ?, is_dirty = ?, updated_at = ?
             WHERE id = ?
-        ''', (email, username, display_name, major, student_year, is_dirty, timestamp, student_id))
+        ''', (email, username, display_name, major, student_year, university, birth_year, age, phone, is_dirty, timestamp, student_id))
     else:
         cursor.execute('''
-            INSERT INTO students (id, email, username, display_name, major, student_year, created_at, updated_at, is_dirty)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (student_id, email, username, display_name, major, student_year, c_at, timestamp, is_dirty))
+            INSERT INTO students (id, email, username, display_name, major, student_year, university, birth_year, age, phone, created_at, updated_at, is_dirty)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (student_id, email, username, display_name, major, student_year, university, birth_year, age, phone, c_at, timestamp, is_dirty))
     
     conn.commit()
     conn.close()
@@ -101,6 +101,73 @@ def save_student_context(student_id, raw_input_dict, ai_plan_dict=None, ai_statu
     conn.commit()
     conn.close()
     return context_id
+
+# ==========================================
+# STUDENT GRADES & GPA OPERATIONS
+# ==========================================
+
+def get_student_grades(student_id):
+    """Retrieves all grades for a student."""
+    conn = get_connection()
+    grades = conn.execute("SELECT * FROM student_grades WHERE student_id = ? ORDER BY semester ASC, id ASC", (student_id,)).fetchall()
+    conn.close()
+    return [dict(g) for g in grades]
+
+def add_student_grade(student_id, semester, course_name, credits, grade_value, grade_letter):
+    """Adds a new grade entry for the student."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO student_grades (student_id, semester, course_name, credits, grade_value, grade_letter)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ''', (student_id, semester, course_name, credits, grade_value, grade_letter))
+    new_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+    return new_id
+
+def delete_student_grade(grade_id):
+    """Deletes a grade entry."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM student_grades WHERE id = ?", (grade_id,))
+    conn.commit()
+    conn.close()
+
+def calculate_gpa(student_id):
+    """Calculates the cumulative GPA of a student.
+    Returns cumulative GPA (float) and semester-wise GPAs (dict)."""
+    conn = get_connection()
+    grades = conn.execute("SELECT semester, credits, grade_value FROM student_grades WHERE student_id = ?", (student_id,)).fetchall()
+    conn.close()
+    
+    if not grades:
+        return 0.0, {}
+        
+    total_credits = 0
+    weighted_sum = 0.0
+    
+    semesters = {}
+    for g in grades:
+        sem = g["semester"]
+        cred = g["credits"]
+        val = g["grade_value"]
+        
+        total_credits += cred
+        weighted_sum += val * cred
+        
+        if sem not in semesters:
+            semesters[sem] = {"credits": 0, "sum": 0.0}
+        semesters[sem]["credits"] += cred
+        semesters[sem]["sum"] += val * cred
+        
+    cumulative_gpa = round(weighted_sum / total_credits, 2) if total_credits > 0 else 0.0
+    
+    semester_gpas = {}
+    for sem, data in semesters.items():
+        semester_gpas[sem] = round(data["sum"] / data["credits"], 2) if data["credits"] > 0 else 0.0
+        
+    return cumulative_gpa, semester_gpas
 
 # ==========================================
 # SYNC WORKER HELPERS
@@ -203,4 +270,29 @@ def clear_session():
     cursor.execute("PRAGMA foreign_keys = ON;")
     conn.commit()
     conn.close()
+
+def save_mock_interview(student_id, category, score, feedback, date_str):
+    """Saves a new mock interview attempt to the database."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO mock_interviews (student_id, category, score, feedback, date_str)
+        VALUES (?, ?, ?, ?, ?)
+    ''', (student_id, category, score, feedback, date_str))
+    conn.commit()
+    conn.close()
+
+def get_mock_interviews(student_id):
+    """Retrieves all mock interview attempts for a student."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT id, category, score, feedback, date_str
+        FROM mock_interviews
+        WHERE student_id = ?
+        ORDER BY id DESC
+    ''', (student_id,))
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
 

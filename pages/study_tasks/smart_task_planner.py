@@ -17,7 +17,7 @@ class PlannerToolbar(QFrame):
 
     def setup_ui(self):
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(32, 0, 32, 0)
+        layout.setContentsMargins(16, 0, 16, 0)
         layout.setSpacing(24)
 
         info_v = QVBoxLayout()
@@ -124,19 +124,20 @@ class ClassDialog(QDialog):
         
         if is_ai:
             self.assign_btn = QPushButton("Assign to Schedule")
-            self.assign_btn.setStyleSheet("background: #10B981; color: white; padding: 8px; border-radius: 4px; font-weight: bold;")
+            self.assign_btn.setStyleSheet("background: #10B981; color: white; height: 36px; padding: 0 12px; border-radius: 6px; font-weight: bold;")
             self.assign_btn.clicked.connect(self.accept_assign)
             btns.addWidget(self.assign_btn)
             
         self.save_btn = QPushButton("Save")
-        self.save_btn.setStyleSheet("background: #0F172A; color: white; padding: 8px; border-radius: 4px;")
+        self.save_btn.setStyleSheet("background: #2563EB; color: white; height: 36px; padding: 0 12px; border-radius: 6px; font-weight: bold;")
         self.save_btn.clicked.connect(self.accept)
         
         self.del_btn = QPushButton("Delete")
-        self.del_btn.setStyleSheet("background: #EF4444; color: white; padding: 8px; border-radius: 4px;")
+        self.del_btn.setStyleSheet("background: #EF4444; color: white; height: 36px; padding: 0 12px; border-radius: 6px; font-weight: bold;")
         self.del_btn.clicked.connect(self.reject_delete)
         
         cancel_btn = QPushButton("Cancel")
+        cancel_btn.setStyleSheet("background: #F1F5F9; color: #0F172A; border: 1px solid #CBD5E1; height: 36px; padding: 0 12px; border-radius: 6px; font-weight: bold;")
         cancel_btn.clicked.connect(self.reject)
         
         btns.addWidget(self.save_btn)
@@ -303,7 +304,7 @@ class SmartTaskPlanner(QWidget):
         
         self.grid_container = QWidget()
         self.grid_layout = QGridLayout(self.grid_container)
-        self.grid_layout.setContentsMargins(20, 20, 20, 20)
+        self.grid_layout.setContentsMargins(16, 16, 16, 16)
         self.grid_layout.setSpacing(4)
         
         self.scroll.setWidget(self.grid_container)

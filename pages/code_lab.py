@@ -30,8 +30,8 @@ class ClickableCard(QFrame):
                 border-radius: 12px;
             }
             #ClickableCard:hover {
-                border: 1px solid #38BDF8;
-                background-color: #243249;
+                border: 1px solid #2563EB;
+                background-color: #F8FAFC;
             }
         """)
         
@@ -44,6 +44,9 @@ class ClickableCard(QFrame):
         self.internal_layout = QVBoxLayout(self)
         self.internal_layout.setContentsMargins(14, 12, 14, 12)
         self.internal_layout.setSpacing(6)
+        
+        from core.config import apply_theme
+        apply_theme(self)
 
     def mousePressEvent(self, event):
         if self.on_click:
@@ -91,8 +94,12 @@ class CodeLabPage(QWidget):
         main_splitter = QSplitter(Qt.Orientation.Horizontal)
         main_splitter.setStyleSheet("""
             QSplitter::handle {
-                background-color: rgba(148, 163, 184, 0.1);
-                width: 1px;
+                background-color: #E2E8F0;
+                width: 4px;
+                margin: 0 4px;
+            }
+            QSplitter::handle:hover {
+                background-color: #2563EB;
             }
         """)
         
@@ -102,6 +109,65 @@ class CodeLabPage(QWidget):
         left_lay.setContentsMargins(20, 20, 10, 20)
         left_lay.setSpacing(16)
         
+        # Mode Toggle Frame
+        toggle_frame = QFrame()
+        toggle_frame.setStyleSheet("background-color: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px;")
+        toggle_lay = QHBoxLayout(toggle_frame)
+        toggle_lay.setContentsMargins(10, 8, 10, 8)
+        toggle_lay.setSpacing(10)
+        
+        toggle_lay.addWidget(QLabel("Mode:", styleSheet="font-weight: bold; color: #0F172A; border: none; background: transparent;"))
+        
+        self.btn_mode_practice = QPushButton("Practice")
+        self.btn_mode_practice.setCheckable(True)
+        self.btn_mode_practice.setChecked(True)
+        self.btn_mode_practice.setCursor(Qt.CursorShape.PointingHandCursor)
+        
+        self.btn_mode_exam = QPushButton("Exam (Contest)")
+        self.btn_mode_exam.setCheckable(True)
+        self.btn_mode_exam.setCursor(Qt.CursorShape.PointingHandCursor)
+        
+        btn_style_active = """
+            QPushButton {
+                background-color: #0F172A; color: white; border: none; border-radius: 6px;
+                padding: 6px 12px; font-size: 11px; font-weight: bold;
+            }
+        """
+        btn_style_inactive = """
+            QPushButton {
+                background-color: #F1F5F9; color: #475569; border: none; border-radius: 6px;
+                padding: 6px 12px; font-size: 11px; font-weight: bold;
+            }
+            QPushButton:hover { background-color: #E2E8F0; }
+        """
+        
+        def set_modes_style():
+            if self.btn_mode_practice.isChecked():
+                self.btn_mode_practice.setStyleSheet(btn_style_active)
+                self.btn_mode_exam.setStyleSheet(btn_style_inactive)
+            else:
+                self.btn_mode_practice.setStyleSheet(btn_style_inactive)
+                self.btn_mode_exam.setStyleSheet(btn_style_active)
+                
+        self.btn_mode_practice.clicked.connect(lambda: [
+            self.btn_mode_practice.setChecked(True),
+            self.btn_mode_exam.setChecked(False),
+            set_modes_style(),
+            self._on_mode_changed('practice')
+        ])
+        
+        self.btn_mode_exam.clicked.connect(lambda: [
+            self.btn_mode_practice.setChecked(False),
+            self.btn_mode_exam.setChecked(True),
+            set_modes_style(),
+            self._on_mode_changed('exam')
+        ])
+        
+        toggle_lay.addWidget(self.btn_mode_practice)
+        toggle_lay.addWidget(self.btn_mode_exam)
+        set_modes_style()
+        left_lay.addWidget(toggle_frame)
+
         # Progress Card
         progress_card = QFrame()
         progress_card.setStyleSheet("background-color: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px;")
@@ -143,7 +209,7 @@ class CodeLabPage(QWidget):
                 font-size: 13px;
             }
             QLineEdit:focus {
-                border: 1px solid #38BDF8;
+                border: 1px solid #2563EB;
             }
         """)
         self.search_box.textChanged.connect(self._apply_filters)
@@ -163,7 +229,7 @@ class CodeLabPage(QWidget):
             QComboBox QAbstractItemView {
                 background-color: #FFFFFF;
                 color: #0F172A;
-                selection-background-color: #38BDF8;
+                selection-background-color: #2563EB;
                 selection-color: #F8FAFC;
                 border: 1px solid #E2E8F0;
             }
@@ -175,7 +241,7 @@ class CodeLabPage(QWidget):
         self.btn_add_challenge.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_add_challenge.setStyleSheet("""
             QPushButton {
-                background-color: #0284C7;
+                background-color: #2563EB;
                 color: white;
                 font-weight: bold;
                 border-radius: 8px;
@@ -184,7 +250,7 @@ class CodeLabPage(QWidget):
                 border: none;
             }
             QPushButton:hover {
-                background-color: #0369A1;
+                background-color: #1D4ED8;
             }
         """)
         self.btn_add_challenge.clicked.connect(self._open_add_challenge_dialog)
@@ -246,7 +312,16 @@ class CodeLabPage(QWidget):
         
         # Horizontal Split (Description on left, Code Editor on right)
         editor_splitter = QSplitter(Qt.Orientation.Horizontal)
-        editor_splitter.setStyleSheet("QSplitter::handle { background-color: rgba(148, 163, 184, 0.1); width: 1px; }")
+        editor_splitter.setStyleSheet("""
+            QSplitter::handle {
+                background-color: #E2E8F0;
+                width: 4px;
+                margin: 0 4px;
+            }
+            QSplitter::handle:hover {
+                background-color: #2563EB;
+            }
+        """)
         
         # Problem Details
         desc_widget = QWidget()
@@ -262,7 +337,7 @@ class CodeLabPage(QWidget):
         self.diff_badge = QLabel("Easy")
         self.diff_badge.setStyleSheet("color: #10B981; background-color: rgba(16, 185, 129, 0.15); font-size: 10px; font-weight: bold; padding: 2px 8px; border-radius: 4px;")
         self.topic_badge = QLabel("Topic: Array")
-        self.topic_badge.setStyleSheet("color: #38BDF8; font-size: 11px; font-weight: bold;")
+        self.topic_badge.setStyleSheet("color: #2563EB; font-size: 11px; font-weight: bold;")
         meta_row.addWidget(self.diff_badge)
         meta_row.addWidget(self.topic_badge)
         meta_row.addStretch()
@@ -272,7 +347,7 @@ class CodeLabPage(QWidget):
         self.desc_browser.setStyleSheet("""
             QTextBrowser {
                 background-color: #FFFFFF;
-                color: #E2E8F0;
+                color: #334155;
                 border: 1px solid #E2E8F0;
                 border-radius: 8px;
                 padding: 12px;
@@ -296,7 +371,7 @@ class CodeLabPage(QWidget):
         self.code_editor.setStyleSheet("""
             QPlainTextEdit {
                 background-color: #FFFFFF;
-                color: #38BDF8;
+                color: #0F172A;
                 border: 1px solid #E2E8F0;
                 border-radius: 8px;
                 padding: 12px;
@@ -304,8 +379,7 @@ class CodeLabPage(QWidget):
         """)
         el.addWidget(self.code_editor)
         editor_splitter.addWidget(editor_widget)
-        
-        aw_lay.addWidget(editor_splitter, 3) # takes more space
+        editor_splitter.setSizes([350, 450])
         
         # Console Output (terminal-like)
         console_widget = QWidget()
@@ -327,7 +401,24 @@ class CodeLabPage(QWidget):
             }
         """)
         cl.addWidget(self.console)
-        aw_lay.addWidget(console_widget, 1) # console takes less space
+        
+        # Vertical Splitter (Description/Editor on top, Console on bottom)
+        workspace_vertical_splitter = QSplitter(Qt.Orientation.Vertical)
+        workspace_vertical_splitter.setStyleSheet("""
+            QSplitter::handle {
+                background-color: #E2E8F0;
+                height: 4px;
+                margin: 2px 0;
+            }
+            QSplitter::handle:hover {
+                background-color: #2563EB;
+            }
+        """)
+        workspace_vertical_splitter.addWidget(editor_splitter)
+        workspace_vertical_splitter.addWidget(console_widget)
+        workspace_vertical_splitter.setSizes([550, 200])
+        
+        aw_lay.addWidget(workspace_vertical_splitter, 1)
         
         # Actions Row
         actions = QHBoxLayout()
@@ -346,6 +437,7 @@ class CodeLabPage(QWidget):
         
         self.timer_lbl = QLabel("⏱️ 30:00")
         self.timer_lbl.setStyleSheet("color: #0F172A; font-weight: bold; font-size: 14px; background: #FFFFFF; border-radius: 8px; padding: 0 15px;")
+        self.timer_lbl.hide()
         actions.addWidget(self.timer_lbl)
         
         actions.addWidget(self.btn_run)
@@ -391,22 +483,29 @@ class CodeLabPage(QWidget):
         # Load all challenges
         self.challenges_list = code_lab_db.get_all_challenges()
         
-        # Update progress stats
-        stats = code_lab_db.get_challenge_statistics()
-        total = stats["total"]
-        solved = stats["solved"]
-        self.progress_lbl.setText(f"Challenges Solved: {solved} / {total}")
+        is_exam = self.btn_mode_exam.isChecked() if hasattr(self, 'btn_mode_exam') else False
         
-        if total > 0:
-            self.progress_bar.setValue(int(solved / total * 100))
-        else:
+        if is_exam:
+            stats = code_lab_db.get_exam_statistics()
+            solved = stats["solved"]
+            score = stats["score"]
+            self.progress_lbl.setText(f"Exam Solved: {solved} | Total Score: {score}")
             self.progress_bar.setValue(0)
+            self.progress_bar.hide()
+        else:
+            stats = code_lab_db.get_challenge_statistics()
+            total = stats["total"]
+            solved = stats["solved"]
+            self.progress_lbl.setText(f"Practice Solved: {solved} / {total}")
+            self.progress_bar.show()
+            if total > 0:
+                self.progress_bar.setValue(int(solved / total * 100))
+            else:
+                self.progress_bar.setValue(0)
             
-        # Re-draw the explorer challenges list
         self._apply_filters()
 
     def _apply_filters(self):
-        # Clear items in list layout
         for i in reversed(range(self.list_layout.count())):
             item = self.list_layout.itemAt(i)
             if item.widget():
@@ -416,6 +515,7 @@ class CodeLabPage(QWidget):
                 
         search_query = self.search_box.text().lower().strip()
         diff_filter = self.diff_combo.currentText()
+        is_exam = self.btn_mode_exam.isChecked() if hasattr(self, 'btn_mode_exam') else False
         
         for challenge in self.challenges_list:
             title = challenge["title"].lower()
@@ -423,7 +523,6 @@ class CodeLabPage(QWidget):
             diff = challenge["difficulty"]
             cid = challenge["id"]
             
-            # Apply filters
             match_search = (not search_query) or (search_query in title) or (search_query in topic)
             match_diff = (diff_filter == "All Difficulties") or (diff_filter.lower() == diff.lower())
             
@@ -433,34 +532,33 @@ class CodeLabPage(QWidget):
                 header = QHBoxLayout()
                 header.setContentsMargins(0, 0, 0, 0)
                 
-                # Title
                 lbl_title = QLabel(challenge["title"])
                 lbl_title.setStyleSheet("color: #0F172A; font-size: 13px; font-weight: bold; background: transparent; border: none;")
                 header.addWidget(lbl_title)
                 header.addStretch()
                 
-                # Solved indicator dot
                 dot_lbl = QLabel()
-                dot_style = "color: #94A3B8; font-size: 14px;" # default new
+                dot_style = "color: #94A3B8; font-size: 14px;"
                 
-                # Fetch last submission status
-                last_sub = code_lab_db.get_last_submission(cid)
+                submissions = code_lab_db.get_challenge_submissions(cid)
+                mode_str = 'exam' if is_exam else 'practice'
+                last_sub = next((s for s in submissions if s.get("mode") == mode_str), None)
+                
                 if last_sub:
                     if last_sub["status"] == "Solved":
                         dot_lbl.setText("●")
-                        dot_style = "color: #10B981; font-size: 14px;" # green
+                        dot_style = "color: #10B981; font-size: 14px;"
                     else:
                         dot_lbl.setText("●")
-                        dot_style = "color: #F59E0B; font-size: 14px;" # orange (attempted)
+                        dot_style = "color: #F59E0B; font-size: 14px;"
                 else:
-                    dot_lbl.setText("○") # empty circle for new
+                    dot_lbl.setText("○")
                     
                 dot_lbl.setStyleSheet(dot_style + "background: transparent; border: none;")
                 header.addWidget(dot_lbl)
                 
                 card.internal_layout.addLayout(header)
                 
-                # Details row
                 details = QHBoxLayout()
                 details.setContentsMargins(0, 0, 0, 0)
                 
@@ -475,18 +573,18 @@ class CodeLabPage(QWidget):
                 details.addWidget(diff_lbl)
                 
                 card.internal_layout.addLayout(details)
+                
+                from core.config import apply_theme
+                apply_theme(card)
                 self.list_layout.addWidget(card)
                 
         self.list_layout.addStretch()
 
     def _load_challenge(self, challenge):
         self.active_challenge = challenge
-        
-        # Open Workspace Stack
         self.welcome_card.hide()
         self.active_workspace.show()
         
-        # Populate problem metadata
         self.problem_title.setText(challenge["title"])
         self.topic_badge.setText(f"Topic: {challenge['topic']}")
         
@@ -496,29 +594,37 @@ class CodeLabPage(QWidget):
         bg_rgba = "rgba(16, 185, 129, 0.15)" if diff.lower() == "easy" else ("rgba(245, 158, 11, 0.15)" if diff.lower() == "medium" else "rgba(239, 68, 68, 0.15)")
         self.diff_badge.setStyleSheet(f"color: {color}; background-color: {bg_rgba}; font-size: 10px; font-weight: bold; padding: 2px 8px; border-radius: 4px;")
         
-        # Set description text
         self.desc_browser.setHtml(challenge["description"])
         
-        # Load user's last code submission if it exists, otherwise starter code
-        last_sub = code_lab_db.get_last_submission(challenge["id"])
+        is_exam = self.btn_mode_exam.isChecked() if hasattr(self, 'btn_mode_exam') else False
+        mode_str = 'exam' if is_exam else 'practice'
+        
+        submissions = code_lab_db.get_challenge_submissions(challenge["id"])
+        last_sub = next((s for s in submissions if s.get("mode") == mode_str), None)
+        
         if last_sub and last_sub.get("code"):
             self.code_editor.setPlainText(last_sub["code"])
-            # Load AI feedback in terminal if it exists
             if last_sub.get("ai_review"):
                 self.console.setText(last_sub["ai_review"])
                 self.console.setStyleSheet("background-color: #020617; color: #E2E8F0; font-family: Consolas, monospace; font-size: 11px;")
             else:
-                self.console.setText("Write your code and run tests or request AI review...")
+                self.console.setText("Write your code and run tests...")
                 self.console.setStyleSheet("background-color: #020617; color: #64748B; font-family: Consolas, monospace; font-size: 11px;")
         else:
             self.code_editor.setPlainText(challenge["starter_code"])
-            self.console.setText("Write your code and run tests or request AI review...")
+            self.console.setText("Write your code and run tests...")
             self.console.setStyleSheet("background-color: #020617; color: #64748B; font-family: Consolas, monospace; font-size: 11px;")
-
-        # Start timer for 30 mins
-        self.time_left = 1800
-        self._update_timer()
-        self.timer.start(1000)
+            
+        if is_exam:
+            self.timer_lbl.show()
+            self.btn_ai.hide()
+            self.time_left = 1800
+            self._update_timer()
+            self.timer.start(1000)
+        else:
+            self.timer.stop()
+            self.timer_lbl.hide()
+            self.btn_ai.show()
 
     def _update_timer(self):
         if self.time_left > 0:
@@ -527,11 +633,12 @@ class CodeLabPage(QWidget):
             self.timer_lbl.setText(f"⏱️ {mins:02d}:{secs:02d}")
         else:
             self.timer.stop()
-            self._show_message("Time's Up!", "Thời gian làm bài đã hết!", is_warning=True)
+            self.timer_lbl.setText("⏱️ Timeout")
+            self._show_message("Time's Up!", "Thời gian làm bài thi đã hết! Kết quả sẽ không được tính.", is_warning=True)
 
-    def _run_local_tests(self):
+    def _run_local_tests(self, return_ratio=False):
         if not self.active_challenge:
-            return False
+            return 0.0 if return_ratio else False
             
         code = self.code_editor.toPlainText()
         test_cases_json = self.active_challenge["test_cases"]
@@ -539,22 +646,18 @@ class CodeLabPage(QWidget):
         self.console.setText("Running local test suite...")
         self.console.setStyleSheet("background-color: #020617; color: #38BDF8; font-family: Consolas, monospace; font-size: 11px;")
         
-        # Quick process events to draw "running..." text
         QGuiApplication.processEvents()
         
         test_cases = json.loads(test_cases_json)
         
-        # Capture standard out
         old_stdout = sys.stdout
         redirected_output = io.StringIO()
         sys.stdout = redirected_output
         
         try:
-            # Create isolated local namespace
             local_scope = {}
             exec(code, {}, local_scope)
             
-            # Retrieve the function defined by the user
             func = None
             for key, val in local_scope.items():
                 if callable(val) and not key.startswith("__"):
@@ -563,45 +666,59 @@ class CodeLabPage(QWidget):
                     
             if not func:
                 sys.stdout = old_stdout
-                self.console.setText("❌ Error: No function defined in code workspace.\nPlease define a python function matching the challenge.")
+                self.console.setText("❌ Error: No function defined in code workspace.")
                 self.console.setStyleSheet("background-color: #020617; color: #EF4444; font-family: Consolas, monospace; font-size: 11px;")
-                return False
+                return 0.0 if return_ratio else False
                 
-            # Execute cases
             passed_cases = 0
+            failed_case_info = None
+            
             for idx, tc in enumerate(test_cases):
                 args = tc["input"]
                 expected = tc["output"]
                 
-                # Clone parameters for safe in-place edits (e.g. string arrays)
                 import copy
                 cloned_args = copy.deepcopy(args)
                 
                 result = func(*cloned_args)
                 
-                # Handle in-place string arrays that return None but modify inputs
                 if result is None and len(cloned_args) == 1:
                     result = cloned_args[0]
                     
-                # Standardize structures for clean equivalence comparison
                 if isinstance(result, tuple):
                     result = list(result)
                 if isinstance(expected, tuple):
                     expected = list(expected)
                     
                 if result != expected:
-                    sys.stdout = old_stdout
-                    console_out = redirected_output.getvalue()
-                    err_msg = f"❌ Test Case {idx + 1} Failed!\n\nInput Params: {args}\nExpected Output: {expected}\nReturned Output: {result}\n"
-                    if console_out:
-                        err_msg += f"\nCaptured console stdout:\n{console_out}"
-                    self.console.setText(err_msg)
-                    self.console.setStyleSheet("background-color: #020617; color: #EF4444; font-family: Consolas, monospace; font-size: 11px;")
-                    return False
-                passed_cases += 1
+                    if not return_ratio:
+                        sys.stdout = old_stdout
+                        console_out = redirected_output.getvalue()
+                        err_msg = f"❌ Test Case {idx + 1} Failed!\n\nInput Params: {args}\nExpected Output: {expected}\nReturned Output: {result}\n"
+                        if console_out:
+                            err_msg += f"\nCaptured console stdout:\n{console_out}"
+                        self.console.setText(err_msg)
+                        self.console.setStyleSheet("background-color: #020617; color: #EF4444; font-family: Consolas, monospace; font-size: 11px;")
+                        return False
+                    else:
+                        if not failed_case_info:
+                            failed_case_info = f"❌ Test Case {idx + 1} Failed! Expected {expected}, got {result}"
+                else:
+                    passed_cases += 1
                 
             sys.stdout = old_stdout
             console_out = redirected_output.getvalue()
+            
+            if return_ratio:
+                ratio = passed_cases / len(test_cases) if test_cases else 0.0
+                if ratio < 1.0:
+                    self.console.setText(f"{failed_case_info or '❌ Tests failed.'}\nPassed {passed_cases}/{len(test_cases)} cases.")
+                    self.console.setStyleSheet("background-color: #020617; color: #EF4444; font-family: Consolas, monospace; font-size: 11px;")
+                else:
+                    self.console.setText(f"✅ Success: All {passed_cases} Test Cases Passed!\n")
+                    self.console.setStyleSheet("background-color: #020617; color: #10B981; font-family: Consolas, monospace; font-size: 11px;")
+                return ratio
+                
             success_msg = f"✅ Success: All {passed_cases} Test Cases Passed!\n"
             if console_out:
                 success_msg += f"\nCaptured console stdout:\n{console_out}"
@@ -614,7 +731,7 @@ class CodeLabPage(QWidget):
             tb = traceback.format_exc()
             self.console.setText(f"❌ Syntax or Runtime Exception:\n{tb}")
             self.console.setStyleSheet("background-color: #020617; color: #EF4444; font-family: Consolas, monospace; font-size: 11px;")
-            return False
+            return 0.0 if return_ratio else False
 
     def _get_ai_mentor_review(self):
         if not self.active_challenge:
@@ -824,26 +941,57 @@ class CodeLabPage(QWidget):
         if not self.active_challenge:
             return
             
-        passed = self._run_local_tests()
-        if not passed:
-            self._show_message("Validation Error", "Code must pass all test cases before submitting.", is_warning=True)
-            return
-            
+        is_exam = self.btn_mode_exam.isChecked() if hasattr(self, 'btn_mode_exam') else False
         code = self.code_editor.toPlainText()
         cid = self.active_challenge["id"]
         
-        # Run AI analysis to save feedback
-        ai_feedback = self._analyze_code_structurally(cid, code, True)
-        
-        # Save as Solved
-        code_lab_db.save_submission(cid, code, "Solved", ai_feedback, 100)
-        
-        self._show_message("Success", "Challenge solved and submitted successfully!")
-        self.console.setText(ai_feedback + "\n\n🚀 SUBMISSION SUCCESSFUL!")
-        self.console.setStyleSheet("background-color: #020617; color: #10B981; font-family: Consolas, monospace; font-size: 11px;")
-        
-        # Refresh progress and list status
+        if is_exam:
+            if self.time_left <= 0:
+                self._show_message("Validation Error", "Thời gian đã hết! Bạn không thể nộp bài thi này.", is_warning=True)
+                return
+                
+            passed_ratio = self._run_local_tests(return_ratio=True)
+            
+            diff = self.active_challenge["difficulty"].lower()
+            mult = 1.0
+            if diff == "medium":
+                mult = 2.0
+            elif diff == "hard":
+                mult = 3.0
+                
+            score = int(passed_ratio * 100 * mult)
+            
+            self.timer.stop()
+            self.timer_lbl.setText("⏱️ Done")
+            
+            ai_feedback = self._analyze_code_structurally(cid, code, passed_ratio == 1.0)
+            code_lab_db.save_submission(cid, code, "Solved" if passed_ratio == 1.0 else "Attempted", ai_feedback, score, mode='exam')
+            
+            self._show_message("Success", f"Nộp bài thi thành công!\nĐiểm số đạt được: {score} điểm (Tỷ lệ: {int(passed_ratio*100)}%)")
+            self.console.setText(ai_feedback + f"\n\n🚀 SUBMISSION SUCCESSFUL! SCORE: {score}")
+            self.console.setStyleSheet("background-color: #020617; color: #10B981; font-family: Consolas, monospace; font-size: 11px;")
+        else:
+            passed = self._run_local_tests()
+            if not passed:
+                self._show_message("Validation Error", "Code must pass all test cases before submitting.", is_warning=True)
+                return
+                
+            ai_feedback = self._analyze_code_structurally(cid, code, True)
+            code_lab_db.save_submission(cid, code, "Solved", ai_feedback, 100, mode='practice')
+            
+            self._show_message("Success", "Challenge solved and submitted successfully!")
+            self.console.setText(ai_feedback + "\n\n🚀 SUBMISSION SUCCESSFUL!")
+            self.console.setStyleSheet("background-color: #020617; color: #10B981; font-family: Consolas, monospace; font-size: 11px;")
+            
         self.refresh()
+
+    def _on_mode_changed(self, mode):
+        self.timer.stop()
+        self.timer_lbl.hide()
+        self.refresh()
+        self.active_workspace.hide()
+        self.welcome_card.show()
+        self.active_challenge = None
 
     def _open_add_challenge_dialog(self):
         dialog = AddChallengeDialog(self)

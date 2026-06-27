@@ -1,4 +1,6 @@
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QFrame, QButtonGroup, QSpacerItem, QSizePolicy, QGraphicsDropShadowEffect, QGraphicsOpacityEffect
+from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QFrame, 
+                             QButtonGroup, QSpacerItem, QSizePolicy, QGraphicsDropShadowEffect, 
+                             QGraphicsOpacityEffect, QPushButton)
 from PyQt6.QtCore import Qt, QPropertyAnimation, QEasingCurve, pyqtSignal, QSize, QRect, QParallelAnimationGroup
 from PyQt6.QtGui import QColor, QFont
 from ui_core.animated_nav_button import AnimatedNavButton
@@ -36,14 +38,34 @@ class SidebarComponent(QFrame):
         self.header_layout.setSpacing(10)
         
         self.logo_label = QLabel("✦")
-        self.logo_label.setStyleSheet("font-size: 20px; color: #38BDF8; font-weight: bold; border: none; background: transparent;")
+        self.logo_label.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.logo_label.setStyleSheet("font-size: 20px; color: #2563EB; font-weight: bold; border: none; background: transparent;")
+        self.logo_label.mousePressEvent = lambda event: self.toggle_collapse()
         
         self.title_label = QLabel("AI-Career Bridge")
         self.title_label.setStyleSheet("font-size: 15px; font-weight: 800; color: #0F172A; border: none; background: transparent; letter-spacing: -0.4px;")
         
+        self.btn_collapse = QPushButton("☰")
+        self.btn_collapse.setFixedSize(28, 28)
+        self.btn_collapse.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_collapse.setStyleSheet("""
+            QPushButton {
+                background-color: transparent;
+                color: #0F172A;
+                border-radius: 6px;
+                font-size: 14px;
+                border: none;
+            }
+            QPushButton:hover {
+                background-color: #F1F5F9;
+            }
+        """)
+        self.btn_collapse.clicked.connect(self.toggle_collapse)
+
         self.header_layout.addWidget(self.logo_label)
         self.header_layout.addWidget(self.title_label)
         self.header_layout.addStretch()
+        self.header_layout.addWidget(self.btn_collapse)
         
         self.main_layout.addWidget(self.header_container)
         
@@ -112,7 +134,7 @@ class SidebarComponent(QFrame):
         self.avatar_label.setFixedSize(40, 40)
         self.avatar_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.avatar_label.setStyleSheet("""
-            background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #38BDF8, stop:1 #0284C7);
+            background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2563EB, stop:1 #1D4ED8);
             color: white;
             border-radius: 20px;
             font-weight: bold;
@@ -165,6 +187,7 @@ class SidebarComponent(QFrame):
         # Skip complex opacity for now, just toggle visibility
         self.title_label.setVisible(not self.is_collapsed)
         self.user_info_container.setVisible(not self.is_collapsed)
+        self.btn_collapse.setVisible(not self.is_collapsed)
         
         for btn in self.nav_buttons:
             btn.setCollapsed(self.is_collapsed)

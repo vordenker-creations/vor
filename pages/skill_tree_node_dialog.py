@@ -20,56 +20,56 @@ class NodeDialog(QDialog):
         self.resize(420, 520)
         self.setStyleSheet("""
             QDialog {
-                background-color: #0F172A;
-                color: #F1F5F9;
+                background-color: #FFFFFF;
+                color: #0F172A;
             }
             QLabel {
-                color: #94A3B8;
+                color: #475569;
                 font-size: 13px;
                 font-weight: 600;
             }
             QLineEdit, QComboBox, QSpinBox {
-                background-color: #1E293B;
-                color: #F1F5F9;
-                border: 1px solid #334155;
+                background-color: #FFFFFF;
+                color: #0F172A;
+                border: 1px solid #CBD5E1;
                 border-radius: 8px;
                 padding: 10px;
                 font-size: 13px;
             }
             QLineEdit:focus, QComboBox:focus, QSpinBox:focus {
-                border: 1px solid #38BDF8;
+                border: 1px solid #2563EB;
             }
             QComboBox QAbstractItemView {
-                background-color: #1E293B;
-                color: #F1F5F9;
-                selection-background-color: #38BDF8;
-                selection-color: #0F172A;
-                border: 1px solid #334155;
+                background-color: #FFFFFF;
+                color: #0F172A;
+                selection-background-color: #EFF6FF;
+                selection-color: #2563EB;
+                border: 1px solid #CBD5E1;
             }
             QCheckBox {
-                color: #94A3B8;
+                color: #475569;
                 font-size: 13px;
                 font-weight: 600;
             }
             QPushButton {
-                background-color: #1E293B;
-                color: #F1F5F9;
-                border: 1px solid #334155;
+                background-color: #F1F5F9;
+                color: #0F172A;
+                border: 1px solid #CBD5E1;
                 border-radius: 8px;
                 padding: 10px 16px;
                 font-weight: bold;
                 font-size: 13px;
             }
             QPushButton:hover {
-                background-color: #334155;
+                background-color: #E2E8F0;
             }
             QPushButton#btnPrimary {
-                background-color: #38BDF8;
-                color: #0F172A;
+                background-color: #2563EB;
+                color: #FFFFFF;
                 border: none;
             }
             QPushButton#btnPrimary:hover {
-                background-color: #0EA5E9;
+                background-color: #1D4ED8;
             }
             QPushButton#btnDelete {
                 background-color: #EF4444;
@@ -164,10 +164,10 @@ class NodeDialog(QDialog):
                 for p in related_projects:
                     lbl = QLabel(f"💼 {p['title']} ({p['progress']}% Complete)")
                     lbl.setStyleSheet("""
-                        color: #E2E8F0;
+                        color: #475569;
                         font-size: 12px;
-                        background-color: #1E293B;
-                        border: 1px solid #334155;
+                        background-color: #F8FAFC;
+                        border: 1px solid #E2E8F0;
                         border-radius: 6px;
                         padding: 4px 8px;
                     """)

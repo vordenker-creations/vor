@@ -17,13 +17,13 @@ class MissionDialog(QDialog):
         self.resize(500, 580)
         self.setStyleSheet("""
             QDialog {
-                background-color: #0F172A;
-                color: #F1F5F9;
+                background-color: #FFFFFF;
+                color: #0F172A;
             }
             QLabel#title {
                 font-size: 20px;
                 font-weight: 800;
-                color: #F1F5F9;
+                color: #0F172A;
                 letter-spacing: -0.5px;
             }
             QLabel#subtitle {
@@ -36,46 +36,46 @@ class MissionDialog(QDialog):
             }
             QScrollBar:vertical {
                 border: none;
-                background: #1E293B;
+                background: #F1F5F9;
                 width: 8px;
                 border-radius: 4px;
             }
             QScrollBar::handle:vertical {
-                background: #475569;
+                background: #CBD5E1;
                 border-radius: 4px;
             }
             QPushButton {
-                background-color: #1E293B;
-                color: #F1F5F9;
-                border: 1px solid #334155;
+                background-color: #F1F5F9;
+                color: #0F172A;
+                border: 1px solid #CBD5E1;
                 border-radius: 12px;
                 padding: 10px 16px;
                 font-weight: bold;
                 font-size: 13px;
             }
             QPushButton:hover {
-                background-color: #334155;
+                background-color: #E2E8F0;
             }
             QPushButton#btnCode {
-                border: 1px solid rgba(56, 189, 248, 0.4);
-                color: #38BDF8;
+                border: 1px solid rgba(37, 99, 235, 0.4);
+                color: #2563EB;
             }
             QPushButton#btnCode:hover {
-                background-color: rgba(56, 189, 248, 0.1);
+                background-color: rgba(37, 99, 235, 0.1);
             }
             QPushButton#btnInterview {
-                border: 1px solid rgba(139, 92, 246, 0.4);
-                color: #A78BFA;
+                border: 1px solid rgba(124, 58, 237, 0.4);
+                color: #7C3AED;
             }
             QPushButton#btnInterview:hover {
-                background-color: rgba(139, 92, 246, 0.1);
+                background-color: rgba(124, 58, 237, 0.1);
             }
             QPushButton#btnPlanner {
-                border: 1px solid rgba(245, 158, 11, 0.4);
-                color: #FBBF24;
+                border: 1px solid rgba(217, 119, 6, 0.4);
+                color: #D97706;
             }
             QPushButton#btnPlanner:hover {
-                background-color: rgba(245, 158, 11, 0.1);
+                background-color: rgba(217, 119, 6, 0.1);
             }
         """)
 
@@ -97,7 +97,7 @@ class MissionDialog(QDialog):
 
         # Mastery percentage overview
         self.mastery_lbl = QLabel(f"Current Mastery: {node_data.get('mastery', 0)}%")
-        self.mastery_lbl.setStyleSheet("font-size: 14px; font-weight: 700; color: #38BDF8;")
+        self.mastery_lbl.setStyleSheet("font-size: 14px; font-weight: 700; color: #2563EB;")
         layout.addWidget(self.mastery_lbl)
 
         # Sub-tasks/Missions List Scroll Area
@@ -118,9 +118,9 @@ class MissionDialog(QDialog):
             item_frame = QFrame()
             item_frame.setStyleSheet("""
                 QFrame {
-                    background-color: #1E293B;
+                    background-color: #F8FAFC;
                     border-radius: 12px;
-                    border: 1px solid #334155;
+                    border: 1px solid #E2E8F0;
                 }
             """)
             item_lay = QHBoxLayout(item_frame)
@@ -180,7 +180,7 @@ class MissionDialog(QDialog):
         if chk.isChecked():
             chk.setStyleSheet("""
                 QCheckBox {
-                    color: #64748B;
+                    color: #94A3B8;
                     font-size: 13px;
                     font-weight: 500;
                     text-decoration: line-through;
@@ -189,7 +189,7 @@ class MissionDialog(QDialog):
         else:
             chk.setStyleSheet("""
                 QCheckBox {
-                    color: #E2E8F0;
+                    color: #0F172A;
                     font-size: 13px;
                     font-weight: 600;
                 }

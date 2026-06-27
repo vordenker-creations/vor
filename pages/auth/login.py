@@ -308,14 +308,7 @@ class LoginPage(QWidget):
             f"color: {COLOR_TEXT_SECONDARY}; font-size: 13px; font-weight: 600; border: none; background: transparent;")
         self.lang_btn.clicked.connect(self._toggle_language)
 
-        self.theme_btn = QPushButton("🌙")
-        self.theme_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.theme_btn.setStyleSheet(
-            f"color: {COLOR_TEXT_SECONDARY}; font-size: 16px; border: none; background: transparent;")
-        self.theme_btn.clicked.connect(self._toggle_theme)
-
         top_controls.addWidget(self.lang_btn)
-        top_controls.addWidget(self.theme_btn)
 
         # Login Card
         self.card = QFrame()
@@ -547,45 +540,7 @@ class LoginPage(QWidget):
             self.footer_text.setText("Chưa có tài khoản?")
 
     def _toggle_theme(self):
-        self.is_dark = not getattr(self, "is_dark", False)
-
-        bg_color = "#0F172A" if self.is_dark else "#F8FAFC"
-        card_bg = "#1E293B" if self.is_dark else "#FFFFFF"
-        text_pri = "#F8FAFC" if self.is_dark else "#0F172A"
-        text_sec = "#94A3B8" if self.is_dark else "#64748B"
-        border = "#334155" if self.is_dark else "#E2E8F0"
-
-        self.theme_btn.setText("☀️" if self.is_dark else "🌙")
-
-        self.setStyleSheet(f"background-color: {bg_color}; font-family: '{FONT_FAMILY}', sans-serif;")
-        self.left_widget.setStyleSheet(f"background-color: {bg_color};")
-        self.right_widget.setStyleSheet(f"background-color: {bg_color};")
-
-        self.card.setStyleSheet(f"""
-            QFrame#LoginCard {{
-                background-color: {card_bg};
-                border-radius: 28px;
-                border: 1px solid {border};
-            }}
-        """)
-
-        self.title.setStyleSheet(
-            f"color: {text_pri}; font-size: 42px; font-weight: 800; letter-spacing: -1.5px; line-height: 1.1;")
-        self.subtitle.setStyleSheet(f"color: {text_sec}; font-size: 18px; font-weight: 500; line-height: 1.4;")
-        self.welcome_title.setStyleSheet(
-            f"color: {text_pri}; font-size: 28px; font-weight: 800; letter-spacing: -0.5px;")
-        self.welcome_sub.setStyleSheet(f"color: {text_sec}; font-size: 15px; font-weight: 500;")
-
-        self.or_lbl.setStyleSheet(f"color: {text_sec}; font-size: 12px; font-weight: 500;")
-        self.footer_text.setStyleSheet(f"color: {text_sec}; font-size: 14px; font-weight: 500;")
-        self.register_btn.setStyleSheet(
-            f"QPushButton {{ color: {text_pri}; font-weight: 700; font-size: 14px; border: none; background: transparent; }} QPushButton:hover {{ color: {COLOR_PRIMARY}; }}")
-
-        self.remember_cb.setStyleSheet(f"""
-            QCheckBox {{ color: {text_sec}; font-size: 13px; font-weight: 500; spacing: 8px; }}
-            QCheckBox::indicator {{ width: 16px; height: 16px; border-radius: 4px; border: 1px solid {border}; background: {card_bg}; }}
-            QCheckBox::indicator:checked {{ background: {COLOR_PRIMARY}; border: 1px solid {COLOR_PRIMARY}; }}
-        """)
+        pass
 
 
 if __name__ == "__main__":

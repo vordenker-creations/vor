@@ -3,7 +3,7 @@ from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QGraphicsView, QGraphicsScene, QGraphicsEllipseItem,
     QGraphicsTextItem, QGraphicsLineItem, QGraphicsDropShadowEffect,
-    QFrame, QProgressBar, QSizePolicy
+    QFrame, QProgressBar, QSizePolicy, QSplitter
 )
 from PyQt6.QtCore import Qt, QRectF, QPointF
 from PyQt6.QtGui import (
@@ -183,7 +183,7 @@ class SkillDetailPanel(QFrame):
         super().__init__(parent)
         self.parent_page = parent
         self.selected_node_data = None
-        self.setFixedWidth(300)
+        self.setMinimumWidth(240)
         self.setStyleSheet("""
             QFrame {
                 background-color: #FFFFFF;
@@ -441,8 +441,23 @@ class SkillTreePage(QWidget):
         right_layout.setContentsMargins(20, 30, 30, 30)
         right_layout.addWidget(self.detail_panel)
 
-        main_layout.addWidget(canvas_wrapper, 75)
-        main_layout.addWidget(right_wrapper, 25)
+        # QSplitter Layout for Canvas and Detail Panel
+        self.tree_splitter = QSplitter(Qt.Orientation.Horizontal)
+        self.tree_splitter.setStyleSheet("""
+            QSplitter::handle {
+                background-color: #E2E8F0;
+                width: 4px;
+                margin: 0 8px;
+            }
+            QSplitter::handle:hover {
+                background-color: #2563EB;
+            }
+        """)
+        self.tree_splitter.addWidget(canvas_wrapper)
+        self.tree_splitter.addWidget(right_wrapper)
+        self.tree_splitter.setSizes([750, 250])
+        
+        main_layout.addWidget(self.tree_splitter)
 
     def _on_node_selected(self, data):
         self.detail_panel.update_detail(data)

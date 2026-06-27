@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
     QPushButton, QScrollArea, QFrame, QGraphicsDropShadowEffect,
-    QSizePolicy, QListWidget, QListWidgetItem
+    QSizePolicy, QListWidget, QListWidgetItem, QSplitter
 )
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QColor
@@ -41,7 +41,7 @@ class ChatLeftSidebar(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setStyleSheet("background: transparent; border: none;")
-        self.setFixedWidth(230)
+        self.setMinimumWidth(180)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -234,6 +234,10 @@ class ChatMessageBubble(QWidget):
             layout.addLayout(col)
             layout.addStretch()
 
+        from core.config import apply_theme
+        apply_theme(self)
+
+
 
 # ==========================================
 # COMPONENT: MAIN CHAT AREA
@@ -385,7 +389,7 @@ class ChatRightPanel(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setStyleSheet("background: transparent; border: none;")
-        self.setFixedWidth(200)
+        self.setMinimumWidth(150)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -457,15 +461,29 @@ class CommunityChatPage(QWidget):
 
         main_layout = QHBoxLayout(self)
         main_layout.setContentsMargins(24, 24, 24, 24)
-        main_layout.setSpacing(20)
+        main_layout.setSpacing(0)
 
         self.left_panel = ChatLeftSidebar()
         self.middle_panel = MainChatArea()
         self.right_panel = ChatRightPanel()
 
-        main_layout.addWidget(self.left_panel)
-        main_layout.addWidget(self.middle_panel, 1)  # Stretch to fill
-        main_layout.addWidget(self.right_panel)
+        self.chat_splitter = QSplitter(Qt.Orientation.Horizontal)
+        self.chat_splitter.setStyleSheet("""
+            QSplitter::handle {
+                background-color: #E2E8F0;
+                width: 4px;
+                margin: 0 8px;
+            }
+            QSplitter::handle:hover {
+                background-color: #2563EB;
+            }
+        """)
+        self.chat_splitter.addWidget(self.left_panel)
+        self.chat_splitter.addWidget(self.middle_panel)
+        self.chat_splitter.addWidget(self.right_panel)
+        self.chat_splitter.setSizes([230, 650, 200])
+
+        main_layout.addWidget(self.chat_splitter)
 
         # Connections
         self.left_panel.channel_list.currentItemChanged.connect(self._change_channel)

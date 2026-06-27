@@ -112,8 +112,8 @@ class DashboardOverviewView(QWidget):
         
         # Master layout (QHBoxLayout)
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(20)
+        layout.setContentsMargins(16, 16, 16, 16)
+        layout.setSpacing(16)
         
         # Left Workspace Scroll Area
         self.scroll_area = QScrollArea()
@@ -263,7 +263,10 @@ class DashboardOverviewView(QWidget):
             btn_gen = QPushButton("✨ Generate Academic Plan")
             btn_gen.setFixedHeight(44)
             btn_gen.setCursor(Qt.CursorShape.PointingHandCursor)
-            btn_gen.setStyleSheet("background: #38BDF8; color: white; font-weight: 700; font-size: 14px; border-radius: 10px;")
+            btn_gen.setStyleSheet("""
+                QPushButton { background: #2563EB; color: white; font-weight: 700; font-size: 14px; border-radius: 10px; border: none; }
+                QPushButton:hover { background: #1D4ED8; }
+            """)
             btn_gen.clicked.connect(self.start_generation)
             pc_layout.addWidget(btn_gen)
         else:
@@ -309,13 +312,16 @@ class DashboardOverviewView(QWidget):
         progress = QProgressBar()
         progress.setRange(0, 0)  # Indeterminate
         progress.setFixedHeight(8)
-        progress.setStyleSheet("QProgressBar { background: #F1F5F9; border-radius: 4px; } QProgressBar::chunk { background: #38BDF8; border-radius: 4px; }")
+        progress.setStyleSheet("QProgressBar { background: #F1F5F9; border-radius: 4px; } QProgressBar::chunk { background: #2563EB; border-radius: 4px; }")
         
         btn_refresh = QPushButton("🔄 Refresh Status Now")
         btn_refresh.setCursor(Qt.CursorShape.PointingHandCursor)
         btn_refresh.setFixedHeight(36)
         btn_refresh.setFixedWidth(180)
-        btn_refresh.setStyleSheet("background: #0284C7; color: white; font-weight: 700; font-size: 13px; border-radius: 8px; border: none;")
+        btn_refresh.setStyleSheet("""
+            QPushButton { background: #2563EB; color: white; font-weight: 700; font-size: 13px; border-radius: 8px; border: none; }
+            QPushButton:hover { background: #1D4ED8; }
+        """)
         btn_refresh.clicked.connect(self.start_polling)
         
         pc_layout.addWidget(loader_lbl)
@@ -340,7 +346,7 @@ class DashboardOverviewView(QWidget):
         banner.setObjectName("BannerFrame")
         banner.setStyleSheet("""
             #BannerFrame {
-                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #0F172A, stop:0.6 #1E293B, stop:1 #0284C7);
+                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #0F172A, stop:0.6 #1E293B, stop:1 #2563EB);
                 border-radius: 16px;
             }
         """)
@@ -369,7 +375,7 @@ class DashboardOverviewView(QWidget):
         btn_regen.setFixedHeight(40)
         btn_regen.setStyleSheet("""
             QPushButton {
-                background: #0284C7;
+                background: #2563EB;
                 color: white;
                 font-weight: 700;
                 font-size: 14px;
@@ -378,10 +384,10 @@ class DashboardOverviewView(QWidget):
                 border: none;
             }
             QPushButton:hover {
-                background: #0369A1;
+                background: #1D4ED8;
             }
             QPushButton:pressed {
-                background: #075985;
+                background: #1E3A8A;
             }
         """)
         btn_regen.clicked.connect(self.start_generation)
@@ -452,7 +458,7 @@ class DashboardOverviewView(QWidget):
         
         kpi_layout.addWidget(KPICard("Academic Progress", f"{ac_prog}%", "Based on roadmap", "#10B981"))
         kpi_layout.addWidget(KPICard("Weekly Workload", f"{task_load} tasks", "Weekly study plan", "#F59E0B"))
-        kpi_layout.addWidget(KPICard("Career Readiness", f"{career_readiness}%" if career_readiness != "--" else "--", "Skill matches", "#38BDF8"))
+        kpi_layout.addWidget(KPICard("Career Readiness", f"{career_readiness}%" if career_readiness != "--" else "--", "Skill matches", "#2563EB"))
         
         layout.addWidget(kpi_row)
         
@@ -466,7 +472,7 @@ class DashboardOverviewView(QWidget):
         s_title.setStyleSheet("color: #0F172A; font-size: 16px; font-weight: 800;")
         sl.addWidget(s_title)
         
-        skills = [("Python", 85, "#38BDF8"), ("Java", 65, "#10B981"), ("C++", 50, "#F59E0B"), ("SQL Server", 75, "#8B5CF6")]
+        skills = [("Python", 85, "#2563EB"), ("Java", 65, "#10B981"), ("C++", 50, "#F59E0B"), ("SQL Server", 75, "#8B5CF6")]
         
         for name, val, color in skills:
             row = QWidget()
@@ -522,7 +528,7 @@ class DashboardOverviewView(QWidget):
                 progress = course.get("progress_pct", 0)
                 ai_insight = course.get("ai_insight", "")
                 
-                color = "#10B981" if "completed" in status.lower() else ("#38BDF8" if "progress" in status.lower() else "#94A3B8")
+                color = "#10B981" if "completed" in status.lower() else ("#2563EB" if "progress" in status.lower() else "#94A3B8")
                 
                 h_row = QHBoxLayout()
                 badge = QLabel(status)
@@ -994,7 +1000,7 @@ class DashboardPage(QWidget):
         header.setFixedHeight(64)
         header.setStyleSheet("background-color: #FFFFFF; border-bottom: 1px solid #E2E8F0;")
         layout = QHBoxLayout(header)
-        layout.setContentsMargins(20, 0, 20, 0)
+        layout.setContentsMargins(16, 0, 16, 0)
         layout.setSpacing(16)
         
         # Sidebar Toggle

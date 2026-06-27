@@ -40,6 +40,13 @@ def init_code_lab_db():
         FOREIGN KEY (challenge_id) REFERENCES code_challenges(id) ON DELETE CASCADE
     )
     ''')
+    
+    # Migration: Add mode column if not exists
+    cursor.execute("PRAGMA table_info(code_submissions)")
+    columns = [col[1] for col in cursor.fetchall()]
+    if columns and "mode" not in columns:
+        cursor.execute("ALTER TABLE code_submissions ADD COLUMN mode TEXT DEFAULT 'practice';")
+        
     conn.commit()
     
     # Seed default challenges if empty or if new sum-two-numbers challenge is missing
@@ -144,13 +151,13 @@ def get_challenge_by_id(challenge_id):
     conn.close()
     return dict(row) if row else None
 
-def save_submission(challenge_id, code, status, ai_review=None, score=None):
+def save_submission(challenge_id, code, status, ai_review=None, score=None, mode='practice'):
     conn = get_connection()
     cursor = conn.cursor()
     submitted_at = datetime.now().isoformat()
     cursor.execute(
-        "INSERT INTO code_submissions (challenge_id, code, status, ai_review, score, submitted_at) VALUES (?, ?, ?, ?, ?, ?)",
-        (challenge_id, code, status, ai_review, score, submitted_at)
+        "INSERT INTO code_submissions (challenge_id, code, status, ai_review, score, submitted_at, mode) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (challenge_id, code, status, ai_review, score, submitted_at, mode)
     )
     conn.commit()
     conn.close()
@@ -192,6 +199,31 @@ def get_challenge_statistics():
     return {
         "total": total_challenges,
         "solved": solved_challenges
+    }
+
+def get_exam_statistics():
+    init_code_lab_db()
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT COUNT(DISTINCT challenge_id) FROM code_submissions WHERE status = 'Solved' AND mode = 'exam'")
+    solved_count = cursor.fetchone()[0] or 0
+    
+    # Calculate sum of maximum score for each challenge solved in Exam Mode
+    cursor.execute("""
+        SELECT SUM(max_score) FROM (
+            SELECT MAX(score) as max_score 
+            FROM code_submissions 
+            WHERE status = 'Solved' AND mode = 'exam' 
+            GROUP BY challenge_id
+        )
+    """)
+    total_score = cursor.fetchone()[0] or 0
+    
+    conn.close()
+    return {
+        "solved": solved_count,
+        "score": total_score
     }
 
 def add_custom_challenge(challenge_id, title, topic, difficulty, description, starter_code, test_cases):

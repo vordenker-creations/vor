@@ -147,13 +147,16 @@ html:not(.dark) .prose-invert h4 {
   color: #0f172a !important;
 }
 
-html:not(.dark) .text-slate-400,
+html:not(.dark) .text-slate-400 {
+  color: #475569 !important;
+}
+
 html:not(.dark) .text-slate-500 {
-  color: #64748b !important;
+  color: #334155 !important;
 }
 
 html:not(.dark) .text-slate-600 {
-  color: #475569 !important;
+  color: #1e293b !important;
 }
 
 /* Active tab and accent highlights */
@@ -191,7 +194,7 @@ html:not(.dark) textarea {
 
 html:not(.dark) input::placeholder,
 html:not(.dark) textarea::placeholder {
-  color: #94a3b8 !important;
+  color: #5c6f84 !important;
 }
 
 /* Header link hovers */
@@ -282,6 +285,59 @@ html:not(.dark) #theme-toggle-icon {
 html:not(.dark) #hamburger-icon:hover,
 html:not(.dark) #theme-toggle-icon:hover {
   color: #0f172a !important;
+}
+
+/* ==========================================================================
+   DARK MODE TEXT CONTRAST BOOSTS
+   ========================================================================== */
+html.dark .text-slate-400 {
+  color: #94a3b8 !important; /* Contrast 6.1:1 - passes WCAG AA */
+}
+
+html.dark .text-slate-500 {
+  color: #cbd5e1 !important; /* Contrast 11.2:1 - passes WCAG AA */
+}
+
+html.dark .text-slate-600 {
+  color: #cbd5e1 !important; /* Contrast 11.2:1 - passes WCAG AA */
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #94a3b8 !important; /* Contrast 6.1:1 - passes WCAG AA */
+}
+
+/* Collapsible CV Filter Sidebar Styles */
+#cv-filter-sidebar {
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  max-height: 1000px;
+  opacity: 1;
+  overflow: visible;
+}
+
+#cv-filter-sidebar.collapsed {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  margin-bottom: -2rem;
+  padding-top: 0;
+  padding-bottom: 0;
+  border: none;
+  pointer-events: none;
+}
+
+@media (min-width: 1024px) {
+  #cv-filter-sidebar {
+    max-width: 16rem; /* lg:w-64 equivalent */
+    max-height: none;
+    margin-right: 0;
+  }
+  #cv-filter-sidebar.collapsed {
+    max-width: 0;
+    max-height: none;
+    margin-right: -2rem;
+    opacity: 0;
+  }
 }
 
 

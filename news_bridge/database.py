@@ -43,17 +43,51 @@ def initialize_db() -> None:
             salary TEXT NOT NULL,
             location TEXT NOT NULL,
             posted_by TEXT DEFAULT 'system',
+            status TEXT DEFAULT 'active',
+            logo TEXT DEFAULT '',
+            gpa TEXT DEFAULT '',
+            languages TEXT DEFAULT '',
+            other_reqs TEXT DEFAULT '',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
         """)
         
-        # Safe migration for existing tables: add posted_by if missing
+        # Safe migration for existing tables: add columns if missing
         try:
             cursor.execute("ALTER TABLE jobs ADD COLUMN posted_by TEXT DEFAULT 'system';")
             conn.commit()
             logger.info("Migrated jobs table: added 'posted_by' column successfully.")
         except sqlite3.OperationalError:
-            # Column already exists
+            pass
+        try:
+            cursor.execute("ALTER TABLE jobs ADD COLUMN status TEXT DEFAULT 'active';")
+            conn.commit()
+            logger.info("Migrated jobs table: added 'status' column successfully.")
+        except sqlite3.OperationalError:
+            pass
+        try:
+            cursor.execute("ALTER TABLE jobs ADD COLUMN logo TEXT DEFAULT '';")
+            conn.commit()
+            logger.info("Migrated jobs table: added 'logo' column successfully.")
+        except sqlite3.OperationalError:
+            pass
+        try:
+            cursor.execute("ALTER TABLE jobs ADD COLUMN gpa TEXT DEFAULT '';")
+            conn.commit()
+            logger.info("Migrated jobs table: added 'gpa' column successfully.")
+        except sqlite3.OperationalError:
+            pass
+        try:
+            cursor.execute("ALTER TABLE jobs ADD COLUMN languages TEXT DEFAULT '';")
+            conn.commit()
+            logger.info("Migrated jobs table: added 'languages' column successfully.")
+        except sqlite3.OperationalError:
+            pass
+        try:
+            cursor.execute("ALTER TABLE jobs ADD COLUMN other_reqs TEXT DEFAULT '';")
+            conn.commit()
+            logger.info("Migrated jobs table: added 'other_reqs' column successfully.")
+        except sqlite3.OperationalError:
             pass
         
         # 2. Create users table
@@ -80,6 +114,7 @@ def initialize_db() -> None:
             student_major TEXT DEFAULT '',
             student_year INTEGER DEFAULT 1,
             student_name TEXT DEFAULT '',
+            status TEXT DEFAULT 'applied',
             UNIQUE(user_email, job_id)
         );
         """)
@@ -97,6 +132,28 @@ def initialize_db() -> None:
             cursor.execute("ALTER TABLE applications ADD COLUMN student_name TEXT DEFAULT '';")
         except sqlite3.OperationalError:
             pass
+        try:
+            cursor.execute("ALTER TABLE applications ADD COLUMN status TEXT DEFAULT 'applied';")
+        except sqlite3.OperationalError:
+            pass
+
+        # 4. Create cvs table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS cvs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            major TEXT NOT NULL,
+            university TEXT NOT NULL,
+            gpa REAL NOT NULL,
+            skills TEXT NOT NULL,
+            languages TEXT DEFAULT '',
+            bio TEXT DEFAULT '',
+            avatar TEXT DEFAULT '',
+            certificates TEXT DEFAULT '',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """)
         
         conn.commit()
         
@@ -153,20 +210,20 @@ def get_all_jobs() -> List[Dict[str, Any]]:
         if conn:
             conn.close()
 
-def insert_job(title: str, company: str, salary: str, location: str, description: str, posted_by: str = "system") -> int:
+def insert_job(title: str, company: str, salary: str, location: str, description: str, posted_by: str = "system", logo: str = "", gpa: str = "", languages: str = "", other_reqs: str = "") -> int:
     """
     Inserts a job record into the database.
     Uses parameterized query to secure input fields against SQL injection.
     """
     query = """
-    INSERT INTO jobs (title, company, salary, location, description, posted_by)
-    VALUES (?, ?, ?, ?, ?, ?);
+    INSERT INTO jobs (title, company, salary, location, description, posted_by, logo, gpa, languages, other_reqs)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
     """
     conn = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute(query, (title, company, salary, location, description, posted_by))
+        cursor.execute(query, (title, company, salary, location, description, posted_by, logo, gpa, languages, other_reqs))
         conn.commit()
         inserted_id = cursor.lastrowid
         logger.info(f"Successfully inserted job ID {inserted_id} posted by {posted_by} into database.")
@@ -285,6 +342,58 @@ def delete_job(job_id: int, email: str) -> bool:
         logger.error(f"Failed to delete job ID {job_id} from database: {e}")
         if conn:
             conn.rollback()
+        raise e
+    finally:
+        if conn:
+            conn.close()
+
+# ==================== CVS CRUD LOGIC ====================
+
+def insert_cv(name: str, email: str, major: str, university: str, gpa: float, skills: str, languages: str = "", bio: str = "", avatar: str = "", certificates: str = "") -> None:
+    """
+    Inserts or updates a candidate CV in the database.
+    """
+    query = """
+    INSERT INTO cvs (name, email, major, university, gpa, skills, languages, bio, avatar, certificates)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(email) DO UPDATE SET
+        name = excluded.name,
+        major = excluded.major,
+        university = excluded.university,
+        gpa = excluded.gpa,
+        skills = excluded.skills,
+        languages = excluded.languages,
+        bio = excluded.bio,
+        avatar = excluded.avatar,
+        certificates = excluded.certificates;
+    """
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(query, (name, email, major, university, gpa, skills, languages, bio, avatar, certificates))
+        conn.commit()
+        logger.info(f"Successfully inserted/updated CV for email {email}")
+    except sqlite3.Error as e:
+        logger.error(f"Failed to insert/update CV in database: {e}")
+        if conn:
+            conn.rollback()
+        raise e
+    finally:
+        if conn:
+            conn.close()
+
+def get_all_cvs() -> List[Dict[str, Any]]:
+    """Retrieves all synced student CVs."""
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM cvs ORDER BY id DESC;")
+        rows = cursor.fetchall()
+        return [dict(row) for row in rows]
+    except sqlite3.Error as e:
+        logger.error(f"Failed to query all CVs: {e}")
         raise e
     finally:
         if conn:

@@ -53,53 +53,58 @@
   <!-- Lucide Icons CDN -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Application Core script -->
-  <script src="app.js" defer></script>
+  <script type="module" src="app.js" defer></script>
 </head>
 <body class="text-slate-100 antialiased selection:bg-cyan-500/30 selection:text-cyan-300">
 
   <!-- ======================== TOAST NOTIFICATION CONTAINER ======================== -->
   <div id="toast-container" class="fixed top-24 right-6 z-50 flex flex-col gap-3 pointer-events-none"></div>
-
   <!-- ======================== HEADER NAVBAR ======================== -->
-  <header class="sticky top-0 z-40 w-full border-b border-slate-800/40 bg-brand-background/80 backdrop-blur-md transition-all duration-300">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <div class="flex h-16 items-center justify-between">
+  <div class="sticky top-0 z-40 w-full px-4 sm:px-6 lg:px-8 pt-4 pointer-events-none">
+    <header class="mx-auto max-w-7xl rounded-2xl border border-slate-200/80 dark:border-slate-800/40 bg-white/75 dark:bg-slate-950/75 backdrop-blur-xl transition-all duration-300 shadow-glass pointer-events-auto">
+      <div class="px-6 h-16 flex items-center justify-between">
         
         <!-- Logo -->
-        <a href="#" onclick="switchTab('jobs')" class="flex items-center gap-2.5 text-xl font-bold tracking-tight text-white hover:opacity-90 duration-200">
-          <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 text-brand-background shadow-glow-cyan shadow-cyan-400/30 font-black">✦</span>
-          <span>AI-Career <span class="text-cyan-400">bridge</span></span>
+        <a href="#" onclick="switchTab('jobs')" class="flex items-center gap-2.5 text-lg font-bold tracking-tight text-white hover:opacity-90 duration-200 group">
+          <span class="flex h-8.5 w-8.5 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 via-blue-500 to-indigo-600 text-brand-background shadow-glow-cyan shadow-cyan-400/30 font-black transition-transform duration-300 group-hover:scale-110">✦</span>
+          <span class="font-extrabold tracking-tight">AI-Career <span class="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent group-hover:from-cyan-300 group-hover:to-blue-400 transition-all duration-300">bridge</span></span>
         </a>
 
         <!-- Middle Navigation Link Groups -->
-        <nav class="hidden md:flex items-center gap-8">
-          <a href="#" onclick="switchTab('jobs')" id="nav-jobs" class="text-sm font-semibold text-cyan-400 hover:text-cyan-300 transition-colors duration-200 flex items-center gap-1.5">
-            <i data-lucide="briefcase" class="w-4 h-4"></i> Find Jobs
+        <nav class="hidden lg:flex items-center gap-1.5 p-1 bg-slate-100/60 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80 rounded-full px-2 backdrop-blur-md shrink-0">
+          <button onclick="toggleNavLabels()" class="text-slate-400 hover:text-cyan-400 p-1.5 rounded-full hover:bg-slate-900/40 transition duration-150 mr-0.5 shrink-0" title="Thu gọn / Mở rộng tên thẻ" id="nav-toggle-btn">
+            <i data-lucide="chevrons-left" class="w-3.5 h-3.5" id="nav-toggle-icon"></i>
+          </button>
+          <a href="#" onclick="switchTab('cvs')" id="nav-cvs" data-i18n-title="nav_cvs" class="text-xs font-semibold uppercase tracking-wider transition-all duration-200 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-cyan-500/20 bg-cyan-500/10 text-cyan-400 shadow-sm shadow-cyan-500/5 whitespace-nowrap">
+            <i data-lucide="file-text" class="w-3.5 h-3.5"></i> <span data-i18n="nav_cvs">CV Sinh viên</span>
           </a>
-          <a href="#" onclick="switchTab('post-job')" id="nav-post-job" class="text-sm font-semibold text-slate-300 hover:text-white transition-colors duration-200 flex items-center gap-1.5">
-            <i data-lucide="plus-circle" class="w-4 h-4"></i> Post a Job
+          <a href="#" onclick="switchTab('jobs')" id="nav-jobs" data-i18n-title="nav_jobs" class="text-xs font-semibold uppercase tracking-wider transition-all duration-200 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/30 whitespace-nowrap">
+            <i data-lucide="briefcase" class="w-3.5 h-3.5"></i> <span data-i18n="nav_jobs">Việc làm</span>
           </a>
-          <a href="#" onclick="switchTab('profile')" id="nav-profile" class="text-sm font-semibold text-slate-300 hover:text-white transition-colors duration-200 flex items-center gap-1.5">
-            <i data-lucide="user" class="w-4 h-4"></i> My Profile
+          <a href="#" onclick="switchTab('post-job')" id="nav-post-job" data-i18n-title="nav_post_job" class="recruiter-link hidden text-xs font-semibold uppercase tracking-wider transition-all duration-200 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/30 whitespace-nowrap">
+            <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> <span data-i18n="nav_post_job">Đăng tuyển dụng</span>
           </a>
-          <a href="#" onclick="switchTab('chat')" id="nav-chat" class="text-sm font-semibold text-slate-300 hover:text-white transition-colors duration-200 flex items-center gap-1.5">
-            <i data-lucide="message-square" class="w-4 h-4"></i> Chat chung
+          <a href="#" onclick="switchTab('applicants')" id="nav-applicants" data-i18n-title="nav_applicants" class="recruiter-link hidden text-xs font-semibold uppercase tracking-wider transition-all duration-200 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/30 whitespace-nowrap">
+            <i data-lucide="users" class="w-3.5 h-3.5"></i> <span data-i18n="nav_applicants">Quản lý ứng viên</span>
+          </a>
+          <a href="#" onclick="switchTab('chat')" id="nav-chat" data-i18n-title="nav_chat" class="text-xs font-semibold uppercase tracking-wider transition-all duration-200 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/30 whitespace-nowrap">
+            <i data-lucide="message-square" class="w-3.5 h-3.5"></i> <span data-i18n="nav_chat">Thảo luận</span>
           </a>
         </nav>
 
         <!-- Right Side Button Controls -->
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-3">
           <!-- Notification Bell and Dropdown -->
           <div class="relative">
-            <button onclick="toggleNotificationDropdown()" class="relative text-slate-400 hover:text-cyan-400 transition-colors duration-200 p-1.5" title="Thông báo">
-              <i data-lucide="bell" class="w-5 h-5"></i>
-              <span id="notification-badge" class="absolute top-1 right-1 hidden flex h-2 w-2">
+            <button onclick="toggleNotificationDropdown()" class="relative text-slate-400 hover:text-cyan-400 transition-colors duration-200 p-2 rounded-lg hover:bg-slate-900/40" title="Thông báo">
+              <i data-lucide="bell" class="w-4.5 h-4.5"></i>
+              <span id="notification-badge" class="absolute top-1.5 right-1.5 hidden flex h-1.5 w-1.5">
                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
               </span>
             </button>
             <!-- Dropdown Menu -->
-            <div id="notification-dropdown" class="absolute right-0 mt-2 w-80 glass-card rounded-2xl p-4 shadow-glass border border-slate-800/80 hidden z-50">
+            <div id="notification-dropdown" class="absolute right-0 mt-2 w-80 glass-card rounded-2xl p-4 shadow-glass border border-slate-800/80 hidden z-50 animate-fade-in">
               <div class="flex items-center justify-between pb-2 border-b border-slate-800/60 mb-2">
                 <h4 class="text-xs font-bold text-white uppercase tracking-wider">Thông báo mới</h4>
                 <button onclick="clearNotifications()" class="text-[10px] text-slate-500 hover:text-cyan-400 font-semibold uppercase">Xóa tất cả</button>
@@ -111,61 +116,251 @@
           </div>
 
           <!-- Theme Switcher Button -->
-          <button onclick="toggleTheme()" class="text-slate-400 hover:text-cyan-400 transition-colors duration-200 p-1.5" title="Toggle Light/Dark Mode">
-            <i id="theme-toggle-icon" data-lucide="moon" class="w-5 h-5"></i>
+          <button onclick="toggleTheme()" class="text-slate-400 hover:text-cyan-400 transition-colors duration-200 p-2 rounded-lg hover:bg-slate-900/40" title="Toggle Light/Dark Mode">
+            <i id="theme-toggle-icon" data-lucide="moon" class="w-4.5 h-4.5"></i>
+          </button>
+          
+          <!-- Language Switcher Button -->
+          <button onclick="toggleLanguage()" class="text-slate-400 hover:text-cyan-400 transition-colors duration-200 px-2 py-1 rounded-lg hover:bg-slate-900/40 font-bold text-xs flex items-center gap-1" title="Chuyển đổi ngôn ngữ / Switch Language">
+            <i data-lucide="languages" class="w-4 h-4"></i>
+            <span id="current-lang-label">VI</span>
           </button>
           
           <!-- Non-authenticated UI -->
-          <div id="auth-nav-guest" class="flex items-center gap-3">
-            <button onclick="switchTab('login')" class="text-sm font-semibold text-slate-300 hover:text-white transition-colors px-3 py-1.5 duration-200">Sign In</button>
-            <button onclick="switchTab('register')" class="rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-slate-950 text-xs font-bold px-4 py-2.5 transition-all duration-300 shadow-glow-cyan hover:shadow-glow-cyan-hover transform hover:scale-[1.02]">
-              Join Now
+          <div id="auth-nav-guest" class="flex items-center gap-2">
+            <button onclick="switchTab('login')" class="text-xs font-bold uppercase tracking-wider text-slate-300 hover:text-white px-3 py-2 duration-200 rounded-lg hover:bg-slate-900/40"><span data-i18n="btn_signin">Sign In</span></button>
+            <button onclick="switchTab('register')" class="rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-slate-950 text-xs font-bold px-4 py-2 transition-all duration-300 shadow-glow-cyan hover:shadow-glow-cyan-hover transform hover:scale-[1.02]">
+              <span data-i18n="btn_joinnow">Join Now</span>
             </button>
           </div>
           
-          <!-- Authenticated UI -->
-          <div id="auth-nav-user" class="hidden flex items-center gap-4">
-            <button onclick="switchTab('post-job')" class="hidden sm:flex items-center gap-2 rounded-xl border border-cyan-500/20 bg-cyan-500/5 hover:bg-cyan-500/10 text-cyan-400 hover:text-cyan-300 text-xs font-bold px-4 py-2.5 transition-all duration-200">
-              <i data-lucide="edit-3" class="w-3.5 h-3.5"></i> Post Job
+          <!-- Authenticated UI Dropdown -->
+          <div id="auth-nav-user" class="hidden relative">
+            <button onclick="toggleUserDropdown()" class="flex items-center gap-2 rounded-xl bg-slate-900/40 hover:bg-slate-800/40 border border-slate-800/80 p-1.5 pr-3 transition duration-200">
+              <img id="navbar-avatar" src="" alt="User avatar" class="w-8 h-8 rounded-lg object-cover border border-cyan-500/20">
+              <span id="navbar-username" class="text-xs font-bold text-slate-200 max-w-[100px] truncate">Sarah Jenkins</span>
+              <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
             </button>
             
-            <div class="relative group">
-              <button onclick="switchTab('profile')" class="flex items-center gap-2 group-hover:opacity-90 duration-200">
-                <img id="navbar-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop" alt="User avatar" class="w-9 h-9 rounded-xl object-cover border border-cyan-500/30">
-                <div class="hidden lg:block text-left">
-                  <p id="navbar-username" class="text-xs font-bold text-slate-200">Sarah Jenkins</p>
-                  <p class="text-[10px] text-cyan-400/80">Senior Architect</p>
-                </div>
-              </button>
+            <div id="user-menu-dropdown" class="absolute right-0 mt-2 w-48 glass-card rounded-2xl p-2 shadow-glass border border-slate-800/80 hidden z-50 animate-fade-in">
+              <div class="px-3 py-2 border-b border-slate-800/60 mb-1">
+                <p class="text-[9px] uppercase font-black text-slate-500 tracking-wider">Doanh nghiệp</p>
+                <p id="navbar-dropdown-email" class="text-[10px] text-cyan-400 truncate">company@email.com</p>
+              </div>
+              <a href="#" onclick="switchTab('profile'); toggleUserDropdown()" class="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-900/50 transition duration-150">
+                <i data-lucide="user" class="w-3.5 h-3.5"></i> Giao diện Hồ sơ
+              </a>
+              <a href="#" onclick="switchTab('post-job'); toggleUserDropdown()" class="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-900/50 transition duration-150">
+                <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> Đăng tuyển dụng
+              </a>
+              <a href="#" onclick="switchTab('applicants'); toggleUserDropdown()" class="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-900/50 transition duration-150">
+                <i data-lucide="users" class="w-3.5 h-3.5"></i> Quản lý ứng viên
+              </a>
+              <div class="border-t border-slate-800/60 my-1"></div>
+              <a href="#" onclick="logout(); toggleUserDropdown()" class="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-red-400 hover:text-red-300 hover:bg-red-950/20 transition duration-150">
+                <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Đăng xuất
+              </a>
             </div>
-            
-            <button onclick="logout()" title="Logout" class="text-slate-400 hover:text-red-400 transition-colors p-1.5">
-              <i data-lucide="log-out" class="w-4 h-4"></i>
-            </button>
           </div>
 
           <!-- Mobile Hamburger -->
-          <button onclick="toggleMobileMenu()" class="md:hidden text-slate-300 hover:text-white p-2">
+          <button onclick="toggleMobileMenu()" class="lg:hidden text-slate-300 hover:text-white p-2">
             <i data-lucide="menu" id="hamburger-icon" class="w-6 h-6"></i>
           </button>
         </div>
       </div>
-    </div>
+    </header>
     
     <!-- Mobile Navigation Drawer -->
-    <div id="mobile-menu" class="hidden md:hidden border-b border-slate-800/80 bg-brand-background px-4 py-4 flex flex-col gap-3">
-      <a href="#" onclick="switchTab('jobs'); toggleMobileMenu()" class="text-sm font-medium text-slate-300 hover:text-white py-1">Find Jobs</a>
-      <a href="#" onclick="switchTab('post-job'); toggleMobileMenu()" class="text-sm font-medium text-slate-300 hover:text-white py-1">Post a Job</a>
-      <a href="#" onclick="switchTab('profile'); toggleMobileMenu()" class="text-sm font-medium text-slate-300 hover:text-white py-1">My Profile</a>
-      <a href="#" onclick="switchTab('chat'); toggleMobileMenu()" class="text-sm font-medium text-slate-300 hover:text-white py-1">Chat chung</a>
+    <div id="mobile-menu" class="hidden lg:hidden mt-2 rounded-2xl border border-slate-200/80 dark:border-slate-800/60 bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl px-5 py-4 flex flex-col gap-3 shadow-glass pointer-events-auto">
+      <a href="#" onclick="switchTab('cvs'); toggleMobileMenu()" class="text-sm font-medium text-slate-300 hover:text-white py-1 flex items-center gap-2"><i data-lucide="file-text" class="w-4 h-4 text-cyan-400"></i> <span data-i18n="nav_cvs_mobile">CV Sinh viên</span></a>
+      <a href="#" onclick="switchTab('jobs'); toggleMobileMenu()" class="text-sm font-medium text-slate-300 hover:text-white py-1 flex items-center gap-2"><i data-lucide="briefcase" class="w-4 h-4 text-cyan-400"></i> <span data-i18n="nav_jobs_mobile">Tìm việc làm</span></a>
+      <a href="#" onclick="switchTab('post-job'); toggleMobileMenu()" class="recruiter-link hidden text-sm font-medium text-slate-300 hover:text-white py-1 flex items-center gap-2"><i data-lucide="plus-circle" class="w-4 h-4 text-cyan-400"></i> <span data-i18n="nav_post_job_mobile">Đăng tuyển dụng</span></a>
+      <a href="#" onclick="switchTab('applicants'); toggleMobileMenu()" class="recruiter-link hidden text-sm font-medium text-slate-300 hover:text-white py-1 flex items-center gap-2"><i data-lucide="users" class="w-4 h-4 text-cyan-400"></i> <span data-i18n="nav_applicants_mobile">Quản lý ứng viên</span></a>
+      <a href="#" onclick="switchTab('profile'); toggleMobileMenu()" class="recruiter-link hidden text-sm font-medium text-slate-300 hover:text-white py-1 flex items-center gap-2"><i data-lucide="user" class="w-4 h-4 text-cyan-400"></i> <span data-i18n="nav_profile_mobile">Hồ sơ công ty</span></a>
+      <a href="#" onclick="switchTab('chat'); toggleMobileMenu()" class="text-sm font-medium text-slate-300 hover:text-white py-1 flex items-center gap-2"><i data-lucide="message-square" class="w-4 h-4 text-cyan-400"></i> <span data-i18n="nav_chat_mobile">Thảo luận</span></a>
     </div>
-  </header>
+  </div>
 
   <!-- ======================== MAIN ROUTER WRAPPER ======================== -->
   <main class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 md:py-12">
 
+    <!-- ==================== VIEW 0: STUDENT CVs (HOME) ==================== -->
+    <section id="view-cvs" class="fade-in block">
+      
+      <!-- HERO/MATCHING SELECTOR SECTION -->
+      <div class="relative overflow-hidden rounded-3xl border border-brand-border bg-gradient-to-br from-brand-navyLight/80 via-brand-card/90 to-brand-background p-6 md:p-8 mb-8 shadow-glass">
+        <div class="absolute inset-0 opacity-10 pointer-events-none">
+          <div class="absolute top-[-20%] left-[-10%] w-[50%] h-[80%] rounded-full bg-cyan-500 filter blur-[120px]"></div>
+        </div>
+        
+        <div class="relative z-10 space-y-5">
+          <div class="inline-flex items-center gap-2 rounded-full border border-cyan-500/35 bg-cyan-950/45 px-3 py-1 text-xs font-semibold text-cyan-400">
+            <span class="flex h-2 w-2 rounded-full bg-cyan-400 animate-pulse"></span>
+            <span data-i18n="cv_hero_badge">AI Smart Matching & Recommendations</span>
+          </div>
+          
+          <div class="max-w-3xl">
+            <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
+              <span data-i18n="cv_hero_title">Đề xuất ứng viên tối ưu bằng AI</span>
+            </h1>
+            <p class="text-sm text-slate-300 mt-2 max-w-xl" data-i18n="cv_hero_subtitle">
+              Chọn một bài đăng tuyển dụng của bạn để hệ thống tự động lọc, đối sánh GPA, kỹ năng cốt lõi và đề xuất các CV sinh viên xuất sắc nhất từ Desktop client.
+            </p>
+          </div>
+
+          <!-- Matching Selector Dropdown -->
+          <div class="flex flex-col sm:flex-row gap-4 items-center p-3 rounded-2xl bg-brand-background/90 border border-slate-800/80 shadow-lg max-w-3xl">
+            <div class="flex-1 w-full flex items-center gap-2 px-3">
+              <i data-lucide="briefcase" class="w-5 h-5 text-cyan-400 shrink-0"></i>
+              <select id="cv-job-selector" onchange="handleJobRecommendationChange(this.value)" class="w-full bg-transparent border-0 outline-none text-sm text-slate-200 focus:ring-0 py-2">
+                <option value="" disabled selected data-i18n="cv_select_job_placeholder">Chọn tin đăng của bạn...</option>
+                <!-- Rendered dynamically -->
+              </select>
+            </div>
+            
+            <button onclick="runAiMatching()" class="w-full sm:w-auto rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-slate-950 text-xs font-bold px-6 py-3 transition-all duration-300 shadow-glow-cyan hover:shadow-glow-cyan-hover flex items-center justify-center gap-1.5 shrink-0">
+              <i data-lucide="sparkles" class="w-4 h-4"></i>
+              <span data-i18n="cv_match_btn">Đề xuất CV bằng AI</span>
+            </button>
+          </div>
+          
+          <!-- Requirement Stats of selected Job (Hidden until job selected) -->
+          <div id="selected-job-reqs" class="hidden grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 max-w-3xl">
+            <div class="p-3.5 rounded-xl bg-slate-950/40 border border-slate-800/60 flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-lg bg-cyan-950/60 border border-cyan-800/40 flex items-center justify-center text-cyan-400 shrink-0">
+                <i data-lucide="graduation-cap" class="w-4 h-4"></i>
+              </div>
+              <div>
+                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider" data-i18n="cv_req_gpa">GPA tối thiểu</p>
+                <p id="req-gpa-val" class="text-xs font-bold text-white">-</p>
+              </div>
+            </div>
+            <div class="p-3.5 rounded-xl bg-slate-950/40 border border-slate-800/60 flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-lg bg-cyan-950/60 border border-cyan-800/40 flex items-center justify-center text-cyan-400 shrink-0">
+                <i data-lucide="languages" class="w-4 h-4"></i>
+              </div>
+              <div>
+                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider" data-i18n="cv_req_lang">Ngoại ngữ</p>
+                <p id="req-lang-val" class="text-xs font-bold text-white">-</p>
+              </div>
+            </div>
+            <div class="p-3.5 rounded-xl bg-slate-950/40 border border-slate-800/60 flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-lg bg-cyan-950/60 border border-cyan-800/40 flex items-center justify-center text-cyan-400 shrink-0">
+                <i data-lucide="cpu" class="w-4 h-4"></i>
+              </div>
+              <div>
+                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider" data-i18n="cv_req_skills">Kỹ năng yêu cầu</p>
+                <p id="req-skills-val" class="text-xs font-bold text-white truncate">-</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CV FILTER AND LIST VIEW -->
+      <div class="flex flex-col lg:flex-row gap-8">
+        
+        <!-- Filter Sidebar -->
+        <aside id="cv-filter-sidebar" class="w-full lg:w-64 shrink-0 space-y-6 transition-all duration-300">
+          <div class="glass-card rounded-2xl p-6 shadow-md border border-slate-800/60">
+            <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
+              <i data-lucide="sliders" class="w-4 h-4 text-cyan-400"></i>
+              <span data-i18n="filter_title">Filters</span>
+            </h3>
+
+            <!-- Local SQLite Desktop Client Connection Status -->
+            <div class="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/60 mb-5 space-y-2.5">
+              <div class="flex items-center justify-between">
+                <span class="text-[9px] text-slate-500 font-bold uppercase tracking-wider" data-i18n="cv_sync_title">Nguồn dữ liệu cục bộ</span>
+                <span class="flex h-1.5 w-1.5 relative">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                </span>
+              </div>
+              <div class="flex items-center justify-between">
+                <p class="text-[11px] font-bold text-slate-300 flex items-center gap-1">
+                  <i data-lucide="database" class="w-3.5 h-3.5 text-cyan-400 shrink-0"></i>
+                  <span data-i18n="cv_sync_status">Desktop App SQLite</span>
+                </p>
+                <span class="text-[8px] bg-emerald-950/80 text-emerald-400 border border-emerald-500/30 px-1 py-0.5 rounded font-bold uppercase tracking-wider" data-i18n="cv_sync_connected">Đã kết nối</span>
+              </div>
+              <button onclick="syncDesktopData()" id="desktop-sync-btn" class="w-full flex items-center justify-center gap-1.5 rounded-lg bg-slate-900 border border-slate-800 hover:border-cyan-500/30 hover:bg-cyan-950/20 text-slate-300 hover:text-cyan-400 text-[10px] font-bold py-2 transition-all duration-200">
+                <i data-lucide="refresh-cw" class="w-3 h-3" id="desktop-sync-icon"></i>
+                <span data-i18n="cv_sync_btn">Sync Now</span>
+              </button>
+            </div>
+            
+            <!-- GPA Filter -->
+            <div class="space-y-3 mb-6">
+              <label class="text-xs font-bold tracking-wide text-slate-400 uppercase" data-i18n="filter_min_gpa">Điểm GPA tối thiểu</label>
+              <div class="space-y-2">
+                <input type="range" id="filter-cv-gpa" min="0" max="4.0" step="0.1" value="0.0" oninput="handleCvGpaSliderInput(this.value)" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400">
+                <div class="flex justify-between text-xs text-slate-400 font-semibold">
+                  <span id="cv-gpa-val">0.0 (Any)</span>
+                  <span>4.0</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Major Filter -->
+            <div class="space-y-3 mb-6">
+              <label class="text-xs font-bold tracking-wide text-slate-400 uppercase" data-i18n="filter_major">Ngành học</label>
+              <div class="space-y-2">
+                <label class="flex items-center gap-2.5 text-sm cursor-pointer select-none text-slate-300 hover:text-white">
+                  <input type="checkbox" name="filter-major" value="CNTT" checked class="rounded border-slate-800 bg-brand-background text-cyan-500 focus:ring-cyan-500/50 w-4 h-4">
+                  <span data-i18n="cv_major_cs">Khoa học Máy tính / CNTT</span>
+                </label>
+                <label class="flex items-center gap-2.5 text-sm cursor-pointer select-none text-slate-300 hover:text-white">
+                  <input type="checkbox" name="filter-major" value="ATTT" checked class="rounded border-slate-800 bg-brand-background text-cyan-500 focus:ring-cyan-500/50 w-4 h-4">
+                  <span data-i18n="cv_major_is">An toàn Thông tin</span>
+                </label>
+                <label class="flex items-center gap-2.5 text-sm cursor-pointer select-none text-slate-300 hover:text-white">
+                  <input type="checkbox" name="filter-major" value="KHDL" checked class="rounded border-slate-800 bg-brand-background text-cyan-500 focus:ring-cyan-500/50 w-4 h-4">
+                  <span data-i18n="cv_major_ds">Khoa học Dữ liệu / AI</span>
+                </label>
+              </div>
+            </div>
+            
+            <!-- Skill Keyword Search -->
+            <div class="space-y-3 mb-6">
+              <label class="text-xs font-bold tracking-wide text-slate-400 uppercase" data-i18n="filter_skills_search">Tìm theo kỹ năng</label>
+              <div class="relative">
+                <input type="text" id="filter-cv-skills" placeholder="e.g. React, Python..." class="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-200 placeholder-slate-600 outline-none focus:border-cyan-500/50">
+              </div>
+            </div>
+
+            <!-- Clear button -->
+            <button onclick="clearCvFilters()" class="w-full text-center text-xs font-bold text-slate-500 hover:text-cyan-400 pt-3 border-t border-slate-800/80 duration-150" data-i18n="filter_clear">
+              Clear All Filters
+            </button>
+          </div>
+        </aside>
+
+        <!-- CV Recommended Grid -->
+        <div class="flex-1 space-y-6">
+          <div class="flex items-center justify-between flex-wrap gap-4">
+            <h2 class="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+              <span data-i18n="cv_list_title">Danh sách CV Sinh viên</span>
+              <span id="cv-count-badge" class="rounded-full bg-slate-800/80 px-2 py-0.5 text-xs text-slate-400 font-medium">0 CVs</span>
+            </h2>
+            <button id="cv-toggle-filter-btn" onclick="toggleCvSidebar()" class="flex items-center gap-1.5 rounded-xl border border-slate-800/80 bg-slate-900/30 hover:bg-cyan-500/5 hover:border-cyan-500/20 text-slate-300 hover:text-cyan-400 text-xs font-bold px-3.5 py-2 transition-all duration-200 shadow-sm">
+              <i data-lucide="sliders" class="w-3.5 h-3.5 text-cyan-400" id="cv-toggle-filter-icon"></i>
+              <span id="cv-toggle-filter-text" data-i18n="cv_hide_filters">Ẩn bộ lọc</span>
+            </button>
+          </div>
+          
+          <!-- CV List Container -->
+          <div id="cv-grid-container" class="grid grid-cols-1 md:grid-cols-2 gap-5 animate-fade-in">
+            <!-- Rendered Dynamically -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
     <!-- ==================== VIEW 1: JOB BOARD (HOME) ==================== -->
-    <section id="view-jobs" class="fade-in block">
+    <section id="view-jobs" class="fade-in hidden">
       
       <!-- HERO CONTAINER (Dark blue gradient card) -->
       <div class="relative overflow-hidden rounded-3xl border border-brand-border bg-gradient-to-br from-brand-navyLight/80 via-brand-card/90 to-brand-background p-8 md:p-12 lg:p-16 mb-12 shadow-glass">
@@ -189,14 +384,14 @@
           <div class="lg:col-span-7 space-y-6">
             <div class="inline-flex items-center gap-2 rounded-full border border-cyan-500/35 bg-cyan-950/45 px-3 py-1 text-xs font-semibold text-cyan-400">
               <span class="flex h-2 w-2 rounded-full bg-cyan-400 animate-pulse"></span>
-              Over 1,240 Tech Roles Open Today
+              <span data-i18n="hero_badge">Over 1,240 Tech Roles Open Today</span>
             </div>
             
-            <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.1]">
-              Find the Next <span class="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">Developer</span> Masterpiece.
+            <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.1]" data-i18n="hero_title">
+              Find the Next <span class="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">Developer</span> Masterpiece.
             </h1>
             
-            <p class="text-base sm:text-lg text-slate-300 max-w-xl leading-relaxed">
+            <p class="text-base sm:text-lg text-slate-300 max-w-xl leading-relaxed" data-i18n="hero_subtitle">
               Explore high-paying tech jobs, premium SaaS roles, and remote coding opportunities curated daily with absolute visual transparency.
             </p>
             
@@ -211,13 +406,13 @@
                 <input type="text" id="search-location" placeholder="City or Remote" class="w-full bg-transparent border-0 outline-none text-sm text-slate-200 placeholder-slate-500 py-2.5">
               </div>
               <button onclick="triggerSearch()" class="rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-sm font-bold px-6 py-2.5 transition-all duration-300 shadow-glow-cyan hover:shadow-glow-cyan-hover">
-                Search
+                <span data-i18n="hero_search_btn">Search</span>
               </button>
             </div>
             
             <!-- Recent Searches -->
             <div id="recent-searches-container" class="hidden text-xs text-slate-400 flex flex-wrap items-center gap-2 mt-3 select-none">
-              <span class="font-medium text-slate-400 dark:text-slate-500">Recent searches:</span>
+              <span class="font-medium text-slate-400 dark:text-slate-500" data-i18n="hero_recent_searches">Recent searches:</span>
               <div id="recent-searches-list" class="flex flex-wrap gap-1.5">
                 <!-- Rendered Dynamically -->
               </div>
@@ -493,19 +688,16 @@
                 </div>
               </div>
               
-              <!-- Custom Drag & Drop Mock Upload UI -->
+              <!-- Custom Logo Upload UI -->
               <div>
                 <label class="block text-xs text-slate-400 mb-1.5 uppercase font-medium">Company Logo</label>
-                <div onclick="simulateLogoUpload()" class="border-2 border-dashed border-slate-800 hover:border-cyan-500/40 rounded-xl bg-slate-950/30 p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900/10 transition duration-200 group">
-                  <i data-lucide="upload-cloud" class="w-8 h-8 text-slate-500 group-hover:text-cyan-400 transition duration-200 mb-2"></i>
+                <div onclick="changeJobLogo()" class="border-2 border-dashed border-slate-800 hover:border-cyan-500/40 rounded-xl bg-slate-950/30 p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900/10 transition duration-200 group">
+                  <img id="post-logo-preview" src="" class="hidden w-16 h-16 rounded-xl object-cover mb-2 border border-cyan-500/20">
+                  <i id="post-logo-icon" data-lucide="upload-cloud" class="w-8 h-8 text-slate-500 group-hover:text-cyan-400 transition duration-200 mb-2"></i>
                   <p class="text-xs text-slate-300 font-semibold" id="logo-upload-status">Drag and drop logo, or <span class="text-cyan-400">browse</span></p>
                   <p class="text-[10px] text-slate-500 mt-1">PNG, JPG up to 2MB</p>
-                  
-                  <!-- Fake Progress bar -->
-                  <div id="upload-progress-bar" class="w-full max-w-xs bg-slate-800 h-1.5 rounded-full mt-3 overflow-hidden hidden">
-                    <div id="upload-progress-fill" class="bg-cyan-400 h-full w-0 transition-all duration-300"></div>
-                  </div>
                 </div>
+                <input type="file" id="post-logo-input" accept="image/*" onchange="handleJobLogoFileChange(event)" class="hidden">
                 <input type="hidden" id="post-comp-logo" value="">
               </div>
             </div>
@@ -541,6 +733,21 @@
                   <input type="text" id="post-job-salary" required placeholder="e.g. $130,000 - $160,000" class="glow-focus w-full rounded-xl border border-slate-800 bg-slate-950/70 py-2.5 px-4 text-sm text-slate-200">
                   <span class="field-error text-xs text-red-400 mt-1 block" id="salaryError"></span>
                 </div>
+              </div>
+              
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label for="post-job-gpa" class="block text-xs text-slate-400 mb-1.5 uppercase font-medium">Điểm GPA tối thiểu</label>
+                  <input type="text" id="post-job-gpa" placeholder="e.g. 3.0/4.0 hoặc 7.0/10" class="glow-focus w-full rounded-xl border border-slate-800 bg-slate-950/70 py-2.5 px-4 text-sm text-slate-200">
+                </div>
+                <div>
+                  <label for="post-job-languages" class="block text-xs text-slate-400 mb-1.5 uppercase font-medium">Yêu cầu Ngoại ngữ</label>
+                  <input type="text" id="post-job-languages" placeholder="e.g. Tiếng Anh (IELTS 6.0+, TOEIC 650+)" class="glow-focus w-full rounded-xl border border-slate-800 bg-slate-950/70 py-2.5 px-4 text-sm text-slate-200">
+                </div>
+              </div>
+              <div>
+                <label for="post-job-other-reqs" class="block text-xs text-slate-400 mb-1.5 uppercase font-medium">Yêu cầu khác</label>
+                <textarea id="post-job-other-reqs" rows="2" placeholder="e.g. Kỹ năng giao tiếp tốt, tin học văn phòng..." class="glow-focus w-full rounded-xl border border-slate-800 bg-slate-950/70 py-2.5 px-4 text-sm text-slate-200 resize-none font-sans"></textarea>
               </div>
             </div>
 
@@ -600,6 +807,7 @@
                 <i data-lucide="camera" class="w-5 h-5 text-cyan-400"></i>
               </div>
             </div>
+            <input type="file" id="profile-avatar-input" accept="image/*" onchange="handleAvatarFileChange(event)" class="hidden">
 
             <h2 id="profile-name" class="text-xl font-bold text-white tracking-tight">Sarah Jenkins</h2>
             <p id="profile-title" class="text-xs text-cyan-400/90 font-semibold mt-1">Senior Frontend Architect</p>
@@ -644,25 +852,25 @@
           <div class="glass-card rounded-3xl p-8 shadow-glass border border-slate-800/60 space-y-6">
             <div>
               <div class="flex items-center justify-between mb-3">
-                <h3 class="text-xs font-bold tracking-wide text-slate-400 uppercase">Biography</h3>
+                <h3 class="text-xs font-bold tracking-wide text-slate-400 uppercase">Giới thiệu Doanh nghiệp</h3>
                 <button onclick="openProfileModal()" class="text-xs text-cyan-400 hover:text-cyan-300 font-semibold flex items-center gap-1">
                   <i data-lucide="edit-3" class="w-3 h-3"></i> Edit
                 </button>
               </div>
               <p id="profile-bio" class="text-sm text-slate-300 leading-relaxed">
-                Passionate frontend engineer with 8+ years designing web systems. Specialized in React ecosystem, server components, compiler tooling, and custom CSS micro-animation designs. Devoted to producing scalable design systems.
+                Giới thiệu về doanh nghiệp tuyển dụng của bạn.
               </p>
             </div>
 
             <div class="pt-6 border-t border-slate-800/60">
-              <h3 class="text-xs font-bold tracking-wide text-slate-400 uppercase mb-4">Experience</h3>
+              <h3 class="text-xs font-bold tracking-wide text-slate-400 uppercase mb-4">Trụ sở & Quy mô</h3>
               <div id="profile-experience-container" class="space-y-4">
                 <!-- Rendered Dynamically -->
               </div>
             </div>
 
             <div class="pt-6 border-t border-slate-800/60">
-              <h3 class="text-xs font-bold tracking-wide text-slate-400 uppercase mb-4">Education</h3>
+              <h3 class="text-xs font-bold tracking-wide text-slate-400 uppercase mb-4">Website & Liên hệ</h3>
               <div id="profile-education-container" class="space-y-4">
                 <!-- Rendered Dynamically -->
               </div>
@@ -670,7 +878,7 @@
           </div>
 
           <!-- Applied Jobs List -->
-          <div class="glass-card rounded-3xl p-8 shadow-glass border border-slate-800/60">
+          <div id="applied-jobs-card" class="glass-card rounded-3xl p-8 shadow-glass border border-slate-800/60 hidden">
             <h3 class="text-xs font-bold tracking-wide text-slate-400 uppercase mb-4">Applied Job Applications</h3>
             <div id="applied-jobs-list" class="space-y-3">
               <!-- Rendered Dynamically -->
@@ -687,6 +895,68 @@
             </div>
           </div>
 
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 8: APPLICANTS MANAGEMENT ==================== -->
+    <section id="view-applicants" class="fade-in hidden">
+      <div class="glass-card rounded-3xl p-8 shadow-glass border border-slate-800/60 relative overflow-hidden">
+        
+        <div class="absolute top-0 right-0 w-48 h-48 rounded-full bg-cyan-500/5 filter blur-[60px] pointer-events-none"></div>
+
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800/60 pb-5 mb-8 gap-4">
+          <div>
+            <h2 class="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+              <i data-lucide="users" class="w-5 h-5 text-cyan-400"></i> Quản lý ứng viên ứng tuyển
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">Danh sách tất cả các sinh viên ứng tuyển từ ứng dụng Desktop</p>
+          </div>
+          <button onclick="exportApplicantsCSV()" class="rounded-xl border border-cyan-500/20 bg-cyan-500/5 hover:bg-cyan-500/10 text-cyan-400 hover:text-cyan-300 text-xs font-bold px-4 py-2.5 transition-all duration-200 flex items-center gap-2 self-start sm:self-center">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i> Xuất CSV
+          </button>
+        </div>
+
+        <!-- Filter bar for applicants -->
+        <div class="flex flex-wrap gap-4 mb-6">
+          <div class="flex-1 min-w-[200px]">
+            <input type="text" id="filter-applicant-search" oninput="filterApplicantsTable()" placeholder="Tìm theo tên hoặc email..." class="w-full rounded-xl border border-slate-800 bg-slate-950/70 py-2 px-4 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-cyan-500/60 transition duration-200">
+          </div>
+          <div>
+            <select id="filter-applicant-job" onchange="filterApplicantsTable()" class="rounded-xl border border-slate-800 bg-slate-950/70 py-2 px-4 text-xs text-slate-200 focus:outline-none focus:border-cyan-500/60">
+              <option value="">Tất cả công việc</option>
+            </select>
+          </div>
+          <div>
+            <select id="filter-applicant-status" onchange="filterApplicantsTable()" class="rounded-xl border border-slate-800 bg-slate-950/70 py-2 px-4 text-xs text-slate-200 focus:outline-none focus:border-cyan-500/60">
+              <option value="">Tất cả trạng thái</option>
+              <option value="applied">Đã nộp (Applied)</option>
+              <option value="reviewing">Đang duyệt (Reviewing)</option>
+              <option value="interview">Hẹn phỏng vấn (Interview)</option>
+              <option value="accepted">Nhận việc (Accepted)</option>
+              <option value="rejected">Từ chối (Rejected)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Table Container -->
+        <div class="overflow-x-auto w-full border border-slate-800/80 rounded-2xl bg-slate-950/30">
+          <table class="min-w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="border-b border-slate-800 bg-slate-950/50 text-slate-400 font-bold uppercase tracking-wider">
+                <th class="px-5 py-4">Ứng viên</th>
+                <th class="px-5 py-4">Chuyên ngành / Năm</th>
+                <th class="px-5 py-4">Vị trí ứng tuyển</th>
+                <th class="px-5 py-4">Ngày nộp</th>
+                <th class="px-5 py-4">Trạng thái hồ sơ</th>
+                <th class="px-5 py-4 text-right">Hành động</th>
+              </tr>
+            </thead>
+            <tbody id="applicants-table-body" class="divide-y divide-slate-800/40 text-slate-300">
+              <!-- Rendered Dynamically -->
+            </tbody>
+          </table>
         </div>
 
       </div>
@@ -797,49 +1067,49 @@
 
   <!-- ======================== PROFILE EDIT MODAL ======================== -->
   <div id="profile-edit-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm hidden">
-    <div class="glass-card rounded-3xl p-6 sm:p-8 max-w-md w-full border border-slate-800/80 relative shadow-2xl">
+    <div class="glass-card rounded-3xl p-6 sm:p-8 max-w-md w-full border border-slate-800/80 relative shadow-2xl max-h-[90vh] overflow-y-auto">
       <button onclick="closeProfileModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white transition duration-150">
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
       
       <div class="mb-5 border-b border-slate-800/60 pb-3">
-        <h3 class="text-lg font-bold text-white flex items-center gap-2">
-          <i data-lucide="user-cog" class="w-5 h-5 text-cyan-400"></i> Edit Profile Details
+        <h3 class="text-lg font-bold text-white flex items-center gap-2" data-i18n="profile_edit_title">
+          <i data-lucide="user-cog" class="w-5 h-5 text-cyan-400"></i> Edit Company Profile Details
         </h3>
-        <p class="text-xs text-slate-400 mt-1">Update your professional identity, skills, and biography</p>
+        <p class="text-xs text-slate-400 mt-1" data-i18n="profile_edit_subtitle">Cập nhật thông tin nhận diện doanh nghiệp của bạn</p>
       </div>
       
       <form id="profile-edit-form" onsubmit="handleProfileEditSubmit(event)" class="space-y-4">
         <div>
-          <label for="edit-name" class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Full Name</label>
-          <input type="text" id="edit-name" required placeholder="Sarah Jenkins" class="glow-focus w-full rounded-xl border border-slate-800 bg-slate-950/70 py-2.5 px-4 text-sm text-slate-200">
+          <label for="edit-name" class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider" data-i18n="profile_edit_name">Tên Doanh nghiệp</label>
+          <input type="text" id="edit-name" required placeholder="Vercel Inc." class="glow-focus w-full rounded-xl border border-slate-800 bg-slate-950/70 py-2.5 px-4 text-sm text-slate-200">
         </div>
         <div>
-          <label for="edit-title" class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Professional Title</label>
-          <input type="text" id="edit-title" required placeholder="Senior Frontend Architect" class="glow-focus w-full rounded-xl border border-slate-800 bg-slate-950/70 py-2.5 px-4 text-sm text-slate-200">
+          <label for="edit-title" class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider" data-i18n="profile_edit_domain">Lĩnh vực hoạt động chính</label>
+          <input type="text" id="edit-title" required placeholder="Cloud Platforms & Web Tooling" class="glow-focus w-full rounded-xl border border-slate-800 bg-slate-950/70 py-2.5 px-4 text-sm text-slate-200">
         </div>
         <div>
-          <label for="edit-bio" class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Biography</label>
-          <textarea id="edit-bio" rows="4" placeholder="Tell us about yourself..." class="glow-focus w-full rounded-xl border border-slate-800 bg-slate-950/70 py-2.5 px-4 text-sm text-slate-200 resize-none font-sans"></textarea>
+          <label for="edit-bio" class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider" data-i18n="profile_edit_bio">Giới thiệu doanh nghiệp</label>
+          <textarea id="edit-bio" rows="4" placeholder="Giới thiệu chi tiết..." class="glow-focus w-full rounded-xl border border-slate-800 bg-slate-950/70 py-2.5 px-4 text-sm text-slate-200 resize-none font-sans"></textarea>
         </div>
         <div>
-          <label for="edit-experience" class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Experience (Use double enter to separate jobs)</label>
-          <textarea id="edit-experience" rows="3" placeholder="Job Title&#10;Company ✦ Date&#10;Job Description..." class="glow-focus w-full rounded-xl border border-slate-800 bg-slate-950/70 py-2.5 px-4 text-sm text-slate-200 resize-none font-sans"></textarea>
+          <label for="edit-experience" class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider" data-i18n="profile_edit_headquarters">Trụ sở & Quy mô (Mỗi thông tin 1 dòng)</label>
+          <textarea id="edit-experience" rows="3" placeholder="Trụ sở chính: San Francisco, CA&#10;Quy mô: 500-1000 nhân viên" class="glow-focus w-full rounded-xl border border-slate-800 bg-slate-950/70 py-2.5 px-4 text-sm text-slate-200 resize-none font-sans"></textarea>
         </div>
         <div>
-          <label for="edit-education" class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Education (Use double enter to separate degrees)</label>
-          <textarea id="edit-education" rows="2" placeholder="Degree&#10;University ✦ Date..." class="glow-focus w-full rounded-xl border border-slate-800 bg-slate-950/70 py-2.5 px-4 text-sm text-slate-200 resize-none font-sans"></textarea>
+          <label for="edit-education" class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider" data-i18n="profile_edit_contact">Website & Liên hệ (Mỗi thông tin 1 dòng)</label>
+          <textarea id="edit-education" rows="2" placeholder="Website: https://vercel.com&#10;Email: contact@vercel.com" class="glow-focus w-full rounded-xl border border-slate-800 bg-slate-950/70 py-2.5 px-4 text-sm text-slate-200 resize-none font-sans"></textarea>
         </div>
         <div>
-          <label for="edit-skills" class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Tech Stack (comma-separated)</label>
-          <input type="text" id="edit-skills" placeholder="React, TypeScript, Node.js" class="glow-focus w-full rounded-xl border border-slate-800 bg-slate-950/70 py-2.5 px-4 text-sm text-slate-200">
+          <label for="edit-skills" class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider" data-i18n="profile_edit_skills">Công nghệ sử dụng chính (phân cách bằng dấu phẩy)</label>
+          <input type="text" id="edit-skills" placeholder="React, Next.js, Rust, TailwindCSS" class="glow-focus w-full rounded-xl border border-slate-800 bg-slate-950/70 py-2.5 px-4 text-sm text-slate-200">
         </div>
         
         <div class="pt-3 border-t border-slate-800/40 flex justify-end gap-3">
-          <button type="button" onclick="closeProfileModal()" class="rounded-xl border border-slate-800 bg-transparent text-slate-400 hover:text-white text-xs font-semibold px-4 py-2.5 duration-150">
+          <button type="button" onclick="closeProfileModal()" class="rounded-xl border border-slate-800 bg-transparent text-slate-400 hover:text-white text-xs font-semibold px-4 py-2.5 duration-150" data-i18n="btn_cancel">
             Cancel
           </button>
-          <button type="submit" class="rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-slate-950 text-xs font-bold px-6 py-2.5 transition-all duration-300 shadow-glow-cyan">
+          <button type="submit" class="rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-slate-950 text-xs font-bold px-6 py-2.5 transition-all duration-300 shadow-glow-cyan" data-i18n="btn_save_changes">
             Save Changes
           </button>
         </div>
@@ -849,7 +1119,7 @@
 
   <!-- ======================== JOB EDIT MODAL ======================== -->
   <div id="job-edit-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm hidden">
-    <div class="glass-card rounded-3xl p-6 sm:p-8 max-w-lg w-full border border-slate-800/80 relative shadow-2xl">
+    <div class="glass-card rounded-3xl p-6 sm:p-8 max-w-xl w-full border border-slate-800/80 relative shadow-2xl max-h-[90vh] overflow-y-auto">
       <button onclick="closeJobModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white transition duration-150">
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
@@ -885,10 +1155,40 @@
             <input type="text" id="edit-job-salary" required placeholder="e.g. $100k - $120k" class="glow-focus w-full rounded-xl border border-slate-800 bg-slate-950/70 py-2.5 px-4 text-sm text-slate-200">
           </div>
         </div>
+
+        <!-- Company Logo Edit -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Company Logo</label>
+          <div onclick="changeEditJobLogo()" class="border border-dashed border-slate-800 hover:border-cyan-500/40 rounded-xl bg-slate-950/30 p-4 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900/10 transition duration-200 group">
+            <img id="edit-logo-preview" src="" class="hidden w-12 h-12 rounded-xl object-cover mb-1.5 border border-cyan-500/20">
+            <i id="edit-logo-icon" data-lucide="upload-cloud" class="w-6 h-6 text-slate-500 group-hover:text-cyan-400 transition duration-200 mb-1"></i>
+            <p class="text-[11px] text-slate-300 font-semibold" id="edit-logo-upload-status">Drag and drop logo, or browse</p>
+          </div>
+          <input type="file" id="edit-logo-input" accept="image/*" onchange="handleEditJobLogoFileChange(event)" class="hidden">
+          <input type="hidden" id="edit-comp-logo" value="">
+        </div>
+
+        <!-- GPA and Languages -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label for="edit-job-gpa" class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Điểm GPA tối thiểu</label>
+            <input type="text" id="edit-job-gpa" placeholder="e.g. 3.0/4.0 hoặc 7.0/10" class="glow-focus w-full rounded-xl border border-slate-800 bg-slate-950/70 py-2.5 px-4 text-sm text-slate-200">
+          </div>
+          <div>
+            <label for="edit-job-languages" class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Yêu cầu Ngoại ngữ</label>
+            <input type="text" id="edit-job-languages" placeholder="e.g. Tiếng Anh (IELTS 6.0+)" class="glow-focus w-full rounded-xl border border-slate-800 bg-slate-950/70 py-2.5 px-4 text-sm text-slate-200">
+          </div>
+        </div>
+
+        <!-- Other requirements -->
+        <div>
+          <label for="edit-job-other-reqs" class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Yêu cầu khác</label>
+          <textarea id="edit-job-other-reqs" rows="2" placeholder="e.g. Kỹ năng giao tiếp tốt, tin học văn phòng..." class="glow-focus w-full rounded-xl border border-slate-800 bg-slate-950/70 py-2.5 px-4 text-sm text-slate-200 resize-none font-sans"></textarea>
+        </div>
         
         <div>
           <label for="edit-job-desc" class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Job Description</label>
-          <textarea id="edit-job-desc" rows="5" required placeholder="Specify job role details..." class="glow-focus w-full rounded-xl border border-slate-800 bg-slate-950/70 py-2.5 px-4 text-sm text-slate-200 resize-none font-sans"></textarea>
+          <textarea id="edit-job-desc" rows="5" required placeholder="Specify job role details..." class="glow-focus w-full rounded-xl border border-slate-800 bg-slate-950/70 py-2.5 px-4 text-sm text-slate-200 resize-y font-sans"></textarea>
         </div>
         
         <div class="pt-3 border-t border-slate-800/40 flex justify-end gap-3">
@@ -949,6 +1249,130 @@
         <button onclick="closeApplicantModal()" class="w-full rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-slate-950 text-xs font-bold py-3 transition-all duration-300 shadow-glow-cyan transform hover:scale-[1.01]">
           Đóng
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================== STUDENT CV DETAIL MODAL ======================== -->
+  <div id="cv-detail-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md hidden">
+    <div class="glass-card rounded-3xl p-6 sm:p-8 max-w-2xl w-full border border-slate-800/80 relative shadow-2xl overflow-y-auto max-h-[90vh] animate-fade-in">
+      <!-- Glow background overlay -->
+      <div class="absolute -top-12 -left-12 w-40 h-40 rounded-full bg-cyan-500/10 filter blur-[40px] pointer-events-none"></div>
+      <div class="absolute -bottom-12 -right-12 w-40 h-40 rounded-full bg-blue-500/10 filter blur-[40px] pointer-events-none"></div>
+      
+      <!-- Close button -->
+      <button onclick="closeCvDetail()" class="absolute top-5 right-5 text-slate-400 hover:text-white transition duration-150 z-10">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <!-- Left: Student Info -->
+        <div class="space-y-4">
+          <div class="flex items-center gap-4 border-b border-slate-800/40 pb-4">
+            <div class="w-16 h-16 rounded-2xl border border-cyan-500/20 shrink-0 select-none overflow-hidden" id="cv-modal-avatar-container">
+              <img id="cv-modal-avatar" src="" class="w-full h-full object-cover">
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-white tracking-tight" id="cv-modal-name">-</h3>
+              <p class="text-xs text-cyan-400 font-bold uppercase tracking-wider mt-0.5" id="cv-modal-major-gpa">-</p>
+              <p class="text-[10px] text-slate-500 font-semibold" id="cv-modal-univ">-</p>
+            </div>
+          </div>
+          
+          <div class="space-y-3.5">
+            <div>
+              <span class="block text-[9px] uppercase font-bold text-slate-500 tracking-wider" data-i18n="cv_req_lang">Ngoại ngữ</span>
+              <p class="text-xs font-semibold text-slate-200 mt-0.5" id="cv-modal-languages">-</p>
+            </div>
+            
+            <div>
+              <span class="block text-[9px] uppercase font-bold text-slate-500 tracking-wider" data-i18n="profile_edit_bio">Giới thiệu bản thân</span>
+              <p class="text-xs text-slate-300 leading-relaxed mt-1" id="cv-modal-bio">-</p>
+            </div>
+
+            <div>
+              <span class="block text-[9px] uppercase font-bold text-slate-500 tracking-wider" data-i18n="cv_modal_skills">Danh sách kỹ năng</span>
+              <div class="flex flex-wrap gap-1.5 mt-1.5" id="cv-modal-skills-container">
+                <!-- Rendered dynamically -->
+              </div>
+            </div>
+
+            <div>
+              <span class="block text-[9px] uppercase font-bold text-slate-500 tracking-wider">Chứng chỉ & Giải thưởng</span>
+              <div class="space-y-2 mt-1.5" id="cv-modal-certs-container">
+                <!-- Rendered dynamically -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: AI Evaluation Report -->
+        <div class="rounded-2xl bg-slate-950/60 border border-slate-800/80 p-5 space-y-4 flex flex-col justify-between">
+          <div>
+            <h4 class="text-xs font-bold text-white flex items-center gap-1.5 pb-2.5 border-b border-slate-900/60" data-i18n="cv_ai_report_title">
+              <i data-lucide="sparkles" class="w-4 h-4 text-cyan-400 animate-pulse"></i>
+              Báo cáo phân tích đối sánh AI
+            </h4>
+
+            <!-- Active comparison panel -->
+            <div id="cv-modal-ai-active" class="space-y-4 mt-4">
+              <!-- Score Bar -->
+              <div class="space-y-1">
+                <div class="flex justify-between items-center text-xs">
+                  <span class="text-slate-400 font-semibold">Match Score</span>
+                  <span id="cv-modal-ai-score" class="font-extrabold text-cyan-400 text-sm">0%</span>
+                </div>
+                <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-800">
+                  <div id="cv-modal-ai-progress" class="bg-gradient-to-r from-cyan-400 to-blue-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+              </div>
+
+              <!-- Checks -->
+              <div class="space-y-3 pt-2">
+                <div class="flex items-start gap-2 text-xs">
+                  <span id="cv-modal-gpa-check-icon" class="mt-0.5 shrink-0"></span>
+                  <div>
+                    <span class="block font-bold text-slate-300 text-[11px]" data-i18n="cv_ai_gpa_check">Tiêu chuẩn GPA</span>
+                    <span class="text-[10px] text-slate-500 leading-normal" id="cv-modal-gpa-check-desc">-</span>
+                  </div>
+                </div>
+
+                <div class="flex items-start gap-2 text-xs">
+                  <span id="cv-modal-skills-check-icon" class="mt-0.5 shrink-0"></span>
+                  <div>
+                    <span class="block font-bold text-slate-300 text-[11px]" data-i18n="cv_ai_skills_check">Kỹ năng chuyên môn</span>
+                    <span class="text-[10px] text-slate-500 leading-normal" id="cv-modal-skills-check-desc">-</span>
+                  </div>
+                </div>
+
+                <div class="flex items-start gap-2 text-xs">
+                  <span id="cv-modal-lang-check-icon" class="mt-0.5 shrink-0"></span>
+                  <div>
+                    <span class="block font-bold text-slate-300 text-[11px]" data-i18n="cv_ai_lang_check">Trình độ Ngoại ngữ</span>
+                    <span class="text-[10px] text-slate-500 leading-normal" id="cv-modal-lang-check-desc">-</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- AI Verdict -->
+              <div class="p-3 rounded-xl bg-cyan-950/20 border border-cyan-500/10 space-y-1 mt-1">
+                <span class="block text-[9px] uppercase font-black text-cyan-400 tracking-wider" data-i18n="cv_ai_verdict">Đánh giá sự tương thích</span>
+                <p class="text-[10px] text-slate-300 leading-relaxed font-medium" id="cv-modal-ai-verdict">-</p>
+              </div>
+            </div>
+
+            <!-- Inactive comparison panel (When no job selected) -->
+            <div id="cv-modal-ai-inactive" class="py-12 text-center text-slate-500 flex flex-col items-center justify-center">
+              <i data-lucide="info" class="w-8 h-8 text-slate-600 mb-2 animate-bounce"></i>
+              <p class="text-xs font-semibold max-w-[200px]" data-i18n="cv_select_job_placeholder">Chọn một tin đăng tuyển để chạy phân tích đối sánh AI.</p>
+            </div>
+          </div>
+
+          <button onclick="closeCvDetail()" class="w-full rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-slate-950 text-xs font-bold py-2.5 transition-all duration-300 shadow-glow-cyan transform hover:scale-[1.01] mt-4">
+            Đóng
+          </button>
+        </div>
       </div>
     </div>
   </div>

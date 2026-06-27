@@ -17,56 +17,56 @@ class AddChallengeDialog(QDialog):
 
         self.setStyleSheet("""
             QDialog {
-                background-color: #0F172A;
-                color: #F1F5F9;
+                background-color: #FFFFFF;
+                color: #0F172A;
             }
             QLabel {
-                color: #94A3B8;
+                color: #475569;
                 font-size: 13px;
                 font-weight: 600;
             }
             QLineEdit, QTextEdit, QComboBox {
-                background-color: #1E293B;
-                color: #F1F5F9;
-                border: 1px solid #334155;
+                background-color: #FFFFFF;
+                color: #0F172A;
+                border: 1px solid #CBD5E1;
                 border-radius: 8px;
                 padding: 8px 10px;
                 font-size: 13px;
             }
             QLineEdit:focus, QTextEdit:focus, QComboBox:focus {
-                border: 1px solid #38BDF8;
+                border: 1px solid #2563EB;
             }
             QComboBox QAbstractItemView {
-                background-color: #1E293B;
-                color: #F1F5F9;
-                selection-background-color: #38BDF8;
-                selection-color: #0F172A;
-                border: 1px solid #334155;
+                background-color: #FFFFFF;
+                color: #0F172A;
+                selection-background-color: #EFF6FF;
+                selection-color: #2563EB;
+                border: 1px solid #CBD5E1;
             }
             QScrollArea {
-                border: 1px solid #334155;
-                background-color: #1E293B;
+                border: 1px solid #E2E8F0;
+                background-color: #F8FAFC;
                 border-radius: 8px;
             }
             QPushButton {
-                background-color: #1E293B;
-                color: #F1F5F9;
-                border: 1px solid #334155;
+                background-color: #F1F5F9;
+                color: #0F172A;
+                border: 1px solid #CBD5E1;
                 border-radius: 8px;
                 padding: 8px 14px;
                 font-weight: bold;
                 font-size: 13px;
             }
             QPushButton:hover {
-                background-color: #334155;
+                background-color: #E2E8F0;
             }
             QPushButton#btnPrimary {
-                background-color: #38BDF8;
-                color: #0F172A;
+                background-color: #2563EB;
+                color: white;
                 border: none;
             }
             QPushButton#btnPrimary:hover {
-                background-color: #0EA5E9;
+                background-color: #1D4ED8;
             }
         """)
 
@@ -146,13 +146,14 @@ class AddChallengeDialog(QDialog):
         self.btn_add_case.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_add_case.setStyleSheet("""
             QPushButton {
-                background-color: #1E293B;
-                color: #38BDF8;
-                border: 1px dashed #334155;
+                background-color: #F1F5F9;
+                color: #2563EB;
+                border: 1px dashed #CBD5E1;
             }
             QPushButton:hover {
-                background-color: #243249;
-                border: 1px dashed #38BDF8;
+                background-color: #E2E8F0;
+                border: 1px dashed #2563EB;
+                color: #1D4ED8;
             }
         """)
         self.btn_add_case.clicked.connect(self.add_test_case_row)
@@ -166,7 +167,7 @@ class AddChallengeDialog(QDialog):
 
         # Dialog Action Buttons Footer
         footer = QFrame()
-        footer.setStyleSheet("QFrame { background-color: #0F172A; border-top: 1px solid #334155; }")
+        footer.setStyleSheet("QFrame { background-color: #F8FAFC; border-top: 1px solid #E2E8F0; }")
         footer_layout = QHBoxLayout(footer)
         footer_layout.setContentsMargins(20, 15, 20, 15)
         footer_layout.setSpacing(12)
@@ -177,16 +178,16 @@ class AddChallengeDialog(QDialog):
         self.btn_cancel.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_cancel.setStyleSheet("""
             QPushButton {
-                background-color: #1E293B;
-                color: #F1F5F9;
-                border: 1px solid #334155;
+                background-color: #F1F5F9;
+                color: #0F172A;
+                border: 1px solid #CBD5E1;
                 border-radius: 8px;
                 padding: 8px 14px;
                 font-weight: bold;
                 font-size: 13px;
             }
             QPushButton:hover {
-                background-color: #334155;
+                background-color: #E2E8F0;
             }
         """)
         self.btn_cancel.clicked.connect(self.reject)
@@ -196,8 +197,8 @@ class AddChallengeDialog(QDialog):
         self.btn_save.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_save.setStyleSheet("""
             QPushButton {
-                background-color: #38BDF8;
-                color: #0F172A;
+                background-color: #2563EB;
+                color: white;
                 border: none;
                 border-radius: 8px;
                 padding: 8px 14px;
@@ -205,13 +206,16 @@ class AddChallengeDialog(QDialog):
                 font-size: 13px;
             }
             QPushButton:hover {
-                background-color: #0EA5E9;
+                background-color: #1D4ED8;
             }
         """)
         self.btn_save.clicked.connect(self.accept)
         footer_layout.addWidget(self.btn_save)
         
         outer_layout.addWidget(footer)
+        
+        from core.config import apply_theme
+        apply_theme(self)
 
     def add_test_case_row(self, input_val="", output_val=""):
         row_widget = QWidget()

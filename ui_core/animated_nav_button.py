@@ -38,7 +38,7 @@ class AnimatedNavButton(QPushButton):
         self.indicator = QWidget(self)
         self.indicator.setFixedWidth(3)
         self.indicator.setFixedHeight(20)
-        self.indicator.setStyleSheet("background-color: #38BDF8; border-radius: 1.5px;")
+        self.indicator.setStyleSheet("background-color: #2563EB; border-radius: 1.5px;")
         self.indicator.move(0, 12)
         self.indicator.hide()
         
@@ -65,10 +65,10 @@ class AnimatedNavButton(QPushButton):
         
         if is_dark:
             active_bg = "#1E293B" if self.isChecked() else ("#334155" if hovered else "transparent")
-            active_color = "#38BDF8" if self.isChecked() else ("#F8FAFC" if hovered else "#94A3B8")
+            active_color = "#3B82F6" if self.isChecked() else ("#F8FAFC" if hovered else "#94A3B8")
         else:
-            active_bg = "#F0F9FF" if self.isChecked() else ("#F1F5F9" if hovered else "transparent")
-            active_color = "#0284C7" if self.isChecked() else ("#334155" if hovered else "#64748B")
+            active_bg = "#EFF6FF" if self.isChecked() else ("#F1F5F9" if hovered else "transparent")
+            active_color = "#1D4ED8" if self.isChecked() else ("#0F172A" if hovered else "#64748B")
             
         font_weight = "600" if self.isChecked() else "500"
         

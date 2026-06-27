@@ -20,53 +20,53 @@ class ProjectDialog(QDialog):
         self.resize(480, 680)
         self.setStyleSheet("""
             QDialog {
-                background-color: #0F172A;
-                color: #F1F5F9;
+                background-color: #FFFFFF;
+                color: #0F172A;
             }
             QLabel {
-                color: #94A3B8;
+                color: #475569;
                 font-size: 13px;
                 font-weight: 600;
             }
             QLineEdit, QTextEdit, QSpinBox {
-                background-color: #1E293B;
-                color: #F1F5F9;
-                border: 1px solid #334155;
+                background-color: #FFFFFF;
+                color: #0F172A;
+                border: 1px solid #CBD5E1;
                 border-radius: 8px;
                 padding: 8px 10px;
                 font-size: 13px;
             }
             QLineEdit:focus, QTextEdit:focus, QSpinBox:focus {
-                border: 1px solid #38BDF8;
+                border: 1px solid #2563EB;
             }
             QCheckBox {
-                color: #E2E8F0;
+                color: #475569;
                 font-size: 12px;
             }
             QScrollArea {
-                border: 1px solid #334155;
-                background-color: #1E293B;
+                border: 1px solid #E2E8F0;
+                background-color: #F8FAFC;
                 border-radius: 8px;
             }
             QPushButton {
-                background-color: #1E293B;
-                color: #F1F5F9;
-                border: 1px solid #334155;
+                background-color: #F1F5F9;
+                color: #0F172A;
+                border: 1px solid #CBD5E1;
                 border-radius: 8px;
                 padding: 8px 14px;
                 font-weight: bold;
                 font-size: 13px;
             }
             QPushButton:hover {
-                background-color: #334155;
+                background-color: #E2E8F0;
             }
             QPushButton#btnPrimary {
-                background-color: #38BDF8;
-                color: #0F172A;
+                background-color: #2563EB;
+                color: white;
                 border: none;
             }
             QPushButton#btnPrimary:hover {
-                background-color: #0EA5E9;
+                background-color: #1D4ED8;
             }
         """)
 
@@ -125,6 +125,21 @@ class ProjectDialog(QDialog):
         self.task_name_input = QLineEdit()
         self.task_name_input.setPlaceholderText("Enter milestone name (e.g. Design DB Schema)")
         self.btn_add_task = QPushButton("+ Add Milestone")
+        self.btn_add_task.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_add_task.setStyleSheet("""
+            QPushButton {
+                background-color: #2563EB;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                padding: 6px 12px;
+                font-size: 11px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #1D4ED8;
+            }
+        """)
         self.btn_add_task.clicked.connect(self._add_task_item)
         task_add_lay.addWidget(self.task_name_input, 3)
         task_add_lay.addWidget(self.btn_add_task, 1)
@@ -205,37 +220,24 @@ class ProjectDialog(QDialog):
 
         # 8. Fixed Footer Action buttons (outside scroll area)
         footer_widget = QWidget()
-        footer_widget.setStyleSheet("background-color: #0F172A; border-top: 1px solid #334155;")
+        footer_widget.setStyleSheet("background-color: #F8FAFC; border-top: 1px solid #E2E8F0;")
         btn_box = QHBoxLayout(footer_widget)
         btn_box.setContentsMargins(20, 12, 20, 16)
         btn_box.setSpacing(12)
         
         self.btn_submit = QPushButton("Save Project" if self.is_edit else "Add Project")
         self.btn_submit.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_submit.setStyleSheet("""
-            QPushButton {
-                background-color: #38BDF8;
-                color: #0F172A;
-                border: none;
-                border-radius: 8px;
-                padding: 8px 14px;
-                font-weight: bold;
-                font-size: 13px;
-            }
-            QPushButton:hover {
-                background-color: #0EA5E9;
-            }
-        """)
+        self.btn_submit.setObjectName("btnPrimary")
         self.btn_submit.clicked.connect(self._submit)
         
         self.btn_cancel = QPushButton("Cancel")
         self.btn_cancel.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_cancel.clicked.connect(self.reject)
         
-        btn_box.addWidget(self.btn_submit)
-        btn_box.addWidget(self.btn_cancel)
-        
         outer_layout.addWidget(footer_widget)
+        
+        from core.config import apply_theme
+        apply_theme(self)
 
     def _add_task_item(self):
         name = self.task_name_input.text().strip()
@@ -274,8 +276,8 @@ class ProjectDialog(QDialog):
             item_widget = QWidget()
             item_widget.setStyleSheet("""
                 QWidget {
-                    background-color: #1E293B;
-                    border: 1px solid #334155;
+                    background-color: #FFFFFF;
+                    border: 1px solid #E2E8F0;
                     border-radius: 6px;
                 }
             """)
@@ -286,7 +288,7 @@ class ProjectDialog(QDialog):
             chk = QCheckBox(task["task_name"])
             chk.setChecked(bool(task["completed"]))
             chk.setCursor(Qt.CursorShape.PointingHandCursor)
-            chk.setStyleSheet("color: #F1F5F9; font-size: 12px; border: none; background: transparent;")
+            chk.setStyleSheet("color: #0F172A; font-size: 12px; border: none; background: transparent;")
             # Connect toggle using stateChanged and capturing index
             chk.stateChanged.connect(lambda state, i=idx, c=chk: self._on_dialog_task_toggled(i, c.isChecked()))
             item_lay.addWidget(chk)

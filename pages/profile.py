@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                              QPushButton, QScrollArea, QFrame, QGridLayout, 
                              QLineEdit, QTextEdit, QComboBox, QMessageBox,
                              QGraphicsDropShadowEffect, QSpacerItem, QSizePolicy,
-                             QTabWidget)
+                             QTabWidget, QSpinBox, QInputDialog)
 from PyQt6.QtCore import Qt, QSize, QRectF, QPropertyAnimation, QEasingCurve
 from PyQt6.QtGui import QColor, QPainter, QPen, QBrush, QCursor, QFont, QLinearGradient, QIcon
 
@@ -285,8 +285,8 @@ class ProfilePage(QWidget):
         
         content_container = QWidget()
         self.content_layout = QHBoxLayout(content_container)
-        self.content_layout.setContentsMargins(24, 24, 24, 24)
-        self.content_layout.setSpacing(24)
+        self.content_layout.setContentsMargins(16, 16, 16, 16)
+        self.content_layout.setSpacing(16)
         
         # Tabs
         self.tabs = QTabWidget()
@@ -323,6 +323,11 @@ class ProfilePage(QWidget):
         self.init_portfolio_tab()
         self.tabs.addTab(self.portfolio_tab, "AI Academic Plan")
         
+        # 3. Tab 3: GPA Manager
+        self.gpa_tab = QWidget()
+        self.init_gpa_tab()
+        self.tabs.addTab(self.gpa_tab, "GPA Manager")
+        
         self.tabs.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.content_layout.addWidget(self.tabs, 1)
         
@@ -344,7 +349,7 @@ class ProfilePage(QWidget):
         toolbar.setFixedHeight(80)
         toolbar.setStyleSheet("background: white; border-bottom: 1px solid #E2E8F0;")
         layout = QHBoxLayout(toolbar)
-        layout.setContentsMargins(24, 0, 24, 0)
+        layout.setContentsMargins(16, 0, 16, 0)
         layout.setSpacing(20)
         
         breadcrumbs = QLabel("AI Academic Plan")
@@ -473,16 +478,33 @@ class ProfilePage(QWidget):
         self.edit_display_name.setPlaceholderText("e.g. John Doe")
         add_field(grid_personal, 0, "Display Name:", self.edit_display_name)
         
+        self.edit_university = QLineEdit()
+        self.edit_university.setPlaceholderText("e.g. Vietnam-Korea University")
+        add_field(grid_personal, 1, "University:", self.edit_university)
+        
         self.combo_student_year = QComboBox()
         self.combo_student_year.addItem("1st Year", 1)
         self.combo_student_year.addItem("2nd Year", 2)
         self.combo_student_year.addItem("3rd Year", 3)
         self.combo_student_year.addItem("4th Year", 4)
-        add_field(grid_personal, 1, "Student Year:", self.combo_student_year)
+        add_field(grid_personal, 2, "Student Year:", self.combo_student_year)
         
         self.edit_major = QLineEdit()
         self.edit_major.setPlaceholderText("e.g. Computer Science")
-        add_field(grid_personal, 2, "Major / Field:", self.edit_major)
+        add_field(grid_personal, 3, "Major / Field:", self.edit_major)
+
+        self.edit_age = QLineEdit()
+        self.edit_age.setPlaceholderText("e.g. 20")
+        add_field(grid_personal, 4, "Age:", self.edit_age)
+
+        self.edit_birth_year = QLineEdit()
+        self.edit_birth_year.setPlaceholderText("e.g. 2006")
+        add_field(grid_personal, 5, "Birth Year:", self.edit_birth_year)
+
+        self.edit_phone = QLineEdit()
+        self.edit_phone.setPlaceholderText("e.g. 0912345678")
+        add_field(grid_personal, 6, "Phone Number:", self.edit_phone)
+        
         fc_layout.addWidget(g_personal)
 
         # Academic Background
@@ -980,9 +1002,17 @@ class ProfilePage(QWidget):
         username = student["username"]
         
         display_name = self.edit_display_name.text().strip()
+        university = self.edit_university.text().strip()
         major = self.edit_major.text().strip()
         student_year = self.combo_student_year.currentData() or 1
         
+        age_str = self.edit_age.text().strip()
+        birth_year_str = self.edit_birth_year.text().strip()
+        phone = self.edit_phone.text().strip()
+        
+        age = int(age_str) if age_str.isdigit() else None
+        birth_year = int(birth_year_str) if birth_year_str.isdigit() else None
+
         # Validate GPA
         try:
             gpa = float(self.edit_gpa.text().strip() or 0.0)
@@ -1006,7 +1036,11 @@ class ProfilePage(QWidget):
                 "major": major,
                 "current_semester": student_year * 2 - 1,
                 "gpa": gpa,
-                "skills": skills
+                "skills": skills,
+                "university": university,
+                "age": age_str,
+                "birth_year": birth_year_str,
+                "phone": phone
             },
             "academic_context": {
                 "current_courses": courses,
@@ -1027,6 +1061,10 @@ class ProfilePage(QWidget):
             display_name=display_name,
             major=major,
             student_year=student_year,
+            university=university,
+            birth_year=birth_year,
+            age=age,
+            phone=phone,
             is_dirty=1
         )
         
@@ -1066,9 +1104,17 @@ class ProfilePage(QWidget):
         display_name = student.get("display_name", "") or ""
         major = student.get("major", "") or ""
         student_year = student.get("student_year", 1) or 1
+        university = student.get("university", "") or ""
+        age = student.get("age", "") or ""
+        birth_year = student.get("birth_year", "") or ""
+        phone = student.get("phone", "") or ""
         
         self.edit_display_name.setText(display_name)
+        self.edit_university.setText(university)
         self.edit_major.setText(major)
+        self.edit_age.setText(str(age) if age is not None and age != "" else "")
+        self.edit_birth_year.setText(str(birth_year) if birth_year is not None and birth_year != "" else "")
+        self.edit_phone.setText(phone)
         
         idx = self.combo_student_year.findData(student_year)
         if idx >= 0:
@@ -1109,6 +1155,7 @@ class ProfilePage(QWidget):
 
     def refresh(self):
         self.load_data()
+        self.refresh_gpa_manager()
         
         # Rebuild the portfolio tab
         self._clear_layout(self.workspace_layout)
@@ -1133,3 +1180,390 @@ class ProfilePage(QWidget):
                     widget.deleteLater()
                 else:
                     self._clear_layout(item.layout())
+
+    def init_gpa_tab(self):
+        gpa_layout = QHBoxLayout(self.gpa_tab)
+        gpa_layout.setContentsMargins(20, 20, 20, 20)
+        gpa_layout.setSpacing(24)
+
+        # LEFT SIDE: Stats Card (Slightly narrower to give more space to the table)
+        left_stats = ShadowCard(radius=18)
+        left_stats.setFixedWidth(220)
+        left_stats.layout.setSpacing(16)
+        left_stats.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        gpa_lbl_header = QLabel("Cumulative GPA")
+        gpa_lbl_header.setStyleSheet("color: #64748B; font-size: 13px; font-weight: 800; text-transform: uppercase; border: none; background: transparent;")
+        left_stats.layout.addWidget(gpa_lbl_header)
+
+        # GPA Circular Indicator
+        self.gpa_circle_widget = QWidget()
+        self.gpa_circle_widget.setFixedSize(140, 140)
+        # Custom paint event to draw the circular gauge
+        self.gpa_circle_widget.paintEvent = self._draw_gpa_circle
+        left_stats.layout.addWidget(self.gpa_circle_widget, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        self.gpa_val_display = QLabel("0.00")
+        self.gpa_val_display.setStyleSheet("font-size: 28px; font-weight: 900; color: #0F172A; border: none; background: transparent;")
+        self.gpa_val_display.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        left_stats.layout.addWidget(self.gpa_val_display)
+
+        self.gpa_credits_lbl = QLabel("Total Credits: 0")
+        self.gpa_credits_lbl.setStyleSheet("color: #64748B; font-size: 13px; font-weight: 600; border: none; background: transparent;")
+        self.gpa_credits_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        left_stats.layout.addWidget(self.gpa_credits_lbl)
+
+        # Scale Tip
+        scale_tip = QLabel("Grade Scale:\nA = 4.0 | B+ = 3.5 | B = 3.0\nC+ = 2.5 | C = 2.0\nD+ = 1.5 | D = 1.0 | F = 0")
+        scale_tip.setStyleSheet("color: #94A3B8; font-size: 10px; font-weight: bold; line-height: 1.4; border: none; background: transparent;")
+        left_stats.layout.addWidget(scale_tip)
+
+        gpa_layout.addWidget(left_stats)
+
+        # RIGHT SIDE: Semesters Workspace
+        right_workspace = QWidget()
+        right_lay = QVBoxLayout(right_workspace)
+        right_lay.setContentsMargins(0, 0, 0, 0)
+        right_lay.setSpacing(16)
+
+        # Header for right side: Semester List & Add Semester
+        right_hdr = QHBoxLayout()
+        right_hdr.addWidget(QLabel("Semesters & Course Grades", styleSheet="font-size: 18px; font-weight: 800; color: #0F172A; border: none; background: transparent;"))
+        right_hdr.addStretch()
+
+        self.btn_add_semester = QPushButton("+ Add Semester")
+        self.btn_add_semester.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_add_semester.setStyleSheet("""
+            QPushButton {
+                background: #2563EB; color: white; border-radius: 8px; font-weight: bold;
+                padding: 8px 16px; font-size: 12px;
+            }
+            QPushButton:hover { background: #1D4ED8; }
+        """)
+        self.btn_add_semester.clicked.connect(self._add_semester_dialog)
+        right_hdr.addWidget(self.btn_add_semester)
+        right_lay.addLayout(right_hdr)
+
+        # Semesters Scroll Area
+        self.semesters_scroll = QScrollArea()
+        self.semesters_scroll.setWidgetResizable(True)
+        self.semesters_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self.semesters_scroll.setStyleSheet("background: transparent;")
+        
+        self.semesters_content = QWidget()
+        self.semesters_content.setStyleSheet("background: transparent;")
+        self.semesters_layout = QVBoxLayout(self.semesters_content)
+        self.semesters_layout.setContentsMargins(0, 0, 0, 0)
+        self.semesters_layout.setSpacing(16)
+        self.semesters_layout.addStretch()
+
+        self.semesters_scroll.setWidget(self.semesters_content)
+        right_lay.addWidget(self.semesters_scroll)
+
+        gpa_layout.addWidget(right_workspace, 3)
+
+    def _draw_gpa_circle(self, event):
+        painter = QPainter(self.gpa_circle_widget)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        try:
+            gpa = float(self.gpa_val_display.text())
+        except ValueError:
+            gpa = 0.0
+
+        # Draw background track
+        pen_bg = QPen(QColor("#E2E8F0"))
+        pen_bg.setWidth(10)
+        painter.setPen(pen_bg)
+        painter.drawArc(10, 10, 120, 120, -30 * 16, 240 * 16)
+
+        # Draw progress arc
+        pen_fg = QPen()
+        pen_fg.setWidth(10)
+        pen_fg.setCapStyle(Qt.PenCapStyle.RoundCap)
+
+        grad = QLinearGradient(10, 10, 130, 130)
+        if gpa >= 3.6:
+            grad.setColorAt(0, QColor("#10B981"))
+            grad.setColorAt(1, QColor("#3B82F6"))
+        elif gpa >= 3.0:
+            grad.setColorAt(0, QColor("#3B82F6"))
+            grad.setColorAt(1, QColor("#8B5CF6"))
+        elif gpa >= 2.0:
+            grad.setColorAt(0, QColor("#F59E0B"))
+            grad.setColorAt(1, QColor("#EF4444"))
+        else:
+            grad.setColorAt(0, QColor("#EF4444"))
+            grad.setColorAt(1, QColor("#F43F5E"))
+
+        pen_fg.setBrush(QBrush(grad))
+        painter.setPen(pen_fg)
+
+        progress_angle = int((gpa / 4.0) * 240)
+        painter.drawArc(10, 10, 120, 120, -210 * 16, -progress_angle * 16)
+        painter.end()
+
+    def refresh_gpa_manager(self):
+        student = crud.get_current_student()
+        if not student:
+            return
+            
+        student_id = student["id"]
+        grades = crud.get_student_grades(student_id)
+        
+        # Calculate GPA
+        cum_gpa, sem_gpas = crud.calculate_gpa(student_id)
+        
+        # Update labels
+        self.gpa_val_display.setText(f"{cum_gpa:.2f}")
+        
+        total_credits = sum(g["credits"] for g in grades if g["course_name"] != "Semester Started")
+        self.gpa_credits_lbl.setText(f"Total Credits: {total_credits}")
+        
+        self.edit_gpa.setText(f"{cum_gpa:.2f}")
+        self.gpa_circle_widget.update()
+        
+        # Clear semesters layout
+        for i in reversed(range(self.semesters_layout.count())):
+            item = self.semesters_layout.itemAt(i)
+            if item.widget():
+                item.widget().deleteLater()
+            else:
+                self.semesters_layout.removeItem(item)
+                
+        grades_by_sem = {}
+        for g in grades:
+            sem = g["semester"]
+            if sem not in grades_by_sem:
+                grades_by_sem[sem] = []
+            grades_by_sem[sem].append(g)
+            
+        if not grades_by_sem:
+            grades_by_sem = {"Semester 1": []}
+            
+        for sem_name in sorted(grades_by_sem.keys()):
+            sem_grades = grades_by_sem[sem_name]
+            sem_gpa = sem_gpas.get(sem_name, 0.0)
+            
+            sem_frame = QFrame()
+            sem_frame.setStyleSheet("QFrame { background-color: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; }")
+            sem_lay = QVBoxLayout(sem_frame)
+            sem_lay.setContentsMargins(16, 16, 16, 16)
+            sem_lay.setSpacing(12)
+            
+            hdr = QHBoxLayout()
+            lbl_title = QLabel(f"📁 {sem_name}")
+            lbl_title.setStyleSheet("font-size: 15px; font-weight: 700; color: #0F172A; border: none; background: transparent;")
+            hdr.addWidget(lbl_title)
+            hdr.addStretch()
+            
+            lbl_gpa = QLabel(f"GPA: {sem_gpa:.2f}")
+            lbl_gpa.setStyleSheet("font-size: 13px; font-weight: bold; color: #38BDF8; background: #F0F9FF; padding: 2px 8px; border-radius: 6px; border: none;")
+            hdr.addWidget(lbl_gpa)
+            
+            btn_del_sem = QPushButton("Delete")
+            btn_del_sem.setCursor(Qt.CursorShape.PointingHandCursor)
+            btn_del_sem.setFixedSize(60, 24)
+            btn_del_sem.setStyleSheet("""
+                QPushButton {
+                    background: transparent; color: #EF4444; border: 1px solid rgba(239, 68, 68, 0.4);
+                    border-radius: 4px; font-size: 11px; font-weight: bold;
+                }
+                QPushButton:hover { background: rgba(239, 68, 68, 0.05); }
+            """)
+            btn_del_sem.clicked.connect(lambda checked, s=sem_name: self._delete_semester(s))
+            hdr.addWidget(btn_del_sem)
+            sem_lay.addLayout(hdr)
+            
+            form = QHBoxLayout()
+            form.setSpacing(8)
+            
+            edit_course = QLineEdit()
+            edit_course.setPlaceholderText("Course Name")
+            edit_course.setStyleSheet("QLineEdit { padding: 4px 8px; font-size: 12px; border-radius: 6px; }")
+            
+            spin_credits = QSpinBox()
+            spin_credits.setRange(1, 10)
+            spin_credits.setValue(3)
+            spin_credits.setStyleSheet("QSpinBox { padding: 4px 8px; font-size: 12px; border-radius: 6px; }")
+            
+            combo_grade = QComboBox()
+            grades_scale = [
+                ("A (4.0)", 4.0, "A"),
+                ("B+ (3.5)", 3.5, "B+"),
+                ("B (3.0)", 3.0, "B"),
+                ("C+ (2.5)", 2.5, "C+"),
+                ("C (2.0)", 2.0, "C"),
+                ("D+ (1.5)", 1.5, "D+"),
+                ("D (1.0)", 1.0, "D"),
+                ("F (0.0)", 0.0, "F")
+            ]
+            for text, val, letter in grades_scale:
+                combo_grade.addItem(text, (val, letter))
+            combo_grade.setStyleSheet("QComboBox { padding: 4px 8px; font-size: 12px; border-radius: 6px; }")
+            
+            btn_add = QPushButton("Add")
+            btn_add.setCursor(Qt.CursorShape.PointingHandCursor)
+            btn_add.setStyleSheet("""
+                QPushButton {
+                    background: #0F172A; color: white; border-radius: 6px; font-weight: bold;
+                    padding: 4px 12px; font-size: 11px;
+                }
+                QPushButton:hover { background: #1E293B; }
+            """)
+            btn_add.clicked.connect(lambda checked, s=sem_name, c=edit_course, sp=spin_credits, cg=combo_grade: self._add_course(s, c, sp, cg))
+            
+            form.addWidget(edit_course, 3)
+            form.addWidget(QLabel("Credits:", styleSheet="font-size: 11px; color: #64748B; border: none; background: transparent;"))
+            form.addWidget(spin_credits, 1)
+            form.addWidget(QLabel("Grade:", styleSheet="font-size: 11px; color: #64748B; border: none; background: transparent;"))
+            form.addWidget(combo_grade, 2)
+            form.addWidget(btn_add, 2)
+            sem_lay.addLayout(form)
+            
+            valid_grades = [g for g in sem_grades if not (g["course_name"] == "Semester Started" and g["credits"] == 0)]
+            
+            if valid_grades:
+                from PyQt6.QtWidgets import QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView
+                table = QTableWidget()
+                table.setColumnCount(4)
+                table.setHorizontalHeaderLabels(["Môn Học", "Số Tín Chỉ", "Điểm Chữ", "Thao Tác"])
+                
+                table.setFrameShape(QFrame.Shape.NoFrame)
+                table.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
+                table.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+                table.setShowGrid(False)
+                table.verticalHeader().setVisible(False)
+                
+                header = table.horizontalHeader()
+                header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+                header.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
+                header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
+                header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
+                
+                table.setStyleSheet("""
+                    QTableWidget {
+                        background-color: #FFFFFF;
+                        border: none;
+                        gridline-color: transparent;
+                    }
+                    QHeaderView::section {
+                        background-color: #F8FAFC;
+                        color: #475569;
+                        font-weight: 800;
+                        padding: 8px;
+                        border: none;
+                        border-bottom: 2px solid #E2E8F0;
+                        font-size: 11px;
+                        text-transform: uppercase;
+                    }
+                    QTableWidget::item {
+                        border-bottom: 1px solid #F1F5F9;
+                        padding: 8px;
+                        color: #0F172A;
+                        font-size: 13px;
+                    }
+                """)
+                
+                table.setRowCount(len(valid_grades))
+                table.setFixedHeight(len(valid_grades) * 38 + 36)
+                
+                for idx, g in enumerate(valid_grades):
+                    item_name = QTableWidgetItem(g["course_name"])
+                    item_name.setFlags(item_name.flags() & ~Qt.ItemFlag.ItemIsEditable)
+                    table.setItem(idx, 0, item_name)
+                    
+                    item_credits = QTableWidgetItem(f"{g['credits']} tín chỉ")
+                    item_credits.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                    item_credits.setFlags(item_credits.flags() & ~Qt.ItemFlag.ItemIsEditable)
+                    table.setItem(idx, 1, item_credits)
+                    
+                    item_grade = QTableWidgetItem(g["grade_letter"])
+                    item_grade.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                    item_grade.setFlags(item_grade.flags() & ~Qt.ItemFlag.ItemIsEditable)
+                    table.setItem(idx, 2, item_grade)
+                    
+                    btn_del = QPushButton("🗑️")
+                    btn_del.setCursor(Qt.CursorShape.PointingHandCursor)
+                    btn_del.setFixedSize(24, 24)
+                    btn_del.setStyleSheet("""
+                        QPushButton {
+                            color: #EF4444; border: none; background: transparent; font-size: 13px;
+                        }
+                        QPushButton:hover {
+                            background-color: #FEE2E2;
+                            border-radius: 4px;
+                        }
+                    """)
+                    btn_del.clicked.connect(lambda checked, gid=g["id"]: self._delete_course(gid))
+                    
+                    cell_widget = QWidget()
+                    cell_lay = QHBoxLayout(cell_widget)
+                    cell_lay.setContentsMargins(0, 0, 0, 0)
+                    cell_lay.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                    cell_lay.addWidget(btn_del)
+                    table.setCellWidget(idx, 3, cell_widget)
+                    
+                sem_lay.addWidget(table)
+            else:
+                lbl_empty = QLabel("Chưa có môn học nào trong học kỳ này.")
+                lbl_empty.setStyleSheet("color: #94A3B8; font-size: 12px; font-style: italic; border: none; background: transparent;")
+                sem_lay.addWidget(lbl_empty)
+                
+            self.semesters_layout.addWidget(sem_frame)
+            
+        self.semesters_layout.addStretch()
+
+    def _add_semester_dialog(self):
+        text, ok = QInputDialog.getText(self, "Add Semester", "Enter semester name (e.g. Semester 1):")
+        if ok and text.strip():
+            student = crud.get_current_student()
+            if not student: return
+            conn = crud.get_connection()
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO student_grades (student_id, semester, course_name, credits, grade_value, grade_letter)
+                VALUES (?, ?, 'Semester Started', 0, 0.0, '')
+            ''', (student["id"], text.strip()))
+            conn.commit()
+            conn.close()
+            self.refresh_gpa_manager()
+
+    def _delete_semester(self, semester_name):
+        student = crud.get_current_student()
+        if not student: return
+        conn = crud.get_connection()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM student_grades WHERE student_id = ? AND semester = ?", (student["id"], semester_name))
+        conn.commit()
+        conn.close()
+        self.refresh_gpa_manager()
+
+    def _add_course(self, semester_name, edit_course, spin_credits, combo_grade):
+        student = crud.get_current_student()
+        if not student: return
+        
+        name = edit_course.text().strip()
+        if not name:
+            QMessageBox.warning(self, "Validation Error", "Course Name cannot be empty.")
+            return
+            
+        credits = spin_credits.value()
+        val, letter = combo_grade.currentData()
+        
+        conn = crud.get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT id FROM student_grades WHERE student_id = ? AND semester = ? AND course_name = 'Semester Started' AND credits = 0", (student["id"], semester_name))
+        placeholder = cursor.fetchone()
+        if placeholder:
+            cursor.execute("DELETE FROM student_grades WHERE id = ?", (placeholder["id"],))
+            conn.commit()
+        conn.close()
+
+        crud.add_student_grade(student["id"], semester_name, name, credits, val, letter)
+        edit_course.clear()
+        self.refresh_gpa_manager()
+
+    def _delete_course(self, grade_id):
+        crud.delete_student_grade(grade_id)
+        self.refresh_gpa_manager()

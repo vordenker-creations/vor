@@ -46,6 +46,19 @@ def init_db():
     )
     ''')
 
+    # Migration: Add new columns if they do not exist
+    cursor.execute("PRAGMA table_info(students)")
+    columns = [col[1] for col in cursor.fetchall()]
+    if columns:
+        if "university" not in columns:
+            cursor.execute("ALTER TABLE students ADD COLUMN university TEXT;")
+        if "birth_year" not in columns:
+            cursor.execute("ALTER TABLE students ADD COLUMN birth_year INTEGER;")
+        if "age" not in columns:
+            cursor.execute("ALTER TABLE students ADD COLUMN age INTEGER;")
+        if "phone" not in columns:
+            cursor.execute("ALTER TABLE students ADD COLUMN phone TEXT;")
+
     # 2. Student Context Table
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS student_context (
@@ -66,6 +79,44 @@ def init_db():
     CREATE TABLE IF NOT EXISTS sync_metadata (
         key TEXT PRIMARY KEY,
         value TEXT
+    )
+    ''')
+
+    # 4. Student Grades (GPA) Table
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS student_grades (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        student_id TEXT NOT NULL,
+        semester TEXT NOT NULL,
+        course_name TEXT NOT NULL,
+        credits INTEGER NOT NULL,
+        grade_value REAL NOT NULL,
+        grade_letter TEXT,
+        FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
+    )
+    ''')
+
+    # 5. Project Requirements Table
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS project_requirements (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        project_id INTEGER NOT NULL,
+        requirement_text TEXT NOT NULL,
+        completed INTEGER DEFAULT 0,
+        detailed_suggestion TEXT,
+        FOREIGN KEY (project_id) REFERENCES student_projects(id) ON DELETE CASCADE
+    )
+    ''')
+
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS mock_interviews (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        student_id INTEGER NOT NULL,
+        category TEXT NOT NULL,
+        score REAL NOT NULL,
+        feedback TEXT,
+        date_str TEXT NOT NULL,
+        FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
     )
     ''')
     

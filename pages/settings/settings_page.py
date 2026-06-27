@@ -17,8 +17,8 @@ class SettingsPage(QWidget):
         
         self.content_container = QWidget()
         self.content_layout = QHBoxLayout(self.content_container)
-        self.content_layout.setContentsMargins(40, 40, 40, 40)
-        self.content_layout.setSpacing(32)
+        self.content_layout.setContentsMargins(16, 16, 16, 16)
+        self.content_layout.setSpacing(24)
         self.content_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         
         # --- Two Column Layout ---
@@ -47,7 +47,7 @@ class SettingsPage(QWidget):
         header.setStyleSheet("background-color: #FFFFFF; border-bottom: 1px solid #E2E8F0;")
         
         layout = QHBoxLayout(header)
-        layout.setContentsMargins(32, 0, 32, 0)
+        layout.setContentsMargins(16, 0, 16, 0)
         
         info = QVBoxLayout()
         info.setSpacing(4)
